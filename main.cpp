@@ -4,11 +4,20 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>  // 可选，提供更高层次的协议接口
 #pragma comment(lib, "W2_32.LIB")// 它指示链接器链接 W2_32.LIB 库，这可能是一个与 Windows 相关的库（名字可能类似于标准的 Windows 库，如 User32.lib 或 Gdi32.lib，不过 W2_32.LIB 并不是一个标准的库，可能是一个自定义库）。
+#define  PRINTF(str) printf("[%s - %d]"#str"=%s", __func__ , __LINE__, str);
+
+//void PRINTF(const char * str){
+//    // 哪个函数的 哪一行
+//    printf("[%s - %d]%s", __func__ , __LINE__, str);
+//}
+
 
 void error_die(const char *  str){
     perror(str);// 打印错误名
     exit(1);
 }
+
+
 
 
 
@@ -119,12 +128,106 @@ int startup(unsigned short * port){
     return serve_socket;
 }
 
+
+/**
+ * 从指定的 套接字 读取一行， 保存到 buffer 中
+ * @param sock
+ * @param buffer
+ * @param size
+ * @return  实际读取的数据
+ */
+int get_line(int sock, char * buffer, int size){
+    char c = 0;
+    int i = 0;
+    while (i < (size - 1) && c != '\n'){
+        int n = recv(sock, &c, 1, 0);
+        if(n > 0){
+            if(c == '\r'){
+                n = recv(sock, &c, 1, MSG_PEEK);// 预先看一下，下一个字符
+                if(n > 0 && c == '\n'){
+                    recv(sock, &c, 1, 0);
+                } else{
+                    c='\n';
+                }
+            }
+            buffer[i] = c;
+            i++;
+        } else {
+            c='\n';
+        }
+    }
+    buffer[i] = 0;
+
+
+    return i;
+}
+
+//win 特有的 类型 函数
+/**
+ * 用户请求的线程函数
+ * @param arg
+ * @return
+ */
+DWORD WINAPI accept_request(LPVOID arg){
+    char buffer[1024];
+
+    // 客户端 套接字
+    int client = (SOCKET)arg;
+
+    int numberChars = get_line(client, buffer, sizeof(buffer));
+    //    printf("read  data %s\r\n", buffer);
+    // 哪个函数的 哪一行
+    PRINTF(buffer)
+
+    // 读取一行数据
+    return 0;
+}
+
 int main() {
     std::cout << "start server!" << std::endl;
 
-    unsigned short port = 0;// 再网络开发里面 端口是 无符号， 范围是 0~65536; 无符号类型只能存储非负数，因此与有符号类型相比，它能够表示更大的正整数范围
+    unsigned short port = 8000;// 再网络开发里面 端口是 无符号， 范围是 0~65536; 无符号类型只能存储非负数，因此与有符号类型相比，它能够表示更大的正整数范围
     int server_sock = startup(&port);
-//    std::cout << "http server running ,port =" + server_sock   << std::endl;
+    //std::cout << "http server running ,port =" + server_sock   << std::endl;
     printf("http server running ,port = %d\r\n", port );
+
+    struct sockaddr_in client_addr;
+    int client_addr_len = sizeof(client_addr);
+    while (1){
+        printf("listening  \r\n");
+        // 可以理解为  一级套接字 server_sock  接收到任务后分发给 二级 套接字 client_scok， 二级套接字 会 对接指定的任务，一级套接字接收 任务 分发给 二级 套接字
+        int client_scok = accept(
+                server_sock,
+                (struct sockaddr *)&client_addr,
+                &client_addr_len
+        );
+
+        printf("client_scok %d\r\n", client_scok);
+        if(client_scok == -1){
+            error_die("accept  error");
+        }
+
+
+        // 创建新的线程 处理 具体任务
+        DWORD threadId = 0; // 创建线程 的 ID
+        HANDLE handleFirst =CreateThread(
+            0, 0,
+            accept_request,
+            (void*)client_scok,
+            0,
+            &threadId
+        );
+
+//        HANDLE handleFirst = CreateThread(
+//                NULL,
+//                0,
+//                accept_request,
+//                (void*)client_scok,
+//                0,
+//                &threadId
+//        );
+    }
+
+    closesocket(server_sock);// 关闭 套接字
     return 0;
 }
