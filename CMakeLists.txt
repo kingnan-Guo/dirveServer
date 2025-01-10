@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 include_directories(
     modules/dirveServerLog
+    modules/DRIVETEMP
 )
 #add_executable(dirveServer main.cpp)
 
