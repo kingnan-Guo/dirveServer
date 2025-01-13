@@ -1,1 +1,0 @@
-cmd_/opt/servers/github/dirveServer/devMain.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /opt/servers/github/dirveServer/devMain.ko /opt/servers/github/dirveServer/devMain.o /opt/servers/github/dirveServer/devMain.mod.o

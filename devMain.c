@@ -104,6 +104,9 @@ static int __init my_test_device_init(void) {
 // 模块卸载时执行的函数
 static void __exit my_test_device_exit(void) {
 
+    // 打印 my_buffer
+    printk(KERN_INFO "my_buffer: %s\n", my_buffer);
+
     // 销毁类下面的 设备节点
     device_destroy(my_test_device_class, MKDEV(major, 0));
     // 销毁类
