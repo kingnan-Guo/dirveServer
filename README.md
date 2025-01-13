@@ -2,6 +2,52 @@
 Linux 驱动 和 服务器
 
 
+# ============= 日志记录 ==================
+
+2025/01/13 19：51
+传输数据 在 App 与 驱动 之间 ： dirveServer_tranfer_data_01
+
+
+
+
+
+
+# =============== 知识点 ===============
+
+
+# App 和 驱动 传输数据
+copy_to_user 
+copy_from_user
+
+# 驱动和硬件
+1、各个子系统的函数， 库函数
+2、通过 ioremap 映射 寄存器 地址后， 在驱动程序内访问寄存器
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# 遗留问题 
+    1、 老师教的 bear make 命令 还没安装好环境 ， 安装 bear 后 执行 bear make ； 然后修改生成的 文件 ，修改编译器 gcc ： 交叉编译的工具链的 路径
+    2、当前编译环境不知为何 暂时可以用，
+    3、系统移植 
+    4、 uboot
+
+
+
+
+#  ==================== 安装搭建环境 ==============================================
 
 # 查看使用函数 的 命令
 grep -rn "register_chrdev" *
@@ -29,6 +75,8 @@ sudo yum reinstall kernel-devel kernel-headers
 # 
 rpm -qa | grep kernel
 
+
+vscode 的配置
 c_cpp_properties.json 配置 
 {
     "configurations": [
@@ -88,14 +136,12 @@ c_cpp_properties.json 配置
 
 
 
-
-
-
 /usr/include/linux/ 中的头文件主要是用于用户空间程序的标准库, 这些头文件定义了与 Linux 内核交互的接口，例如系统调用和常量。
 
 
 
 
+# ==================== 编译启动 驱动模块 ===================================
 
 # 首先未来要 手写 Makefile ； cmake 无法再 驱动中使用
 
@@ -131,8 +177,7 @@ sudo rm /dev/mydev
 # 删除驱动模块
 sudo rmmod devMain
 
-# 查看驱动模块是否加载成功 打中找不到  241 my_test_device
+# 查看驱动模块是否加载成功 打印中找不到  241 my_test_device
 cat /proc/devices 
     
-
 
