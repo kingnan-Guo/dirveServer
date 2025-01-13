@@ -6,6 +6,21 @@ Linux 驱动 和 服务器
 
 2025/01/13 19：51
 传输数据 在 App 与 驱动 之间 ： dirveServer_tranfer_data_01
+    1、使用 copy_to_user 和 copy_from_user 传输数据， app 读取 驱动内的信息
+    2、初始化 : class_create 创建设备类， device_create 创建设备节点; 卸载时： device_destroy 销毁设备节点， class_destroy 销毁设备类
+    3、测试驱动模块
+        # 写入
+        ./main /dev/my_test_device helloworld
+        # 读取
+        ./main /dev/my_test_device
+        # 删除设备节点
+        sudo rm /dev/my_test_device
+        # 删除驱动模块
+        sudo rmmod devMain
+
+        # 查看驱动模块是否加载成功 打印中找不到  241 my_test_device
+        cat /proc/devices
+
 
 
 
@@ -39,7 +54,7 @@ copy_from_user
 
 
 # 遗留问题 
-    1、 老师教的 bear make 命令 还没安装好环境 ， 安装 bear 后 执行 bear make ； 然后修改生成的 文件 ，修改编译器 gcc ： 交叉编译的工具链的 路径
+    1、 老师教的 bear make 命令 还没安装好环境 ， 安装 bear 后 执行 bear make ； 然后修改生成的 文件 ，修改编译器 第一行的 cc 改为 交叉编译的工具链的 路径
     2、当前编译环境不知为何 暂时可以用，
     3、系统移植 
     4、 uboot
@@ -131,6 +146,19 @@ c_cpp_properties.json 配置
     "version": 4
 }
 
+setting.json 配置
+{
+    "files.associations": {
+        "fs.h": "c",
+        "kernel.h": "c",
+        "module.h": "c",
+        "init.h": "c",
+        "stdio.h": "c",
+        "cerrno": "c"
+    },
+    // "C_Cpp.errorSquiggles": "disabled"
+}
+
 
 
 
@@ -165,6 +193,9 @@ cat /proc/devices
 # 创建设备节点
 sudo mknod /dev/mydev c 241 0
 
+# 查看是否创建成功
+ls -l /dev/my_test_device 
+
 # 测试驱动模块
 ./main /dev/mydev hello world
 
@@ -179,5 +210,32 @@ sudo rmmod devMain
 
 # 查看驱动模块是否加载成功 打印中找不到  241 my_test_device
 cat /proc/devices 
-    
 
+# 进入 系统目录 查看驱动模块
+cd /sys/class 
+    这里就有 my_test_device
+
+cd /sys/class/my_test_device
+
+ll
+    lrwxrwxrwx 1 root root 0 Jan 13 22:35 my_test_device -> ../../devices/virtual/my_test_device_class/my_test_device
+
+cd ../../devices/virtual/my_test_device_class/my_test_device
+
+cat dev
+    241:0
+    根据 主次设备号 生成设备节点
+
+
+
+# 打开内核 打印信息
+echo "7 4 1 7" > /proc/sys/kernel/printk
+
+# 关闭内核 打印信息
+echo "4 4 1 7" > /proc/sys/kernel/printk
+
+# 查看内核 打印信息
+cat /proc/sys/kernel/printk
+
+# 打印信息
+dmesg | tail
