@@ -3,7 +3,9 @@
         "fs.h": "c",
         "kernel.h": "c",
         "module.h": "c",
-        "init.h": "c"
+        "init.h": "c",
+        "stdio.h": "c",
+        "cerrno": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

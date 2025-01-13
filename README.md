@@ -17,6 +17,7 @@ uname -r
 sudo yum install kernel-devel-$(uname -r)
 
 
+这两句 没用
 export C_INCLUDE_PATH=/lib/modules/$(uname -r)/build/include
 export CPLUS_INCLUDE_PATH=/lib/modules/$(uname -r)/build/include
 
@@ -51,6 +52,8 @@ c_cpp_properties.json 配置
     ],
     "version": 4
 }
+
+最新配置
 
 {
     "configurations": [
@@ -94,18 +97,42 @@ c_cpp_properties.json 配置
 
 
 
+# 首先未来要 手写 Makefile ； cmake 无法再 驱动中使用
 
+# 编译驱动模块
+make
 
-首先未来要 手写 Makefile
+ls -l devMain.ko 
+# 装载 驱动模块
+sudo insmod devMain.ko
 
-ls -l main.ko
+# 查看设备号
+cat /proc/devices 
 
-sudo insmod main.ko
-
+# 查看驱动模块是否加载成功
 dmesg | tail
-
-
-
 
 # 查看驱动模块是否加载成功
 cat /proc/devices
+    打印 ： 241 my_test_device
+
+# 创建设备节点
+sudo mknod /dev/mydev c 241 0
+
+# 测试驱动模块
+./main /dev/mydev hello world
+
+# 查看设备节点是否创建成功
+dmesg | tail
+
+# 删除设备节点
+sudo rm /dev/mydev
+
+# 删除驱动模块
+sudo rmmod devMain
+
+# 查看驱动模块是否加载成功 打中找不到  241 my_test_device
+cat /proc/devices 
+    
+
+
