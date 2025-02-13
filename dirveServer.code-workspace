@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../../../lib/modules/3.10.0-1160.119.1.el7.x86_64/build"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"fs.h": "c",
+			"kernel.h": "c",
+			"module.h": "c",
+			"init.h": "c",
+			"stdio.h": "c",
+			"cerrno": "c",
+			"string.h": "c",
+			"fcntl.h": "c",
+			"stat.h": "c",
+			"cdev.h": "c"
+		}
+	}
+}
