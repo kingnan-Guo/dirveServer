@@ -12,10 +12,12 @@
                 // "/lib/modules/$(uname -r)/build/include/**/*",
                 // "/usr/src/kernels/$(uname -r)/include/uapi/**/*"
                 // "/usr/include/c++/**/**/*"
+
+
                 "/usr/include",
-                "/lib/modules/3.10.0-1160.119.1.el7.x86_64/build/include/",
-                "/lib/modules/3.10.0-1160.119.1.el7.x86_64/build/include/uapi",
-                "/lib/modules/3.10.0-1160.119.1.el7.x86_64/build/arch/x86/include"
+                // "/lib/modules/3.10.0-1160.119.1.el7.x86_64/build/include/",
+                // "/lib/modules/3.10.0-1160.119.1.el7.x86_64/build/include/uapi",
+                // "/lib/modules/3.10.0-1160.119.1.el7.x86_64/build/arch/x86/include"
             ],
             "defines": [],
             "cStandard": "c11",
