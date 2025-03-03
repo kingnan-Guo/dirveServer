@@ -69,6 +69,7 @@ static struct file_operations my_test_device_fops = {
 // 模块加载时执行的函数
 static int __init my_test_device_init(void) {
     int ret;
+    
     major = register_chrdev(0, DEVICE_NAME, &my_test_device_fops);
     if (major < 0) {
         printk(KERN_ALERT "Failed to register character device.\n");

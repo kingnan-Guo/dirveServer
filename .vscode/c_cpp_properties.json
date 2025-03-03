@@ -4,8 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                // "/usr/src/kernels/3.10.0-1160.119.1.el7.x86_64/include/**/*",
-                // "/usr/src/kernels/3.10.0-1160.119.1.el7.x86_64/include/uapi/**/*"
+                "/usr/src/kernels/3.10.0-1160.119.1.el7.x86_64/include/**/*",
+                "/usr/src/kernels/3.10.0-1160.119.1.el7.x86_64/include/uapi/**/*"
                 // "/usr/src/kernels/$(uname -r)/include/**/*",
                 // "/usr/src/kernels/$(uname -r)/include/uapi/**/*"
                 // "/lib/modules/$(uname -r)/build/include/linux/**/*",
@@ -14,7 +14,9 @@
                 // "/usr/include/c++/**/**/*"
 
 
-                "/usr/include",
+                // "/usr/include",
+                
+                // "/usr/src/kernels/3.10.0-1160.119.1.el7.x86_64"
                 // "/lib/modules/3.10.0-1160.119.1.el7.x86_64/build/include/",
                 // "/lib/modules/3.10.0-1160.119.1.el7.x86_64/build/include/uapi",
                 // "/lib/modules/3.10.0-1160.119.1.el7.x86_64/build/arch/x86/include"

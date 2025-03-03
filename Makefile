@@ -2,7 +2,9 @@
 obj-m := devMain.o
 
 # 内核构建目录
-KDIR := /lib/modules/$(shell uname -r)/build
+# KDIR := /lib/modules/$(shell uname -r)/build
+# /usr/src/kernels/3.10.0-1160.119.1.el7.x86_64/
+KDIR := /usr/src/kernels/3.10.0-1160.119.1.el7.x86_64/
 
 # 当前目录
 PWD := $(shell pwd)
