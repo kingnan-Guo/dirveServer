@@ -21,10 +21,11 @@
                 // "/lib/modules/3.10.0-1160.119.1.el7.x86_64/build/include/uapi",
                 // "/lib/modules/3.10.0-1160.119.1.el7.x86_64/build/arch/x86/include"
             ],
+            // 定义预处理器宏
             "defines": [],
             "cStandard": "c11",
             "cppStandard": "c++14",
-            "intelliSenseMode": "linux-gcc-x64"
+            "intelliSenseMode": "linux-gcc-x64"// 设置 IntelliSense 模式，通常根据编译器和架构选择
         }
     ],
     "version": 4
