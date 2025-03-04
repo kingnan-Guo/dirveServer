@@ -316,3 +316,15 @@ ls -l /dev/my_test_device_1
 
 
 
+
+
+
+gpio =============
+
+root@raspberrypi:/opt# cd /sys/class/gpio
+root@raspberrypi:/sys/class/gpio# ls
+export  gpiochip512  gpiochip566  unexport
+
+root@raspberrypi:/sys/class/gpio# echo 529 > /sys/class/gpio/export 
+root@raspberrypi:/sys/class/gpio# echo 529 > /sys/class/gpio/unexport 
+
