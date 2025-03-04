@@ -125,7 +125,7 @@ static int __init my_test_device_init(void) {
     // class_create
     // 创建设备类
     // struct class *class_create(struct module *owner, const char *name);
-    my_test_device_class = class_create(THIS_MODULE, "my_test_device_class");
+    my_test_device_class = class_create( "my_test_device_class");
     if(IS_ERR(my_test_device_class)){
         // pr_err("failed to allocate class\n");
         printk("failed to allocate class\n");
