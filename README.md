@@ -280,3 +280,39 @@ cat ~/.ssh/id_ed25519.pub
 
 
 git fetch --all
+
+
+
+# 写入 
+./main /dev/my_test_device bacd
+# 读出
+./main /dev/my_test_device
+
+
+# 因为 创建了两个次设备号所以可以绑定 
+cat /proc/devices  
+    打印
+    241 my_test_device
+
+
+ls -l /dev/my_test_device 
+    打印 my_test_device 的次设备号是  0
+    crw------- 1 root root 241, 0 Mar  4 12:51 /dev/my_test_device
+
+所以在次设备号 1 
+c 代表 字符设备
+    
+mknod /dev/my_test_device_1 c 241 1
+
+
+
+ls -l /dev/my_test_device_1 
+    打印
+    crw-r--r-- 1 root root 241, 1 Mar  4 12:58 /dev/my_test_device_1
+
+
+执行这个命令也可以 获取 my_test_device 到存入的数据 
+./main /dev/my_test_device_1
+
+
+

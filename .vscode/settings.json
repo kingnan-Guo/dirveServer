@@ -5,7 +5,9 @@
         "module.h": "c",
         "init.h": "c",
         "stdio.h": "c",
-        "cerrno": "c"
+        "cerrno": "c",
+        "uaccess.h": "c",
+        "cdev.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled",
     // "C_Cpp.errorSquiggles": "disabled"
