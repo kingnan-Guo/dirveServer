@@ -28,6 +28,11 @@
 #define GPCLR0              0x28        // 定义了 GPIO 清除寄存器 0 的偏移地址，0x28。这个寄存器用于将 GPIO 引脚设置为低电平（输出低）。如果需要将某个 GPIO 引脚清零，就需要向这个寄存器写入对应引脚的位
 
 
+static volatile unsigned int *BCM2837_PERI_BASE = NULL;
+
+static volatile unsigned int *GPIO_BASE = NULL;
+
+
 
 
 static int major; // 主设备号
@@ -92,6 +97,8 @@ static int __init led_init(void){
     major = register_chrdev(0, DEVICE_NAME, &led_fops);
 
     // iormap 映射寄存器
+    BCM2837_PERI_BASE = ioremap(BCM2837_PERI_BASE, GPIO_REG_SIZE);
+
 
 
     // 创建设备类
