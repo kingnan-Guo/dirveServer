@@ -73,12 +73,6 @@ copy_from_user
 
 
 
-# 遗留问题 
-    1、 老师教的 bear make 命令 还没安装好环境 ， 安装 bear 后 执行 bear make ； 然后修改生成的 文件 ，修改编译器 第一行的 cc 改为 交叉编译的工具链的 路径
-    2、当前编译环境不知为何 暂时可以用，
-    3、系统移植 
-    4、 uboot
-
 
 
 
@@ -334,3 +328,11 @@ export  gpiochip512  gpiochip566  unexport
 root@raspberrypi:/sys/class/gpio# echo 529 > /sys/class/gpio/export 
 root@raspberrypi:/sys/class/gpio# echo 529 > /sys/class/gpio/unexport 
 
+
+
+export ARCH=arm
+export CROSS_COMPILE=aarch64-linux-gnu-
+
+
+echo $ARCH
+echo $CROSS_COMPILE
