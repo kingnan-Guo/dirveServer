@@ -30,12 +30,23 @@ static int major;
 static struct class *my_led_class;
 
 static int led_open(struct inode *node, struct file *file) {
+
+    /**
+     * 1. enable gpio  使能 gpio ； 但是 rpi 是不需要 启动使能 gpio 的， 也不需要 配置 gpio 的时钟 ，stm32pm157 是需要的
+     * 2. configure pin as gpio 配置引脚为 gpio
+     * 3. configure gpio as  output 配置 gpio 为输出 引脚
+     * 
+     */
+
+
     unsigned int gpfsel2_val;
     printk(KERN_INFO "%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
     gpfsel2_val = *GPFSEL2;
     printk(KERN_INFO "GPFSEL2 before: 0x%x\n", gpfsel2_val);
+    // 清除 21-23 位 ；假设 GPFSEL2 是  0000 0000 0000 0000 0000 0000 0000 0000 ，那么 0x7  是 0000 0000 0000 0000 0000 0000 0000 0111 ，所以 0x7 << 21 是 0000 0000 1110 0000 0000 0000 0000 0000
     gpfsel2_val &= ~(0x7 << 21);
+     // 设置 21-23 位 ；假设 GPFSEL2 是  0000 0000 0000 0000 0000 0000 0000 0000 ，那么 0x1  是 0000 0000 0000 0000 0000 0000 0000 0001 ，所以 0x1 << 21 是 0000 0000 0010 0000 0000 0000 0000 0000
     gpfsel2_val |= (0x1 << 21);
     *GPFSEL2 = gpfsel2_val;
     printk(KERN_INFO "GPFSEL2 after: 0x%x\n", *GPFSEL2);
