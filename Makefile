@@ -30,13 +30,14 @@ CFLAGS += -I$(KERNEL_INCLUDE_DIR)
 CFLAGS += -I$(KERNEL_ARCH_INCLUDE_DIR)
 
 # 编译目标
-obj-m := led.o
+obj-m := my_led.o
 
 all:
 	# 进入内核源码目录并构建模块
 	make -C $(KERNEL_DIR) M=$(PWD) modules
 	# 交叉编译
 	# $(CROSS_COMPILE)gcc -o main main.c
+	aarch64-linux-gnu-gcc -o main main.c
 clean:
 	# 清理
 	make -C $(KERNEL_DIR) M=$(PWD) clean

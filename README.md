@@ -193,6 +193,7 @@ make
 ls -l devMain.ko 
 # 装载 驱动模块
 sudo insmod devMain.ko
+sudo insmod my_led.ko
 
 # 查看设备号
 cat /proc/devices 
@@ -209,18 +210,26 @@ sudo mknod /dev/mydev c 241 0
 
 # 查看是否创建成功
 ls -l /dev/my_test_device 
+ls -l /dev/my_led 
 
 # 测试驱动模块
 ./main /dev/mydev hello world
+
+
+chmod +x main
+
+./main /dev/my_led on
 
 # 查看设备节点是否创建成功
 dmesg | tail
 
 # 删除设备节点
 sudo rm /dev/mydev
+sudo rm /dev/my_led
 
 # 删除驱动模块
 sudo rmmod devMain
+rmmod my_led
 
 # 查看驱动模块是否加载成功 打印中找不到  241 my_test_device
 cat /proc/devices 
@@ -330,9 +339,21 @@ root@raspberrypi:/sys/class/gpio# echo 529 > /sys/class/gpio/unexport
 
 
 
-export ARCH=arm
-export CROSS_COMPILE=aarch64-linux-gnu-
+<!-- export ARCH=arm
+export CROSS_COMPILE=aarch64-linux-gnu- -->
 
 
 echo $ARCH
 echo $CROSS_COMPILE
+
+
+
+
+root@raspberrypi:/sys/class/gpio# usermod -aG gpio root
+
+gpioget gpiochip0 27  # 获取 GPIO 27 的当前值
+root@raspberrypi:/sys/class/gpio# gpioset gpiochip0 27=1
+root@raspberrypi:/sys/class/gpio# gpioset gpiochip0 27=0
+
+
+

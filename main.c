@@ -43,12 +43,12 @@ int main(int argc, char *argv[]){
     if(argc == 3){
 
         if(strcmp(argv[2], "on") == 0){
-            status = 1;
+            status = '1';
             length = write(fd, &status, 1);
             printf("write %d bytes to %s\n", length, argv[1]);
         }
         else if(strcmp(argv[2], "off") == 0){
-            status = 0;
+            status = '0';
             length = write(fd, &status, 1);
             printf("write %d bytes to %s\n", length, argv[1]);
         }
