@@ -356,4 +356,5 @@ root@raspberrypi:/sys/class/gpio# gpioset gpiochip0 27=1
 root@raspberrypi:/sys/class/gpio# gpioset gpiochip0 27=0
 
 
-
+root@raspberrypi:/opt/TEMP# echo 1 | sudo tee /dev/my_led
+root@raspberrypi:/opt/TEMP# echo 0 | sudo tee /dev/my_led
