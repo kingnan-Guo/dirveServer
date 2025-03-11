@@ -109,7 +109,10 @@ static void __exit device_exit(void) {
     // 打印 my_buffer
     printk(KERN_INFO "my_buffer: %s\n", my_buffer);
     // 销毁类下面的 设备节点
-    device_destroy(device_class, MKDEV(major, 0));
+    // device_destroy(device_class, MKDEV(major, 0));
+    for(int i = 0; i < DEVICE_NUM; i++){
+        device_destroy(device_class, MKDEV(major, i));
+    }
     // 销毁类
     class_destroy(device_class);
     
