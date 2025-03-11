@@ -289,7 +289,7 @@ cat ~/.ssh/id_ed25519.pub
 
 
 git fetch --all
-
+git fetch origin
 
 
 # 写入 
