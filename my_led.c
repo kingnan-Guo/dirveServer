@@ -14,6 +14,7 @@
 #define GPFSEL2_OFFSET      0x08
 #define GPSET0_OFFSET       0x1C
 #define GPCLR0_OFFSET       0x28
+#define GPLEV0_OFFSET       0x34
 
 static volatile unsigned int *GPIO_BASE = NULL;
 
@@ -22,7 +23,7 @@ static volatile unsigned int *GPIO_BASE = NULL;
 #define GPFSEL2 ((volatile unsigned int *)(GPIO_BASE + (GPFSEL2_OFFSET / 4)))
 #define GPSET0  ((volatile unsigned int *)(GPIO_BASE + (GPSET0_OFFSET / 4)))
 #define GPCLR0  ((volatile unsigned int *)(GPIO_BASE + (GPCLR0_OFFSET / 4)))
-
+#define GPLEV0  ((volatile unsigned int *)(GPIO_BASE + (GPLEV0_OFFSET / 4))) // 读取 gpio 的状态
 static int GPIO_PIN = 27;
 static int major;
 #define DEVICE_NAME "my_led"
@@ -55,7 +56,28 @@ static int led_open(struct inode *node, struct file *file) {
 
 static ssize_t led_read(struct file *file, char __user *buffer, size_t len, loff_t *offset) {
     printk(KERN_INFO "%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-    return 0;
+    // 读取 gpio 的状态
+    char  gpio_value;
+    unsigned int gpio_state;
+
+    gpio_state = *GPLEV0; // GPLEV0 寄存器包含所有的 GPIO 引脚的 当前状态
+    // 读取 27 位的状态
+    if(gpio_state & (1 << GPIO_PIN)){
+        gpio_value = '1';
+    } else {
+        gpio_value = '0';
+    }
+    if(len < 1){
+        return -EFAULT;
+    }
+
+    if(copy_to_user(buffer, &gpio_value, 1)){
+        return -EFAULT;
+    }
+    
+    printk(KERN_INFO "GPIO %d  static %c \n", GPIO_PIN, gpio_value);
+
+    return 1;
 }
 
 static ssize_t led_write(struct file *file, const char __user *buffer, size_t len, loff_t *offset) {

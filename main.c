@@ -58,6 +58,11 @@ int main(int argc, char *argv[]){
         }
 
 
+    } else if(argc == 2) {
+        char buffer[1024];
+        length = read(fd, buffer, sizeof(buffer));
+        printf("Read %d bytes from %s\n", length, argv[1]);
+        printf("%s\n", buffer);
     }
 
 
