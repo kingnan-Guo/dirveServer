@@ -8,7 +8,10 @@ CFLAGS += -I$(KERNEL_INCLUDE_DIR)
 CFLAGS += -I$(KERNEL_ARCH_INCLUDE_DIR)
 
 # 编译目标
-obj-m := my_drv.o
+kingnan_led-y := my_drv.o my_board.o
+# obj-m := my_drv.o
+obj-m += kingnan_led.o
+
 
 all:
 	# 进入内核源码目录并构建模块

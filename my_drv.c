@@ -5,6 +5,7 @@
 #include <linux/uaccess.h>
 #include <linux/cdev.h>
 
+#include "my_op.h"
 
 #define DEVICE_NAME "my_device"
 
@@ -15,34 +16,62 @@ static unsigned char my_buffer[1024]; // 内核空间缓冲区
 static struct class *device_class;
 // static char *device_name = "my_device";
 
+struct my_operations *p_my_device_operations;
+
 
 static int device_open(struct inode *inode, struct file *file) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
+
+    // 根据 次设备号 初始化 led
+    /**
+     * 
+     * MINOR(inode->i_rdev)  获取次设备号
+     * 
+     * 
+     */
+
+    // int minor = MINOR(inode->i_rdev);// 获取次设备号
+    int minor = iminor(inode);// 获取次设备号
+    p_my_device_operations->init(minor);// 初始化 LED
+
     return 0;
 }
 
 static ssize_t device_read(struct file *file, char __user *buffer, size_t len, loff_t *offset) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
     // 检查返回值
-    if (copy_to_user(buffer, my_buffer, len)) {
-        printk(KERN_WARNING "Failed to copy data to user space.\n");
-        return -EFAULT;  // 返回错误码
-    }
+    // if (copy_to_user(buffer, my_buffer, len)) {
+    //     printk(KERN_WARNING "Failed to copy data to user space.\n");
+    //     return -EFAULT;  // 返回错误码
+    // }
     return len;  // 返回读取的字节数
 }
 
+// 写入设备
+// write(fd,  &val, sizeof(val));
 static ssize_t device_write(struct file *file, const char __user *buffer, size_t len, loff_t *offset) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
 
-    if (len > sizeof(my_buffer)) {
-        len = sizeof(my_buffer);  // 限制写入长度
-    }
+    // if (len > sizeof(my_buffer)) {
+    //     len = sizeof(my_buffer);  // 限制写入长度
+    // }
+
+ 
+
+    char status;
+
     // 从用户空间读取数据到内核空间
     // 检查返回值
-    if (copy_from_user(my_buffer, buffer, len)) {
+    if (copy_from_user(&status, buffer, len)) {
         printk(KERN_WARNING "Failed to copy data from user space.\n");
         return -EFAULT;  // 返回错误码
     }
+
+    // 根据次设备号 和 status 控制 LED
+    struct inode  *inode = file_inode(file);// 获取文件的 inode
+    int minor = iminor(inode);// 获取次设备号
+
+    p_my_device_operations->ctl(minor, status); // 
 
     return len;  // 返回写入的数据字节数
 }
@@ -97,6 +126,9 @@ static int __init device_init(void) {
     }
 
 
+
+    // 在入口函数中 获得 my_board_operations； 然后 使用这个指针来操作 单板相关的代码
+    p_my_device_operations  = my_board_operations();
 
 
     printk(KERN_INFO "device registered with major number %d.\n", major);
