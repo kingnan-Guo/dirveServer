@@ -194,6 +194,7 @@ ls -l devMain.ko
 # 装载 驱动模块
 sudo insmod devMain.ko
 sudo insmod my_led.ko
+sudo insmod kingnan_led.ko
 
 # 查看设备号
 cat /proc/devices 
@@ -209,9 +210,9 @@ cat /proc/devices
 sudo mknod /dev/mydev c 241 0
 
 # 查看是否创建成功
-ls -l /dev/my_test_device 
+ls -l /dev/my_device 
 ls -l /dev/my_led 
-
+ls -l /dev/my_device_0
 # 测试驱动模块
 ./main /dev/mydev hello world
 
@@ -358,3 +359,6 @@ root@raspberrypi:/sys/class/gpio# gpioset gpiochip0 27=0
 
 root@raspberrypi:/opt/TEMP# echo 1 | sudo tee /dev/my_led
 root@raspberrypi:/opt/TEMP# echo 0 | sudo tee /dev/my_led
+
+
+cat /sys/class/gpio/gpio27/value

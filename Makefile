@@ -8,9 +8,9 @@ CFLAGS += -I$(KERNEL_INCLUDE_DIR)
 CFLAGS += -I$(KERNEL_ARCH_INCLUDE_DIR)
 
 # 编译目标
-kingnan_led-y := my_drv.o my_board.o
+my_device-y := my_drv.o my_board.o
 # obj-m := my_drv.o
-obj-m += kingnan_led.o
+obj-m += my_device.o
 
 
 all:

@@ -4,15 +4,15 @@
 #include <linux/fs.h>
 #include <linux/uaccess.h>
 #include <linux/cdev.h>
-
+#include <linux/io.h>
 #include "my_op.h"
 
 #define DEVICE_NAME "my_device"
 
-#define DEVICE_NUM 2
+// #define DEVICE_NUM 2
 
 static int major; // 设备主号
-static unsigned char my_buffer[1024]; // 内核空间缓冲区
+// static unsigned char my_buffer[1024]; // 内核空间缓冲区
 static struct class *device_class;
 // static char *device_name = "my_device";
 
@@ -44,7 +44,23 @@ static ssize_t device_read(struct file *file, char __user *buffer, size_t len, l
     //     printk(KERN_WARNING "Failed to copy data to user space.\n");
     //     return -EFAULT;  // 返回错误码
     // }
-    return len;  // 返回读取的字节数
+
+    
+    struct inode  *inode = file_inode(file);// 获取文件的 inode
+    int minor = iminor(inode);// 获取次设备号
+
+    int ret = p_my_device_operations->read(minor, buffer);
+    // char  gpio_value;
+    if (ret < 0) {
+        return ret;
+    }
+    // gpio_value = '1';
+    
+    // if(copy_to_user(buffer, &gpio_value, 1)){
+    //     return -EFAULT;
+    // }
+
+    return ret;  // 返回读取的字节数
 }
 
 // 写入设备
@@ -58,15 +74,21 @@ static ssize_t device_write(struct file *file, const char __user *buffer, size_t
 
  
 
-    char status;
+    
+    char status_char;
+
 
     // 从用户空间读取数据到内核空间
     // 检查返回值
-    if (copy_from_user(&status, buffer, len)) {
+    if (copy_from_user(&status_char, buffer, len)) {
         printk(KERN_WARNING "Failed to copy data from user space.\n");
         return -EFAULT;  // 返回错误码
     }
 
+
+
+    int status = status_char - '0';
+    printk(KERN_INFO "status  == %d \n", status);
     // 根据次设备号 和 status 控制 LED
     struct inode  *inode = file_inode(file);// 获取文件的 inode
     int minor = iminor(inode);// 获取次设备号
@@ -92,7 +114,7 @@ static struct file_operations device_fops = {
 // 模块加载时执行的函数
 static int __init device_init(void) {
     
-    char class_name[30];
+    // char class_name[30];
     char device_name_buf[30];
 
     // 生成 class 名称
@@ -108,17 +130,21 @@ static int __init device_init(void) {
 
     // 创建设备类
     // 为 THIS_MODULE  模块创建一个类
-    snprintf(class_name, sizeof(class_name), "%s_class", DEVICE_NAME);
-    device_class = class_create(class_name);
+    // snprintf(class_name, sizeof(class_name), "%s_class", DEVICE_NAME);
+    device_class = class_create("my_device_class");
     if(IS_ERR(device_class)){
         // pr_err("failed to allocate class\n");
         printk("failed to allocate class\n");
         return PTR_ERR(device_class);
     }
 
+    // 在入口函数中 获得 my_board_operations； 然后 使用这个指针来操作 单板相关的代码
+    p_my_device_operations  = my_board_operations();
+
+
     // device_create(device_class, NULL, MKDEV(major, 0), NULL, DEVICE_NAME + "_0");
 
-    for(int i = 0; i < DEVICE_NUM; i++){
+    for(int i = 0; i < p_my_device_operations->num; i++){
 
         snprintf(device_name_buf, sizeof(device_name_buf), "%s_%d", DEVICE_NAME, i);
         // 创建设备节点
@@ -127,8 +153,7 @@ static int __init device_init(void) {
 
 
 
-    // 在入口函数中 获得 my_board_operations； 然后 使用这个指针来操作 单板相关的代码
-    p_my_device_operations  = my_board_operations();
+
 
 
     printk(KERN_INFO "device registered with major number %d.\n", major);
@@ -138,19 +163,31 @@ static int __init device_init(void) {
 
 // 模块卸载时执行的函数
 static void __exit device_exit(void) {
-    // 打印 my_buffer
-    printk(KERN_INFO "my_buffer: %s\n", my_buffer);
-    // 销毁类下面的 设备节点
-    // device_destroy(device_class, MKDEV(major, 0));
-    for(int i = 0; i < DEVICE_NUM; i++){
-        device_destroy(device_class, MKDEV(major, i));
+    printk(KERN_INFO "Entering device_exit\n");
+
+    // 先删除设备节点
+    if (device_class) {
+        if (p_my_device_operations && p_my_device_operations->num > 0) {
+            for (int i = 0; i < p_my_device_operations->num; i++) {
+                device_destroy(device_class, MKDEV(major, i));
+            }
+        }
+
+        // 删除设备类
+        class_destroy(device_class);
+        device_class = NULL;
     }
-    // 销毁类
-    class_destroy(device_class);
-    
+
+    // 调用板级 `exit` 方法
+    if (p_my_device_operations && p_my_device_operations->exit) {
+        printk(KERN_INFO "Calling board_exit\n");
+        p_my_device_operations->exit(0);
+    }
+
+    // 注销字符设备
     unregister_chrdev(major, DEVICE_NAME);
 
-    printk(KERN_INFO "device unregistered.\n");
+    printk(KERN_INFO "Device unregistered\n");
 }
 
 // 定义模块的加载和卸载函数
