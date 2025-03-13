@@ -113,7 +113,7 @@ static struct file_operations device_fops = {
 
 // 模块加载时执行的函数
 static int __init device_init(void) {
-    
+    printk(KERN_INFO "========= %s %s %d  ========= \n", __FILE__, __FUNCTION__, __LINE__);
     // char class_name[30];
     char device_name_buf[30];
 
@@ -138,8 +138,8 @@ static int __init device_init(void) {
         return PTR_ERR(device_class);
     }
 
-    // 在入口函数中 获得 my_board_operations； 然后 使用这个指针来操作 单板相关的代码
-    p_my_device_operations  = my_board_operations();
+    // 在入口函数中 获得 get_board_operations； 然后 使用这个指针来操作 单板相关的代码
+    p_my_device_operations  = get_board_operations();
 
 
     // device_create(device_class, NULL, MKDEV(major, 0), NULL, DEVICE_NAME + "_0");

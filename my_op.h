@@ -11,7 +11,7 @@ struct my_operations
 
 
 // 单板  文件中 要实现这个函数
-struct my_operations *my_board_operations(void);
+struct my_operations *get_board_operations(void);
 
 
 
