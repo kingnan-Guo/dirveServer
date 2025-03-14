@@ -13,10 +13,10 @@
  */
 
 
-struct my_resources
-{
-    int pin;
-};
+// struct my_resources
+// {
+//     int pin;
+// };
 
-struct my_resources * get_resources(void);
+// struct my_resources * get_resources(void);
 

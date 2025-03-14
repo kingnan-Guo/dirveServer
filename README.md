@@ -362,3 +362,106 @@ root@raspberrypi:/opt/TEMP# echo 0 | sudo tee /dev/my_led
 
 
 cat /sys/class/gpio/gpio27/value
+
+
+
+
+
+
+
+
+
+
+# ====================================
+
+platform 
+
+github/dirveServer/my_chip_board_gpio.c
+    1、在 my_chip_board_gpio_dirver_init 中 
+        注册 my_chip_board_gpio_dirver 
+
+    2、当前  platform_driver 跟 同名的 platform_device 匹配到之后
+        就会调用 platform_driver  的 .probe 函数 my_chip_board_gpio_dirver_probe
+
+
+    3、并且向上层 /opt/github/dirveServer/my_drv.c 提供了 通过  _register_device_operations 注册 p_my_device_operations 
+
+
+    4、在 my_chip_board_gpio_dirver_probe 中 平台设备里面获得 资源 ， 并且记录引脚 到 global_pins 中
+
+    5、 调用 github/dirveServer/my_drv.c 的 _device_create 函数 ，创建 device_create； 
+            这样系统就会 创建好 设备节点， 应用程序才可打开 这个设备 节点 /dev/my_board_device_0
+
+
+github/dirveServer/my_drv.c
+    1、注册好设备节点后 ，就可以 调用 这里的 open 函数 ，然后 就 会去 /opt/github/dirveServer/my_chip_board_gpio.c  中 调用 board_init 函数 ，回去 设备引脚
+
+
+
+github/dirveServer/my_board_n.c
+    负责 提供资源
+
+    my_device_release 用于 释放 platform_device 相关资源，防止内存泄漏
+
+    my_device_release 不是直接调用，而是在 platform_device_unregister() 之后，当引用计数降为 0 时，内核会自动调用它。
+
+
+
+    platform_device_register(&my_board_n_dev);
+        设备注册，引用计数 +1，不会立即调用 release。
+
+    platform_device_unregister(&my_board_n_dev);
+        设备注销，引用计数 -1，当计数归零时，release my_device_release 被调用，释放资源。
+
+
+
+
+
+
+
+# 运行顺序
+insmod my_drv.ko
+insmod my_board_n.ko
+
+insmod my_chip_board_gpio.ko
+
+
+cat /proc/devices  
+
+
+ls -l /dev/my_board_device_*
+chmod +x main
+
+
+dmesg | tail
+
+./main /dev/my_board_device_0 on
+./main /dev/my_board_device_1 off
+
+<!-- rmmod my_driver.ko -->
+
+
+
+rmmod my_chip_board_gpio.ko
+rmmod my_board_n.ko
+rmmod my_drv.ko 
+
+失败报错  无法 卸载驱动
+
+
+# 参数解析
+
+IORESOURCE_IRQ	start 表示 IRQ 号
+IORESOURCE_MEM	start 表示 物理地址（通常是寄存器基地址）
+IORESOURCE_IO	start 表示 I/O 端口地址
+IORESOURCE_DMA	start 表示 DMA 通道
+IORESOURCE_BUSY	资源已被占用（用于标记已使用的资源）
+
+
+
+当 flags = IORESOURCE_IRQ 时： start 表示 IRQ 号，即中断号。
+当 flags = IORESOURCE_MEM 时：start 表示 物理内存地址（用于 MMIO 设备）。
+当 flags = IORESOURCE_IO 时：start 表示 I/O 端口地址（用于 x86 的 I/O 端口映射设备）。
+
+
+
