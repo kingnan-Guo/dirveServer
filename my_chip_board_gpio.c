@@ -150,6 +150,11 @@ static int my_chip_board_gpio_dirver_remove(struct platform_device *dev){
 
 
 
+static const struct of_device_id my_chip_board_gpio_of_match[] = {
+    { .compatible = "my_board_device,my_drv" },
+    { /* sentinel */ }
+};
+
 /**
  * 
  * 名字 跟 platform_device  
@@ -165,6 +170,7 @@ static struct platform_driver my_chip_board_gpio_dirver = {
     .remove = my_chip_board_gpio_dirver_remove,
     .driver = {
         .name = "my_board_n",// 名字 用来跟 platform_device 配对 如果配对成功
+        .of_match_table = 
     },
 };
 
