@@ -1,0 +1,32 @@
+/{
+    mytest {
+        compatible = "mytest", "simple-bus";// 有了  兼容 simple-bus 才会去创建 platform_device
+        mytest@0{
+            compatible = "mytest_0";// 父级有 simple-bus  子级才有可能 创建 成 platform_device
+
+            // 如果有  reg 就会转换成 MEM 属性； 对于设备树节点中的 reg 属性，它属性 IORESOURCE_MEM 类型的资源；
+            reg = 
+            // 如果有  interrupts 中断属性 会转换成 平台属性  的 IRQ 中断 资源，就可以使用  platform_get_resource 来获得中断资源； 对于设备树节点中的 interrupts 属性，它属性 IORESOURCE_IRQ 类型的资源
+            // 有 pin 属性， pin属性 不是标准属性， 就要使用其他 函数 ； 使用 内核 提供的 函数， 对于 跟节点 他会有 /device_node 结构体； device_node 结构体 会保存在 of_root 全局变量中，访问 of_root 得到任意一个节点的，得到节点之后，可以读出属性
+            // of_root  例如 找到节点：  of_find_node_by_path ....、 找到属性  of_find_property ....
+
+
+        }
+    };
+
+    i2c {
+        compatible = "samsung, I2C",
+        at24c02 {
+            compatible = "at24c02";// 由于  父级没有 simple-bus 所以 子级 不会 创建 platform_device
+        }
+    };
+
+    sip {
+        compatible = "samsung, spi",
+        flash@0 {// 也无法创建成  platform_device
+            compatible = "winbond, w25q32dw";
+            spi-max-frequency = <25000000>;
+            reg = <0>;
+        }
+    }
+}

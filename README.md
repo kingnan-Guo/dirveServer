@@ -487,3 +487,16 @@ chmod -R 777 fdt
 反编译 fdt
 
 /opt/sources/linux-rpi-6.6.y/scripts/dtc/dtc -I dtb -O dts -o tmp.dts /opt/github/dirveServer/deviceTree/fdt
+
+
+
+# platform_device
+
+platform_device 是如何找到  platform_dirver
+引入 总线设备驱动模型
+platform_bus_type {
+    match ; ; // 判断  platform_device 和 platform_dirver 是否 匹配的 ；如果 匹配就调用 platform_dirver 的 probe； 不管谁先注册都会 两两比较 去匹配
+    platform_device
+    platform_dirver
+
+}
