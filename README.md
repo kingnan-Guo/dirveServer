@@ -487,3 +487,15 @@ chmod -R 777 fdt
 反编译 fdt
 
 /opt/sources/linux-rpi-6.6.y/scripts/dtc/dtc -I dtb -O dts -o tmp.dts /opt/github/dirveServer/deviceTree/fdt
+
+
+# 课程资料
+git clone https://e.coding.net/weidongshan/01_all_series_quickstart.git
+
+https://download.100ask.net/videos_tutorial/embedded_linux/full_range_phase1/index.html
+
+
+
+
+
+

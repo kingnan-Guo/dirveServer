@@ -1,0 +1,12 @@
+#define GROUP_PIN(group, pin) ((group << 16) | pin)
+
+/{
+    my_board_device@0{
+        compatible = "my_board_device,my_drv";
+        pin = <GROUP_PIN(3, 1)>
+    };
+    my_board_device@1{
+        compatible = "my_board_device,my_drv";
+        pin = <GROUP_PIN(5, 8)>
+    };
+}

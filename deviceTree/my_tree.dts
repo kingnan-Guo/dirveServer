@@ -1,0 +1,32 @@
+/ {
+    mytest {
+        // mytest 会被转换为 platform_device, 因为它兼容"simple-bus";
+        
+        compatile = "mytest", "simple-bus";
+        mytest@0 {
+            compatile = "mytest_0";// 子级是否可以 创建成 platform_device 是依赖于父级， 父级兼容 simple-bus 那么 会被转换为 platform_device
+            // 如果有 reg 那么 会被转换成 IORESOURCE_MEM  ； 对于设备树节点中的 reg 属性，它属性 IORESOURCE_MEM 类型的资源；
+            // 如果有 interrupts 中断属性 那么 会转换为 platform_device 平台设备 里的 IRQ 中断资源； 可以通过  platform_get_resource 获取 属性； 对于设备树节点中的 interrupts 属性，它属性 IORESOURCE_IRQ 类型的资源
+            自定义的 Pin 非标准的 属性， 可以使用内核提供 的 函数
+            在设备树里面 只有某些节点 会被 转换成  platform_device， 即使 某个节点 被转换成 platform_device ，里面非标准的属性 怎么去获得， 可以使用 内核提供的函数；
+            根节点 会有一个 device_node 的结构体， 这个 device_node 结构体会被 保存在 of_root ，就可以访问这个 全局变量 of_root， 访问这个 根节点 得到任意一个节点，读出里面的属性
+            三类 获取值 的方式 ： 找到节点  of_find_node_by_path 、 找到属性  of_find_property、  获取属性的值  of_get_property
+        };
+    };
+    i2c {
+        compatile = "samsung,i2c";
+        at24c02 {
+            // 此 子级 无法创建 platform_device
+            // /i2c/at24c02 节点不会被转换为 platform_device, 它被如何处理完全由父节点的 platform_driver 决定, 一般是被创建为一个 i2c_client
+            compatile = "at24c02";
+        };
+    };
+    spi {
+        compatile = "samsung,spi";
+        flash@0 {       // 节点不会被转换为 platform_device, 一般是被创建为一个 spi_device。
+            compatible = "winbond,w25q32dw";
+            spi-max-frequency = <25000000>;
+            reg = <0>;
+        };
+    };
+};
