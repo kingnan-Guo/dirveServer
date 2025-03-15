@@ -465,3 +465,25 @@ IORESOURCE_BUSY	资源已被占用（用于标记已使用的资源）
 
 
 
+
+# 设备树
+使用
+sources/linux-rpi-6.6.y/arch/arm/boot/dts/broadcom/bcm2710-rpi-3-b-plus.dts
+设备树
+
+
+编译设备树
+make dtbs V=1
+fdt 是从  rpi 的 /sys/firmware 复制出来的 放到  /deviceTree 文件夹里
+/sys/firmware 下的 fdt 的 dtb 文件
+可以反编译
+
+chmod -R 777 fdt
+
+
+./scripts/dtc/dtc -I dts -O dtb -o tmp.dtb arch/arm/boot/dts/xxx.dts // 编译 dts 为 dtb
+./scripts/dtc/dtc -I dtb -O dts -o tmp.dts arch/arm/boot/dts/xxx.dtb // 反编译 dtb 为 dts
+
+反编译 fdt
+
+/opt/sources/linux-rpi-6.6.y/scripts/dtc/dtc -I dtb -O dts -o tmp.dts /opt/github/dirveServer/deviceTree/fdt
