@@ -104,8 +104,8 @@ struct my_operations * get_board_operations(void)
 static int my_chip_board_gpio_dirver_probe(struct platform_device *pdev){
     printk(KERN_INFO "my_chip_board_gpio_dirver_probe \n");
 
-    int i = 0;
-    struct resource *res;
+    // int i = 0;
+    // struct resource *res;
 
     // 要从 platform_device  pdev 中获取资源
 
@@ -169,11 +169,14 @@ static int my_chip_board_gpio_dirver_remove(struct platform_device *pdev){
     // return 0;
 
 
-    struct resource *res;
     int i = 0;
     struct device_node *np;
     int err = 0;
     int my_pin = 0;
+
+    np = pdev->dev.of_node;
+    if (!np)
+        return -1;
 
     // 从 np 中获取 pin， 把值 储存到 global_pins 中
     err = of_property_read_u32(np, "pin", &my_pin);
@@ -189,7 +192,7 @@ static int my_chip_board_gpio_dirver_remove(struct platform_device *pdev){
         // global_cnt--;
     }
 
-    for (i = 0; i < count; i++)
+    for (i = 0; i < global_cnt; i++)
     {
         if(global_pins[i] != -1){
             break;
