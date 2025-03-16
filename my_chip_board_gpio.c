@@ -143,31 +143,6 @@ static int my_chip_board_gpio_dirver_probe(struct platform_device *pdev){
 static int my_chip_board_gpio_dirver_remove(struct platform_device *pdev){
     printk(KERN_INFO "my_chip_board_gpio_dirver_remove \n");
 
-    // device_disroy
-    // int i;
-    // for(i = 0; i < global_cnt; i++){
-    //     _device_destroy(i);
-    // }
-    // global_cnt = 0;
-
-
-    // struct resource *res;
-    // int i = 0;
-    // while (1)
-    // {
-    //     res = platform_get_resource(dev, IORESOURCE_IRQ, i);
-    //     if(!res){
-    //         break;
-    //     }
-    //     if (i < global_cnt) {
-    //         _device_destroy(i);
-    //     }
-    //     i++;
-    //     // global_cnt--;
-    // }
-    // global_cnt = 0;
-    // return 0;
-
 
     int i = 0;
     struct device_node *np;
@@ -247,6 +222,8 @@ static int __init my_chip_board_gpio_dirver_init(void) {
 static void __exit my_chip_board_gpio_dirver_exit(void) {
     printk(KERN_INFO "my_chip_board_gpio_dirver_exit \n");
     platform_driver_unregister(&my_chip_board_gpio_dirver);
+    _register_device_operations(NULL); // 清空指针
+
 }
 
 module_init(my_chip_board_gpio_dirver_init);

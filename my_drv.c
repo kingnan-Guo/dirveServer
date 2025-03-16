@@ -164,23 +164,29 @@ static void __exit device_exit(void) {
 
     // 先删除设备节点
     if (device_class) {
-        // if (p_my_device_operations && p_my_device_operations->num > 0) {
-        //     for (int i = 0; i < p_my_device_operations->num; i++) {
-        //         // device_destroy(device_class, MKDEV(major, i));
-        //         _device_destroy(i);
-        //     }
-        // }
+
 
         // 删除设备类
         class_destroy(device_class);
         device_class = NULL;
     }
 
-    // 调用板级 `exit` 方法
-    if (p_my_device_operations && p_my_device_operations->exit) {
+    // // 调用板级 `exit` 方法
+    // if (p_my_device_operations && p_my_device_operations->exit) {
+    //     printk(KERN_INFO "Calling board_exit\n");
+    //     p_my_device_operations->exit(0);
+    // }
+
+    printk(KERN_INFO "p_my_device_operations = %p\n", p_my_device_operations);
+
+    if (p_my_device_operations) {
         printk(KERN_INFO "Calling board_exit\n");
         p_my_device_operations->exit(0);
+
+    } else {
+        printk(KERN_WARNING "p_my_device_operations is invalid or module not loaded\n");
     }
+
 
     // 注销字符设备
     unregister_chrdev(major, DEVICE_NAME);
