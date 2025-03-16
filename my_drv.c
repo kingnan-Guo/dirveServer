@@ -199,7 +199,7 @@ static void __exit device_exit(void) {
 void _device_create(int minor){
     char device_name_buf[30];
     snprintf(device_name_buf, sizeof(device_name_buf), "%s_%d", DEVICE_NAME, minor);
-    device_create(device_class, NULL, MKDEV(major, minor), NULL, device_name_buf);
+    device_create(device_class, NULL, MKDEV(major, minor), NULL, device_name_buf);//创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件  
 }
 // 别的函数要使用此 函数 必须 导出来
 // 所以 别的函数要使用  _device_create  必须 先 加载 my_drv.c

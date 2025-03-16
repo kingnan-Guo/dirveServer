@@ -15,7 +15,7 @@
 #include <linux/kmod.h>
 #include <linux/gfp.h>
 #include <linux/platform_device.h>
-
+#include <linux/of.h>
 
 #include "my_resources.h"
 #include "my_op.h"
@@ -84,6 +84,8 @@ struct my_operations * get_board_operations(void)
 
 
 /**
+ * 每一次 dtb 节点 都会调用一次 probe 函数， 所以把 while 去掉
+ * 
  * 
  * 当发现 platform_device 的 可以匹配的 时候就会执行 probe 函数
  * 1、记录引脚 ； 定义数组记录引脚 
@@ -99,27 +101,46 @@ struct my_operations * get_board_operations(void)
 
 
 
-static int my_chip_board_gpio_dirver_probe(struct platform_device *dev){
+static int my_chip_board_gpio_dirver_probe(struct platform_device *pdev){
     printk(KERN_INFO "my_chip_board_gpio_dirver_probe \n");
 
     int i = 0;
     struct resource *res;
-    while(1){
-        res = platform_get_resource(dev, IORESOURCE_IRQ, i++); // 获取资源
-        if(!res){
-            break;
-        }
-        //记录引脚 
-        global_pins[global_cnt] = res->start;
-        // 2、device_create
-        _device_create(global_cnt);// 调用 my_drv.c 中的 _device_create ，传入 次设备号
-        global_cnt++;
+
+    // 要从 platform_device  pdev 中获取资源
+
+    struct device_node *np;
+
+    //  在 platform_device 中找到 dev 就是  device 描述设备信息， device 的 device_node  对应 到 of_node ， of_node 里储存的是 dtb 中的节点
+    np = pdev->dev.of_node;
+
+    int err = 0;
+    int my_pin = 0;
+
+    // 和这个 platform_driver 支持的  platform_device ， 可能来自设备树，也可能不是来自设备树 ，所以要判断
+    if(!np){
+        return -ENODEV;
     }
+
+    // 1、获取资源
+    // 从 np 中获取 pin， 把值 储存到 global_pins 中
+    err = of_property_read_u32(np, "pin", &my_pin);
+
+    // res = platform_get_resource(pdev, IORESOURCE_IRQ, i++); // 获取资源
+    // if(!res){
+    //     break;
+    // }
+
+    //记录引脚 
+    global_pins[global_cnt] = my_pin;
+    // 2、device_create
+    _device_create(global_cnt);// 调用 my_drv.c 中的 _device_create ，传入 次设备号
+    global_cnt++;
 
     return 0;
 }
 
-static int my_chip_board_gpio_dirver_remove(struct platform_device *dev){
+static int my_chip_board_gpio_dirver_remove(struct platform_device *pdev){
     printk(KERN_INFO "my_chip_board_gpio_dirver_remove \n");
 
     // device_disroy
@@ -130,22 +151,57 @@ static int my_chip_board_gpio_dirver_remove(struct platform_device *dev){
     // global_cnt = 0;
 
 
+    // struct resource *res;
+    // int i = 0;
+    // while (1)
+    // {
+    //     res = platform_get_resource(dev, IORESOURCE_IRQ, i);
+    //     if(!res){
+    //         break;
+    //     }
+    //     if (i < global_cnt) {
+    //         _device_destroy(i);
+    //     }
+    //     i++;
+    //     // global_cnt--;
+    // }
+    // global_cnt = 0;
+    // return 0;
+
+
     struct resource *res;
     int i = 0;
-    while (1)
+    struct device_node *np;
+    int err = 0;
+    int my_pin = 0;
+
+    // 从 np 中获取 pin， 把值 储存到 global_pins 中
+    err = of_property_read_u32(np, "pin", &my_pin);
+
+    for (i = 0; i< global_cnt; i++)
     {
-        res = platform_get_resource(dev, IORESOURCE_IRQ, i);
-        if(!res){
+
+        if (global_pins[i] == my_pin) {
+            _device_destroy(i);
+            global_pins[i]  = -1;// 
             break;
         }
-        if (i < global_cnt) {
-            _device_destroy(i);
-        }
-        i++;
         // global_cnt--;
     }
-    global_cnt = 0;
+
+    for (i = 0; i < count; i++)
+    {
+        if(global_pins[i] != -1){
+            break;
+        }
+
+    }
+    if(i == global_cnt){
+        global_cnt = 0;
+    }
+    
     return 0;
+
 }
 
 
@@ -170,7 +226,7 @@ static struct platform_driver my_chip_board_gpio_dirver = {
     .remove = my_chip_board_gpio_dirver_remove,
     .driver = {
         .name = "my_board_n",// 名字 用来跟 platform_device 配对 如果配对成功
-        .of_match_table = 
+        .of_match_table = my_chip_board_gpio_of_match
     },
 };
 

@@ -20,7 +20,7 @@ CFLAGS += -I$(KERNEL_ARCH_INCLUDE_DIR)
 
 
 # 总线设备驱动模型 的 编译  出三个 ko 程序---------------------
-obj-m += my_drv.o my_chip_board_gpio.o my_board_n.o
+obj-m += my_drv.o my_chip_board_gpio.o
 
 
 all:
