@@ -496,6 +496,52 @@ https://download.100ask.net/videos_tutorial/embedded_linux/full_range_phase1/ind
 
 
 
+# 编译设备树
+
+
+在
+/opt/sources/linux-rpi-6.6.y/scripts/dtc/include-prefixes/arm/broadcom/bcm2710-rpi-3-b-plus.dts
+
+文件下 
+
+/ 添加
+
+    my_board_n@0{
+        compatible = "my_board_device,my_drv";
+        pin = <GROUP_PIN(3, 1)>;
+		data = "2710";
+    };
+    my_board_n@1{
+        compatible = "my_board_device,my_drv";
+        pin = <GROUP_PIN(5, 8)>;
+		data = "2710";
+    };
+
+
+make ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- clean
+make ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- distclean
+KERNEL=kernel8
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bcm2711_defconfig
+
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-  dtbs  V=1
+编译 设备树
+
+
+我觉得这个也
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs -j$(nproc) 
+
+打包出来的 设备树 替换掉 本来的设备树
+
+ls /proc/device-tree/
+可以看到 my_board_n@0 和 my_board_n@1
+
+# 查看 platform
+
+在 /sys/devices/platform/ 文件夹下可以看到 创建出来的 platform_device
+
+
+
+
 
 
 
