@@ -20,7 +20,7 @@
 #include "my_op.h"
 #include "my_drv.h"
 
-#define DEVICE_NAME "my_board_device"
+#define DEVICE_NAME "my_board_button"
 
 // #define DEVICE_NUM 2
 
@@ -51,19 +51,19 @@ static ssize_t device_read(struct file *file, char __user *buffer, size_t len, l
     
     struct inode  *inode = file_inode(file);// 获取文件的 inode
     int minor = iminor(inode);// 获取次设备号
+    char level;
 
-    int ret = p_my_device_operations->read(minor, buffer);
-    // char  gpio_value;
-    if (ret < 0) {
-        return ret;
+    // int ret = p_my_device_operations->read(minor, buffer);
+    level = p_my_device_operations->read(minor, buffer);
+    // err = copy_to_user(buffer, &level, 1);
+    if (copy_to_user(buffer, &level, 1)) {
+        printk(KERN_ERR "Failed to copy GPIO status to user\n");
+        return -EFAULT;
     }
-    // gpio_value = '1';
-    
-    // if(copy_to_user(buffer, &gpio_value, 1)){
-    //     return -EFAULT;
-    // }
 
-    return ret;  // 返回读取的字节数
+
+
+    return 1;  // 返回读取的字节数
 }
 
 // 写入设备
@@ -127,7 +127,7 @@ static int __init device_init(void) {
     // 创建设备类
     // 为 THIS_MODULE  模块创建一个类
     // snprintf(class_name, sizeof(class_name), "%s_class", DEVICE_NAME);
-    device_class = class_create("my_board_device_class");
+    device_class = class_create("my_board_button_class");
     if(IS_ERR(device_class)){
         // pr_err("failed to allocate class\n");
         printk("failed to allocate class\n");
@@ -137,7 +137,7 @@ static int __init device_init(void) {
     // 在入口函数中 获得 get_board_operations； 然后 使用这个指针来操作 单板相关的代码
     // p_my_device_operations  = get_board_operations();
 
-    // device_create(device_class, NULL, MKDEV(major, 0), NULL, DEVICE_NAME + "_0");
+    // device_create(device_class, NEV(major, 0), NULL, DEVICE_NAME + "_0");
 
     // for(int i = 0; i < p_my_device_operations->num; i++){
     //     // snprintf(device_name_buf, sizeof(device_name_buf), "%s_%d", DEVICE_NAME, i);

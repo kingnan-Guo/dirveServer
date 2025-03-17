@@ -1,6 +1,9 @@
 # dirveServer
 Linux 驱动 和 服务器
 
+芯片手册
+https://www.raspberrypi.org/app/uploads/2012/02/BCM2835-ARM-Peripherals.pdf
+
 
 # ============= 日志记录 ==================
 
@@ -39,7 +42,20 @@ App使用驱动的四种方式 ： dirveServer_tranfer_data_02
 
 
 
+2025/3/17 23:56
+    读取 pin 27 引脚状态使用 ,在使用 dtb 的情况下
 
+    insmod my_chip_board_button.ko 
+    insmod my_drv.ko
+
+    cat /proc/devices  
+
+    ls -l /dev/my_board_*
+
+    ./main /dev/my_board_button_0
+    
+    rmmod my_chip_board_button.ko 
+    rmmod my_drv.ko
 
 
 
@@ -563,3 +579,17 @@ root@raspberrypi:/sys/bus/platform/drivers/my_board_n# pwd
 # my_board_n 平台驱动 platform_driver 支持 my_board_n@0  my_board_n@1 这两个设备
 root@raspberrypi:/sys/bus/platform/drivers/my_board_n# ls
 bind  module  my_board_n@0  my_board_n@1  uevent  unbind
+
+
+
+
+
+
+
+ls /sys/class/gpio/gpio*
+
+
+
+
+
+
