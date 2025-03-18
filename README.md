@@ -61,6 +61,72 @@ App使用驱动的四种方式 ： dirveServer_tranfer_data_02
 
 
 
+2025/03/18 12:44    
+    pinctl 子系统
+
+
+    pinctl：
+        是软件层面的 ， 是一个虚拟层 在 gpio 、 I2C 与  pin 引脚之间 由 BSP 工程师 定义  
+        作用 ： 引脚复用、引脚配置
+
+
+
+
+    # client device
+        正常工作时：  pin-a pin=b 配置为  uart 功能
+        休眠时： pin-a pin=b 配置为  gpio 功能， 并且输出 高电平
+
+        正常工作、休眠 是 state 状态
+        pin A 、pin B 是group
+        pin A 、pin B 配置的 功能 是 function
+
+
+    device {
+        pinctl-names = "default", "sleep";// 这个是被 有两种状态， 使用 某一个字节点 来描述 这个状态
+        pinctl-0 = <&state_0_node_a &state_0_node_b>;//子节点 ； 第 0 个状态的名字 是 default， 对应的引脚在 pinctl-0 里定义； 位于 pincontroller 里面； 
+        pinctl-1 = <&state_1_node_a>;//子节点； 第 1 个状态 的 名字是 sleep， 对应的引脚在 pinctl-1 里定义 ;  位于 pincontroller 里面
+    }
+
+
+    # pincontroller 
+        没有统一格式， 但一般都是  由 pin 配置哪些引脚，然后 给引脚 配置哪些参数 配置那种模式 等，可能是上拉
+
+    pincontroller1{
+        state_0_node_a {
+            function = "uart0",
+            groups = "u0rxtx", "0urtscts";// 用到 哪些 引脚
+        };
+        state_1_node_a {
+            function = "gpio",
+            groups = "u0rxtx", "0urtscts";
+        }
+    }
+
+    1、当设备 为 default 的时候  会 是 state_0_node_a 状态， 会把 u0rxtx", "0urtscts"   复用成  uart0 功能，  （multiplexing node）
+    2、state_1_node_a 状态， 会把 u0rxtx", "0urtscts" 这一组引脚 复用成  gpio 功能  
+    3、但是 rps 3B+ 可能 不适用于 分组
+
+
+    pincontroller2{
+        state_0_node_a {
+            function = "uart0",
+            groups = "u0rxtx", "0urtscts";// 用到 哪些 引脚
+        };
+        state_1_node_a {// 这里是把引脚 配置成 某一个状态 （configuration node）
+            groups = "u0rxtx", "0urtscts";
+            output-hight; 
+        }
+    }
+
+    代码中如何使用
+        1、pincrl 在 驱动程序中不需要管
+        2、设备切换状态时，pinctl 系统 会根据设备树， 对应的 pinctl 就会被调用，切换设置那些 引脚，
+
+        3、比如说 platform_device platform_dirver 的枚举过程中，内核里会有 really_prob, really_prob 会调用 我们提供 的 prob，但是 在 调用 prob 之前 会帮用户设置引脚，会根据设备树 设置成 default 或sleep 状态
+        4、 有自定义的方式 设置 引脚状态    
+
+
+
 
 
 # =============== 知识点 ===============
