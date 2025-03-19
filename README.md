@@ -217,11 +217,19 @@ App使用驱动的四种方式 ： dirveServer_tranfer_data_02
             所以我猜测 pin 27 的引脚编号是 512 + 27
 
             echo 539 > /sys/class/gpio/export
-            echo in > /sys/class/gpio/gpio539/direction
-            cat /sys/calss/gpio539/value
-            echo 539 > /sys/class/gpio /unexport
 
-            可能是   把 539 换成 27
+            设置输入
+            echo in > /sys/class/gpio/gpio539/direction
+            cat /sys/calss/gpio539/value     获取 pin 27 的值
+
+            设置 输出
+            echo 539 > /sys/class/gpio/export
+            echo out > /sys/class/gpio/gpio539/direction
+            echo 1 > /sys/class/gpio/gpio539/value
+            echo 0 > /sys/class/gpio/gpio539/value
+
+            echo 539 > /sys/class/gpio/unexport
+         
 
 
     
