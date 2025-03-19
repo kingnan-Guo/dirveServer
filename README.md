@@ -299,6 +299,30 @@ App使用驱动的四种方式 ： dirveServer_tranfer_data_02
         }
 
 
+2025/03/20 00:01
+
+
+    
+    dtb 内容
+        my_board_n@0{
+            compatible = "my_board_device,my_drv";
+            pin = <GROUP_PIN(3, 1)>;
+            data = "2710";
+
+            led-gpio=<>
+        };
+        my_board_n@1{
+            compatible = "my_board_device,my_drv";
+            pin = <GROUP_PIN(5, 8)>;
+            data = "2710";
+        };
+
+
+    在 github/dirveServer/my_drv.c 中 按照例子写代码，但是 dtb 还没有配置，还没真实上 上机 实验
+
+    我有个 疑问 是否可 可以在  rpi 3B+ 中直接替换 新的设备树？？？
+
+
 
 
 

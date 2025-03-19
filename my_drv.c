@@ -15,220 +15,168 @@
 #include <linux/kmod.h>
 #include <linux/gfp.h>
 
+#include <linux/gpio/consumer.h>
+#include <linux/of.h>
+#include <linux/platform_device.h>
 
 
-#include "my_op.h"
-#include "my_drv.h"
+#define _NAME "_diver"
 
-#define DEVICE_NAME "my_board_button"
-
-// #define DEVICE_NUM 2
+// #define _NUM 2
 
 static int major; // 设备主号
 
-static struct class *device_class;
+static struct class *_class;
+static struct gpio_desc *_gpio;
 
-struct my_operations *p_my_device_operations;
 
-
-static int device_open(struct inode *inode, struct file *file) {
+static int _open(struct inode *inode, struct file *file) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
 
-    // 根据 次设备号 初始化 led
-    /**
-     * MINOR(inode->i_rdev)  获取次设备号
-     */
-
-    // int minor = MINOR(inode->i_rdev);// 获取次设备号
-    int minor = iminor(inode);// 获取次设备号
-    p_my_device_operations->init(minor);// 初始化 LED
+    gpiod_direction_output(_gpio, 0);
 
     return 0;
 }
 
-static ssize_t device_read(struct file *file, char __user *buffer, size_t len, loff_t *offset) {
+static ssize_t _read(struct file *file, char __user *buffer, size_t len, loff_t *offset) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
     
-    struct inode  *inode = file_inode(file);// 获取文件的 inode
-    int minor = iminor(inode);// 获取次设备号
-    char level;
-
-    // int ret = p_my_device_operations->read(minor, buffer);
-    level = p_my_device_operations->read(minor, buffer);
-    // err = copy_to_user(buffer, &level, 1);
+    char level = '0';
+    if(gpiod_get_value(_gpio)){
+        level = '1';
+    }
     if (copy_to_user(buffer, &level, 1)) {
         printk(KERN_ERR "Failed to copy GPIO status to user\n");
         return -EFAULT;
     }
-
-
-
     return 1;  // 返回读取的字节数
 }
 
 // 写入设备
 // write(fd,  &val, sizeof(val));
-static ssize_t device_write(struct file *file, const char __user *buffer, size_t len, loff_t *offset) {
+static ssize_t _write(struct file *file, const char __user *buffer, size_t len, loff_t *offset) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
 
-    // if (len > sizeof(my_buffer)) {
-    //     len = sizeof(my_buffer);  // 限制写入长度
-    // }
+    int err;
+    char status;
 
-    char status_char;
+    err = copy_from_user(&status, buffer, 1);
 
+    // 根据次设备号 和 status 控制 XXX
+    gpiod_set_value(_gpio, status);
 
-    // 从用户空间读取数据到内核空间
-    // 检查返回值
-    if (copy_from_user(&status_char, buffer, len)) {
-        printk(KERN_WARNING "Failed to copy data from user space.\n");
-        return -EFAULT;  // 返回错误码
-    }
-
-
-
-    int status = status_char - '0';
-    printk(KERN_INFO "status  == %d \n", status);
-    // 根据次设备号 和 status 控制 LED
-    struct inode  *inode = file_inode(file);// 获取文件的 inode
-    int minor = iminor(inode);// 获取次设备号
-
-    p_my_device_operations->ctl(minor, status); // 
 
     return len;  // 返回写入的数据字节数
 }
 
-static int device_release(struct inode *inode, struct file *file) {
+static int _release(struct inode *inode, struct file *file) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
     return 0;
 }
 
-static struct file_operations device_fops = {
+static struct file_operations _fops = {
     .owner = THIS_MODULE,
-    .read = device_read,
-    .write = device_write,
-    .open = device_open,
-    .release = device_release
+    .read = _read,
+    .write = _write,
+    .open = _open,
+    .release = _release
 };
 
-// 模块加载时执行的函数
-static int __init device_init(void) {
-    printk(KERN_INFO "========= %s %s %d  ========= \n", __FILE__, __FUNCTION__, __LINE__);
-    // char class_name[30];
-    // char device_name_buf[30];
 
 
-    major = register_chrdev(0, DEVICE_NAME, &device_fops);
+
+
+
+/// @brief 
+/// @param pdev 
+/// @return 
+static int _chip_gpio_probe(struct platform_device *pdev){
+    printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
+    // int err;
+    // 1、 设备树 中定义 有 led-gpio=<>
+    _gpio = gpiod_get(&pdev->dev, "XXX", 0);
+    if(IS_ERR(_gpio)){
+        dev_err(&pdev->dev, "Failed to get GPIO for XXX \n");
+        return PTR_ERR(_gpio);
+    }
+
+    // 2、 注册  file_operations _fops
+    major = register_chrdev(0, _NAME, &_fops);
     if (major < 0) {
         printk(KERN_ALERT "Failed to register character device.\n");
         return major;
     }
 
-    // 创建设备类
-    // 为 THIS_MODULE  模块创建一个类
-    // snprintf(class_name, sizeof(class_name), "%s_class", DEVICE_NAME);
-    device_class = class_create("my_board_button_class");
-    if(IS_ERR(device_class)){
-        // pr_err("failed to allocate class\n");
+    _class = class_create("_diver_class");
+    if(IS_ERR(_class)){
+        printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
+
+		unregister_chrdev(major, _NAME);
+		gpiod_put(_gpio);
+
         printk("failed to allocate class\n");
-        return PTR_ERR(device_class);
+        return PTR_ERR(_class);
     }
 
-    // 在入口函数中 获得 get_board_operations； 然后 使用这个指针来操作 单板相关的代码
-    // p_my_device_operations  = get_board_operations();
-
-    // device_create(device_class, NEV(major, 0), NULL, DEVICE_NAME + "_0");
-
-    // for(int i = 0; i < p_my_device_operations->num; i++){
-    //     // snprintf(device_name_buf, sizeof(device_name_buf), "%s_%d", DEVICE_NAME, i);
-    //     // 创建设备节点
-    //     // device_create(device_class, NULL, MKDEV(major, i), NULL, device_name_buf);
-    //     _device_create(i);
-    // }
 
 
+    char device_name_buf[30];
+    int minor = 0;
+    snprintf(device_name_buf, sizeof(device_name_buf), "%s_%d", _NAME, minor);
+    device_create(_class, NULL, MKDEV(major, minor), NULL, device_name_buf);//创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件  
+    // device_create(_class, NULL, MKDEV(major, 0), NULL, "100ask_led%d", 0);
 
+    return 0;
+}
 
-
-
-    printk(KERN_INFO "device registered with major number %d.\n", major);
-
+/// @brief 清除驱动
+/// @param pdev 
+/// @return 
+static int _chip_gpio_remove(struct platform_device *pdev){
+    device_destroy(_class, MKDEV(major, 0)); // 销毁设备
+    class_destroy(_class);// 销毁 class
+    unregister_chrdev(major, _NAME);// 卸载驱动 注销字符设备
+    // 清除 gpio
+    gpiod_put(_gpio);
     return 0;
 }
 
 
 
+static const struct of_device_id _chip_gpio_of_match[] = {
+    { .compatible = "my_board_device,my_drv" }// my_board_device,my_drv 这个值 在 dtb 上配好的 
+};
+
+static struct platform_driver _chip_gpio_dirver = {
+    .probe = _chip_gpio_probe,
+    .remove = _chip_gpio_remove,
+    .driver = {
+        .name = "my_board_n",// 名字 用来跟 platform_device 配对 如果配对成功
+        .of_match_table = _chip_gpio_of_match
+    },
+};
+
+
+
+
+
+
+
+// 模块加载时执行的函数 
+static int __init device_init(void) {
+    printk(KERN_INFO "========= %s %s %d  ========= \n", __FILE__, __FUNCTION__, __LINE__);
+
+    // 入口函数里 注册 _chip_gpio_dirver 结构体
+    int err;
+    err = platform_driver_register(&_chip_gpio_dirver);// 注册 _chip_gpio_dirver 会调用  probe
+    return err;
+}
+
 // 模块卸载时执行的函数
 static void __exit device_exit(void) {
-    printk(KERN_INFO "Entering device_exit\n");
-
-    // 先删除设备节点
-    if (device_class) {
-
-
-        // 删除设备类
-        class_destroy(device_class);
-        device_class = NULL;
-    }
-
-    // // 调用板级 `exit` 方法
-    // if (p_my_device_operations && p_my_device_operations->exit) {
-    //     printk(KERN_INFO "Calling board_exit\n");
-    //     p_my_device_operations->exit(0);
-    // }
-
-    printk(KERN_INFO "p_my_device_operations = %p\n", p_my_device_operations);
-
-    if (p_my_device_operations) {
-        printk(KERN_INFO "Calling board_exit\n");
-        p_my_device_operations->exit(0);
-
-    } else {
-        printk(KERN_WARNING "p_my_device_operations is invalid or module not loaded\n");
-    }
-
-
-    // 注销字符设备
-    unregister_chrdev(major, DEVICE_NAME);
-
-    printk(KERN_INFO "Device unregistered\n");
+    platform_driver_unregister(&_chip_gpio_dirver);// 会调用 remove
+    printk(KERN_INFO "Entering _exit\n");
 }
-
-
-
-
-
-
-
-
-// 封装 device_create 
-void _device_create(int minor){
-    char device_name_buf[30];
-    snprintf(device_name_buf, sizeof(device_name_buf), "%s_%d", DEVICE_NAME, minor);
-    device_create(device_class, NULL, MKDEV(major, minor), NULL, device_name_buf);//创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件  
-}
-// 别的函数要使用此 函数 必须 导出来
-// 所以 别的函数要使用  _device_create  必须 先 加载 my_drv.c
-EXPORT_SYMBOL(_device_create);
-
-
-
-void _device_destroy(int minor){
-    // device_destroy(device_class, MKDEV(major, minor));
-    device_destroy(device_class, MKDEV(major, minor));
-}
-EXPORT_SYMBOL(_device_destroy);
-
-
-// 底层向上册 注册函数
-void _register_device_operations(struct my_operations *opr){
-    // p_my_device_operations 由 底层 主动提供
-    p_my_device_operations = opr;
-}
-EXPORT_SYMBOL(_register_device_operations);
-
-
-
 
 // 定义模块的加载和卸载函数
 module_init(device_init);
