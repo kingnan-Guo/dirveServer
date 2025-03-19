@@ -127,6 +127,104 @@ App使用驱动的四种方式 ： dirveServer_tranfer_data_02
 
 
 
+2025/03/19 
+
+    GPIO 子系统
+    要操作 GPIO 引继哦啊，先把 所用 引脚配置为 GPIO 的 功能，这通过 Pinctl 子系统来实现
+    然后就可以根据配置 设置引脚方向（输入 / 输出）、读 、写
+
+    在设备树 里定 GPIO 引脚
+    在驱动代码中：
+        BSP 实现 GPIO 的控制器 驱动， 驱动 直接调用 
+        使用 GPIO 子系统的标准 获得 GPIO、设置方向、读取设置GPIO 值
+        可以让 驱动与 板子 分离
+
+    
+
+    如何使用 GPIO 子系统
+        1、确定使用哪个引脚，例如 stm32pm157  是去确定使用哪一组的里的哪一个引脚， 一般 是在设备树里 指定这两个 参数
+
+                device {
+                    // 可能会用多个 gpio 所以 定义 gpios
+                    // <哪一组gpio(必填), 哪一个 pin (由 组 确定), flag (由 组 确定)>
+                    led-gpios =<>
+                }
+
+
+                gpio1{
+                    gpio-controller;// 用来描述 这个节点 是 gpio controller 控制器
+                    #gpio-cells = <2>; // 以后要制定这一组 的某一个引脚时 要使用 两个整数 来指定； 来表述 除了 组之外 还用什么整数 来指定 ； 也就是  led-gpios 会有 三个参数， 一个 是 组 
+
+                }
+
+
+
+
+        2、假设 在 设备树已经 指定 我这设备要用哪一个引脚，在驱动程序里面 如何 获得 引脚
+            a：GPIO 子系统有两套接口，基于 描述符的 （descriptor-base）、老的（legacy ， 基于整数 引脚号 的 api）；前者的函数 都有 前缀 "gpiod_"， 他使用 gpio_desc 可够题来表示一个引脚； 后者 的函数都有前缀 "gpio_", 他使用 一个整数来表示一个引脚
+
+            b： 要操作一个引脚，首先要get引脚，然后设置方向、读值、写值
+
+
+            c: 如何 获取出 值
+                foo_deivce {
+                    compatible = "acme,foo";
+
+                    led-gpios = <&gpio 15 GPIO_ACTIVE_HIGH>,
+                                <&gpio 16 GPIO_ACTIVE_HIGH>;
+
+                    power-gpios = <&gpio 1 GPIO_ACTIVE_LOW>;
+                }
+
+                1: 使用 
+                    struct gpio_desc *red, *gree, *power;
+
+                    // gpiod_***  是 新的 api
+                    red = gpiod_get_index(dev, "led", 0, GPIO_OUT_HIGH), ;
+                    gree = gpiod_get_index(dev, "led", 0, GPIO_OUT_HIGH);
+
+                    power = gpiod_get(dev, "power", GPIO_OUT_HIGH) ;
+
+                    也可使用
+                        gpiod_direction_input / gpiod_direction_output 设置方向
+
+
+        3、获取引脚编号等
+
+
+            root@raspberrypi:/# cd /sys/class/gpio/
+            root@raspberrypi:/sys/class/gpio# ls
+            export  gpiochip512  gpiochip566  unexport
+            root@raspberrypi:/sys/class/gpio# cd gpiochip512
+            root@raspberrypi:/sys/class/gpio/gpiochip512# ls
+            base  device  label  ngpio  power  subsystem  uevent
+            root@raspberrypi:/sys/class/gpio/gpiochip512# cat base 
+            512
+            root@raspberrypi:/sys/class/gpio/gpiochip512# cat label 
+            pinctrl-bcm2835
+            root@raspberrypi:/sys/class/gpio/gpiochip512# cat ngpio 
+            54
+
+
+        4、
+
+            root@raspberrypi:/# cd /sys/class/gpio/
+            root@raspberrypi:/sys/class/gpio# ls
+            export  gpiochip512  gpiochip566  unexport
+            gpiochip512 引脚编号
+            rpi 3B+  只有一组 gpio
+
+            所以我猜测 pin 27 的引脚编号是 512 + 27
+
+            echo 539 > /sys/class/gpio/export
+            echo in > /sys/class/gpio/gpio539/direction
+            cat /sys/calss/gpio539/value
+            echo 539 > /sys/class/gpio /unexport
+
+            可能是   把 539 换成 27
+
+
+    
 
 
 # =============== 知识点 ===============
