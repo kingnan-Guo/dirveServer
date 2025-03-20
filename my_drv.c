@@ -144,14 +144,14 @@ static int _chip_gpio_remove(struct platform_device *pdev){
 
 
 static const struct of_device_id _chip_gpio_of_match[] = {
-    { .compatible = "my_board_device,my_drv" }// my_board_device,my_drv 这个值 在 dtb 上配好的 
+    { .compatible = "my_outputs,my_drv" }// my_board_device,my_drv 这个值 在 dtb 上配好的 
 };
 
 static struct platform_driver _chip_gpio_dirver = {
     .probe = _chip_gpio_probe,
     .remove = _chip_gpio_remove,
     .driver = {
-        .name = "my_board_n",// 名字 用来跟 platform_device 配对 如果配对成功
+        .name = "my_outputs",// 名字 用来跟 platform_device 配对 如果配对成功
         .of_match_table = _chip_gpio_of_match
     },
 };
