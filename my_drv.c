@@ -122,9 +122,9 @@ static int _chip_gpio_probe(struct platform_device *pdev){
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
     // int err;
     // 1、 设备树 中定义 有 led-gpio=<>
-    _gpio = gpiod_get(&pdev->dev, "output_1", 0);
+    _gpio = gpiod_get(&pdev->dev, "input_1", 0);
     if(IS_ERR(_gpio)){
-        dev_err(&pdev->dev, "Failed to get GPIO for output_1 \n");
+        dev_err(&pdev->dev, "Failed to get GPIO for input_1 \n");
         return PTR_ERR(_gpio);
     }
 
@@ -172,14 +172,14 @@ static int _chip_gpio_remove(struct platform_device *pdev){
 
 
 static const struct of_device_id _chip_gpio_of_match[] = {
-    { .compatible = "my_outputs,my_drv" }// my_board_device,my_drv 这个值 在 dtb 上配好的 
+    { .compatible = "my_inputs,my_drv" }// my_board_device,my_drv 这个值 在 dtb 上配好的 
 };
 
 static struct platform_driver _chip_gpio_dirver = {
     .probe = _chip_gpio_probe,
     .remove = _chip_gpio_remove,
     .driver = {
-        .name = "my_outputs",// 名字 用来跟 platform_device 配对 如果配对成功
+        .name = "my_inputs",// 名字 用来跟 platform_device 配对 如果配对成功
         .of_match_table = _chip_gpio_of_match
     },
 };
