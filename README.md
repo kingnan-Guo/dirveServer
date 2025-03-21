@@ -369,10 +369,19 @@ App使用驱动的四种方式 ： dirveServer_tranfer_data_02
 
 
     然后对 dtb 进行打包
+
+        可以使用
             make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs_clean
             make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs
+            make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-  dtbs  V=1 
+            
+            
+        只编译设备树 
 
-        可以使用 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-  dtbs  V=1 只编译设备树 
+            编译结果
+            arch/arm64/boot/dts/broadcom/bcm2710-rpi-3-b-plus.dtb
+
+        
 
 
             make ARCH=arm CROSS_COMPILE=aarch64-linux-gnu- clean
@@ -404,22 +413,12 @@ App使用驱动的四种方式 ： dirveServer_tranfer_data_02
 
             在 
             /sys/devices/platform# 中可以看到 
-            my_board_n@0  my_board_n@1 两个设备树 解析之后得到的 节点
+            my_board_n@0  my_board_n@1 my_inputs my_outputs设备树 解析之后得到的 节点
 
 
-            root@raspberrypi:/sys/devices/platform/my_board_n@0# ls -l driver
-            lrwxrwxrwx 1 root root 0 Mar 16 14:33 driver -> ../../../bus/platform/drivers/my_board_n
-
-            # 因为 平台dirver 的 名字 是 my_board_n， 在 my_chip_board_gpio.c 中 my_chip_board_gpio_dirver 的 dirve name
-
-            root@raspberrypi:/sys/devices/platform/my_board_n@0# cd ../../../bus/platform/drivers/my_board_n
-            root@raspberrypi:/sys/bus/platform/drivers/my_board_n# pwd
-            /sys/bus/platform/drivers/my_board_n
+            ls /proc/device-tree 也可以看到
 
 
-            # my_board_n 平台驱动 platform_driver 支持 my_board_n@0  my_board_n@1 这两个设备
-            root@raspberrypi:/sys/bus/platform/drivers/my_board_n# ls
-            bind  module  my_board_n@0  my_board_n@1  uevent  unbind
 
 
 

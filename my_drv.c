@@ -94,9 +94,9 @@ static int _chip_gpio_probe(struct platform_device *pdev){
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
     // int err;
     // 1、 设备树 中定义 有 led-gpio=<>
-    _gpio = gpiod_get(&pdev->dev, "XXX", 0);
+    _gpio = gpiod_get(&pdev->dev, "output_1", 0);
     if(IS_ERR(_gpio)){
-        dev_err(&pdev->dev, "Failed to get GPIO for XXX \n");
+        dev_err(&pdev->dev, "Failed to get GPIO for output_1 \n");
         return PTR_ERR(_gpio);
     }
 
