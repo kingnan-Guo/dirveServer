@@ -37,7 +37,7 @@ static int _open(struct inode *inode, struct file *file) {
     // 干脆移除 gpiod_direction_output，因为在 probe 中已经设置过方向
     // gpiod_direction_output(_gpio, 0); // 这段要去掉的 原因 是 已经在初始化的 时候设置过方向，如果 ./main /dev/_dirver_0 on  运行时  会先调 open 然后 吧 输出设置成0 ，所以一直是 0
 
-    // 第二种方式 （还未尝试）
+    // 第二种方式 (已经尝试 可以用)
     // 修改 _open 函数
     // 避免每次打开时重置 GPIO 状态：
     // 只设置方向，不强制设置值
