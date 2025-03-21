@@ -430,7 +430,50 @@ App使用驱动的四种方式 ： dirveServer_tranfer_data_02
 
 
 
+
+
+
+
+
     修改 my_drv 
+
+
+
+
+
+
+
+
+    报错 找不到 
+
+
+    要修改 dts
+
+
+
+        my_outputs {
+            compatible = "my_outputs,my_drv";
+            pinctrl-names = "default";
+            pinctrl-0 = <&my_output_pins>;
+            output_1-gpios = <&gpio 27 GPIO_ACTIVE_HIGH>;
+        };
+
+
+
+        my_inputs {
+            compatible = "my_inputs,my_drv";
+            pinctrl-names = "default";
+            pinctrl-0 = <&my_input_pins>;
+
+            input_1-gpios = <&gpio 26 GPIO_ACTIVE_HIGH>;
+            input_1-linux,code = <28>;
+            input_1-debounce-interval = <50>; // 消抖时间 50ms
+        };
+
+
+
+
+
 
 
 

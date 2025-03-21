@@ -33,7 +33,18 @@ static struct gpio_desc *_gpio;
 static int _open(struct inode *inode, struct file *file) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
 
-    gpiod_direction_output(_gpio, 0);
+
+    // 干脆移除 gpiod_direction_output，因为在 probe 中已经设置过方向
+    // gpiod_direction_output(_gpio, 0); // 这段要去掉的 原因 是 已经在初始化的 时候设置过方向，如果 ./main /dev/_dirver_0 on  运行时  会先调 open 然后 吧 输出设置成0 ，所以一直是 0
+
+    // 第二种方式 （还未尝试）
+    // 修改 _open 函数
+    // 避免每次打开时重置 GPIO 状态：
+    // 只设置方向，不强制设置值
+    // gpiod_direction_output(_gpio, gpiod_get_value(_gpio)); // 保持当前值
+
+
+
 
     return 0;
 }
@@ -57,14 +68,31 @@ static ssize_t _read(struct file *file, char __user *buffer, size_t len, loff_t 
 static ssize_t _write(struct file *file, const char __user *buffer, size_t len, loff_t *offset) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
 
-    int err;
+
+    // int err;
     char status;
+    int value;
 
-    err = copy_from_user(&status, buffer, 1);
+    // err = copy_from_user(&status, buffer, 1);
+    // printk(" status  %s", status);
+    // // 根据次设备号 和 status 控制 XXX
+    // gpiod_set_value(_gpio, status);
+    if (copy_from_user(&status, buffer, 1)){
+        return -EFAULT;
+    }
+        
 
-    // 根据次设备号 和 status 控制 XXX
-    gpiod_set_value(_gpio, status);
+    // 转换 ASCII 字符到数值
+    if (status == '0') {
+        value = 0;
+    } else if (status == '1') {
+        value = 1;
+    } else {
+        printk(KERN_ERR "Invalid input: %c\n", status);
+        return -EINVAL;
+    }
 
+    gpiod_set_value(_gpio, value);
 
     return len;  // 返回写入的数据字节数
 }
