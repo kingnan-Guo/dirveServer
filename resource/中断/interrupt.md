@@ -139,7 +139,7 @@
             TIMER_SOFTIRQ,
             NET_TX_SOFTIRQ,
             NET_RX_SOFTIRQ,
-            BLOCK_SOFTIRQ,
+            BLOCK_SOFTIRQ, 
             BLOCK_IOPOLL_SOFTIRQ,
             TASKLET_SOFTIRQ, // tasklet 软件中断
             SCHED_SOFTIRQ,
@@ -147,3 +147,44 @@
             RCU_SOFTIRQ,
             NR_SOFTIRQS
         };
+
+
+4、Linux 中断系统中的重要数据结构
+    1、 GPIO --- GIC（中断控制器） ---- CPU
+        a: GIC 会中断cpu
+        b：cpu 会读取 GIC 中断的寄存器  ，来记录发生的 哪一个中断
+        c: 读取 gpio 控制器 ，来读取 是哪个 gpio 中断
+
+    2、struct irq_desc
+        a: 中断A
+            1、读取gpio 
+            2、确定 gpio 中断
+                a：如何判断，比如说一个gpio 上连接了两个中断， 一个是按钮、一个是 网卡
+                    1、 当 GIC 调用 gpio 寄存器 ，读取 gpio 中断号，然后判断是哪一个中断，比如说 gpio 中断号是 1 ，那么就判断是哪一个中断
+                    2、调用 网卡 的 中断处理函数 ，看看是不是网卡产生的
+    
+    3、 在设备树 里生命使用哪一个 中断
+        a:  
+            interrupt = <5 RISING>; 5 表示 硬件 中断号， 属于某一个 域 的 irq_domain， RISING 表示 上升沿触（irq_domain， 会把 5 号中断 转换成 软件 中断号）
+            interrupt-parent = <&gpio1>; 表示 是 谁的中断，表示  gpio1 这个节点 的中断， 中断控制器是 gpio1
+
+        b:  irq_domain 会提供 一些函数 
+            1、xlate  是用来解析设备节点的， 解析设备树 ； 比如说就把 5 解析成 hwirq ，hwirq 是硬件中断号， 把 RISING 解析成 trigger
+            2、map  是用来把 硬件中断号 5  转换成 虚拟中断号 XXX （不同于 软件中断号）， 建立 hwirq  和 软件中断号 的映射关系， 映射关系 会保存到 liner_revmap[] 中
+            3、 软件 中断号 会保存到 platfom_device->irq 中， 就可以使用 request_irq 注册这个中断，给这个 中断 提供 处理函数
+            4、 内核在处理这个设备树时 会
+
+
+        
+
+
+
+
+![中断内部处理过程](中断内部处理过程.png)
+![中断内部处理过程](./irq_data内部结构.png)
+
+
+
+5、在设备树中 指定中断， 在代码中获得中断
+    1、设备树里中断节点的 语法
+    2、
