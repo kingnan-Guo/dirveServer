@@ -187,4 +187,144 @@
 
 5、在设备树中 指定中断， 在代码中获得中断
     1、设备树里中断节点的 语法
-    2、
+        a: 设备树里描述 中断控制器 GIC （顶层的中断控制器）， 中断控制器找到对应的 驱动程序 ， 如何找到对应的 驱动程序
+            1、compatible = "xxxx"// 找到对应的 驱动程序
+            2、interrupt-controller;
+            3、#interrupt-cells = <2>; 如果想用这个中断控制器里的 某一个中断， 需要 几个 cell描述这个 中断
+        
+        b: 下一级 的中断控制器 描述中断； GPIO 也可以被认为一个 中断控制器， 但是 GPIO 仍然 要 使用到上一级的 中断控制器 的 某一个中断
+            1、compatible = "xxxx"// 找到对应的 驱动程序
+            2、interrupt-controller;
+            3、#interrupt-cells = <2>; 如果想用这个中断控制器里的 某一个中断， 需要 几个 cell描述这个 中断
+            4、使用 上一级哪一个 中断控制器 的哪一个中断
+                a: interrupt-parent = <&intc>; // 使用 gic 这个节点 的中断
+                b: interrupts = <GIC_SPI 89 ITQ_TYPE_LEVEL_HIGH> <6 XXX>; // 描述一个中断, 用多少个 cell 描述这个中断 ，由 interrupt-parent 的 #interrupt-cells 决定； interrupts 中 向 intc 发送 89 号中断， 查表 89 号中断 是 gpc
+        
+        c: 对于用户 想使用 某一个中断的时候也需要 指定 
+            1、interrupt-parent
+            2、interrupts
+            3、 可以使用一个新的 属性代替 interrupts， interrupt-parent ； 就是 interrupts-extended = <&intc1 5 1>, <intc2 1 0> ; intc1 表示 是哪一个中断控制器 ， 后面的 5 1 由 中断控制的  cells 来决定， 
+                a
+    2、 用户只需要 指定使用哪个中断就可以了
+
+        a: 如何使用
+            1、interrupt-parent=<&gpio1> 指定要使用的额中断控制器
+            2、interrupts=<1 1> 指定使用哪一个中断, 使用 gpio1 的1 号引脚， 第二个 1 表示 触发类型； 1表示上升沿触发 2 表示下降沿触发 4 表示高电平触发 8 表示低电平触发 ，如果想同时使用 1 2 那么 就写 3 双边沿 触发
+
+        b: 代码中如何获得这个中断   
+            1、如果一个节点可以被转换成 platfor_device ,如果他的设备里指定了中断属性，那么可以从 platform_device 中获得 中断资源
+                a: platform_device->dev.of_node; 获得设备树节点
+
+                platform_get_resources(dev, type, num) ; type 哪个类型的资源 ： IRQ_RESOURCE_MEN, IRQ_RESOURCE_REG
+                <!-- b: of_irq_get(of_node, 0); 获得中断号， 0 表示使用 第一个中断， 如果有多个中断，可以使用 1 2 3 4 来获得
+                c: request_irq(中断号, 中断处理函数, 触发类型, "name", NULL); 注册中断处理函数 -->
+            2、如果一个节点不能被转换成 platfor_device 
+                eg: i2C 设备 ，I2C 设备总线驱动在处理设备树里的 I2C子节点时，也会粗粒其中的 中断信息。 下面有很多i2c 的子节点，i2c 总线会把下面 的i2C设备转换成一个 i2C_client 结构体，中断号会保存在 i2C_client 的 irq 成员里
+                    spi 设备， SPI总线驱动在处理设备里的 spiu 子节点时 也会处理其中的 中断信息，下面有很多 spi 子节点， spi 总线会把下面的 spi 子节点转换成一个 spi_device 结构体，中断号会保存在 spi_device 的 irq 成员里
+            3、 使用if_irq_get 函数 解析中断信息获得节点， 获得中断号
+            4、GPIO
+                gpio_to_irq
+                gpiod_to_irq
+
+
+
+
+2025/03/24 00:05
+
+6、处理器 中断
+    PPI: private peripheral interrupt; 
+    SPI: shared peripheral interrupt;
+    SGI: software generated interrupt; cpu 核之间的 通信
+
+        如何使用 GIC 里面的中断 
+            1、 先指定类别 PPI SPI SGI
+            2、在指定哪一个
+            3、类型 指定边沿触发 还是电平触发
+        
+        每个中断号对应一个功能
+            1、比如说 imx6ULL 的 66 号中断就是 0-15 号引脚的 总和，只要有一个引脚发生中断， 就会触发 gpio 模块的 想上一级中断控制器 发送66 号中断
+            2、 89 号中断 
+
+
+
+
+7、编写驱动
+    1、确定使用的引脚 ，暂定 pin 25
+
+
+
+
+
+    设备树
+        1、 通过 Pinctrl 设置 gpio 引脚 工作于 gpio 模式。
+        2、是哪一个GPIO 模块里的 哪一个引脚
+
+
+
+    /{
+        my_interrupts {
+            compatible = "my_interrupts,my_drv"; // 设备树里根据 这个值 与 platform_driver 的 of_device_id 里的 compatible 值进行匹配
+
+            pinctrl-names = "default";
+            pinctrl-0 = <&my_interrupt_pins>;// 要去配置 pinctrl
+            gpios = <&gpio 25 GPIO_ACTIVE_LOW>, <&gpio 24 GPIO_ACTIVE_LOW>;
+            interrupt-parent = <&gpio>;// 指定 GPIO 控制器作为中断的 父级节点
+            interrupts = <24 2>, <25 2>; // 声明使用 24 25 号引脚， 触发类型为 2 下降沿触发，Raspberry Pi 的 GPIO 中断不支持在 interrupts 中直接用 3 表示双边沿触发
+            status = "okay"; // 表示设备可用
+        };
+
+
+
+        /* my interrupt */
+        my_interrupts {
+            compatible = "my_interrupts,my_drv";
+            pinctrl-names = "default";
+            pinctrl-0 = <&my_interrupt_pins>;
+            gpios = <&gpio 25 GPIO_ACTIVE_LOW>, <&gpio 24 GPIO_ACTIVE_LOW>;
+            interrupt-parent = <&gpio>;
+            interrupts = <24 2>, <25 2>;
+            status = "okay";
+        };
+
+
+    };
+
+
+
+    &gpio {
+
+
+        my_interrupt_pins: my_interrupt_pins  {
+            brcm,pins = <24 25>;// 引脚号
+            brcm,function = <0>;// 输入模式
+            brcm,pull = <2>;// 上拉
+        };
+
+
+        my_interrupt_pins: my_interrupt_pins {
+            brcm,pins = <24 25>;
+            brcm,function = <0>;
+            brcm,pull = <2>;
+        };
+
+    }
+
+
+    可以使用
+    
+        make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs_clean
+        make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs
+        make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-  dtbs  V=1 
+            
+    只编译设备树
+
+            编译结果
+            arch/arm64/boot/dts/broadcom/bcm2710-rpi-3-b-plus.dtb
+
+
+    打包出来的 设备树 替换掉 本来的设备树
+        复制 新的 设备树 到 /boot/firmware/下 备份之前的 bcm2710-rpi-3-b-plus.dtb
+
+
+        ls /proc/device-tree/
+        ls /sys/devices/platform/
