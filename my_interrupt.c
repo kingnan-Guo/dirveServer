@@ -15,234 +15,236 @@
 #include <linux/gfp.h>
 #include <linux/platform_device.h>
 #include <linux/of.h>
+#include <linux/of_gpio.h>
 #include <linux/interrupt.h>
 #include <linux/irq.h>
 #include <linux/slab.h>
 #include <linux/gpio/consumer.h>
 
+#define DEVICE_NAME "my_gpio_keys"
 
-
-#define _NAME "key_diver"
-
-static int major; // 设备主号
-
-static struct class *_class;
-static struct gpio_desc *_gpio;
-
-
-
-// 定义全局的 结构体数组 用于保存 gpio  flags irq
+static int major;
+static struct class *gpio_class;
 
 struct gpio_key {
-    int gpio;
-    enum of_gpio_flags flag;
-    int irq;
+    struct gpio_desc *desc; // GPIO 描述符
+    int irq;                // 中断号
+    int index;              // GPIO 索引
 };
 
-// 我感觉需要定义一个数据 ，但老师 有点浪费 说定义一个结构体指针，之后再分配
 static struct gpio_key *gpio_keys;
+static int gpio_count;
 
-
-static int _open(struct inode *inode, struct file *file) {
-    printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
+/* 文件操作函数 */
+static int my_open(struct inode *inode, struct file *file)
+{
+    printk(KERN_INFO "%s: Device opened\n", DEVICE_NAME);
     return 0;
 }
 
-static ssize_t _read(struct file *file, char __user *buffer, size_t len, loff_t *offset) {
-    printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
-    char level = '0';
-    if(gpiod_get_value(_gpio)){
-        level = '1';
-    }
-    if (copy_to_user(buffer, &level, 1)) {
-        printk(KERN_ERR "Failed to copy GPIO status to user\n");
-        return -EFAULT;
-    }
-    return 1;  // 返回读取的字节数
-}
-
-// 写入设备
-static ssize_t _write(struct file *file, const char __user *buffer, size_t len, loff_t *offset) {
-    printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
-    return len;  // 返回写入的数据字节数
-}
-
-static int _release(struct inode *inode, struct file *file) {
-    printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
+static ssize_t my_read(struct file *file, char __user *buffer, size_t len, loff_t *offset)
+{
+    printk(KERN_INFO "%s: Write operation not supported\n", DEVICE_NAME);
     return 0;
 }
 
-static struct file_operations _fops = {
+static ssize_t my_write(struct file *file, const char __user *buffer, size_t len, loff_t *offset)
+{
+    printk(KERN_INFO "%s: Write operation not supported\n", DEVICE_NAME);
+    return -EINVAL;
+}
+
+static int my_release(struct inode *inode, struct file *file)
+{
+    printk(KERN_INFO "%s: Device closed\n", DEVICE_NAME);
+    return 0;
+}
+
+static const struct file_operations my_fops = {
     .owner = THIS_MODULE,
-    .read = _read,
-    .write = _write,
-    .open = _open,
-    .release = _release
+    .open = my_open,
+    .read = my_read,
+    .write = my_write,
+    .release = my_release,
 };
 
-
-
-
-// 中断处理函数
-static irqreturn_t gpio_key_isr(int irq, void *dev_id){
-    struct gpio_key *gpio_key = dev_id;
-    // 读取对应的 引脚 来获取电平
-
-    printk("key %d  value %d\n", irq, gpio_get_value(gpio_key->gpio));
-
-
-    return IRQ_HANDLED;// 返回 IRQ_HANDLED 表示中断处理完成
-
+/* 中断处理函数 */
+static irqreturn_t gpio_key_isr(int irq, void *dev_id)
+{
+    struct gpio_key *key = dev_id;
+    int value = gpiod_get_value(key->desc);
+    printk(KERN_INFO "%s: Interrupt on GPIO %d (IRQ %d), value = %d\n",
+           DEVICE_NAME, key->index, irq, value);
+    return IRQ_HANDLED;
 }
 
+/* 平台设备探测函数 */
+static int my_gpio_probe(struct platform_device *pdev)
+{
+    struct device *dev = &pdev->dev;
+    struct device_node *node = dev->of_node;
+    int err, i;
 
-/// @brief 
-/// @param pdev 
-/// @return 
-static int _chip_gpio_probe(struct platform_device *pdev){
-    printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
+    printk(KERN_INFO "%s: Probing device\n", DEVICE_NAME);
 
+    if (!node) {
+        dev_err(dev, "No device tree node found!\n");
+        return -ENODEV;
+    }
+    printk(KERN_INFO "%s: Device tree node found: %s\n", DEVICE_NAME, node->full_name);
 
-    int count;// gpio 的数量
-    struct device_node *node = pdev->dev.of_node;// 获取设备节点
-    enum of_gpio_flags flag;// gpio 的 flags
-    int gpio;// 引脚编号
-    int irq;// 中断号
-    int err;
-    
+    gpio_count = of_count_phandle_with_args(node, "interrupt-gpios", "#gpio-cells");
+    if (gpio_count <= 0) {
+        dev_err(dev, "No GPIOs found in device tree, count = %d\n", gpio_count);
+        return -EINVAL;
+    }
+    printk(KERN_INFO "%s: Found %d GPIOs\n", DEVICE_NAME, gpio_count);
 
+    if (!of_find_property(node, "interrupt-gpios", NULL)) {
+        dev_err(dev, "No 'gpios' property in device tree!\n");
+        return -EINVAL;
+    }
+    if (!of_find_property(node, "pinctrl-0", NULL)) {
+        dev_err(dev, "No 'pinctrl-0' property in device tree!\n");
+        return -EINVAL;
+    }
 
-    // 获取 gpio 的数量
-    // pdev->dev.of_node 是 device_node 结构体，表示设备树节点
-    count = of_gpio_count(node);
+    gpio_keys = devm_kzalloc(dev, sizeof(struct gpio_key) * gpio_count, GFP_KERNEL);
+    if (!gpio_keys) {
+        dev_err(dev, "Failed to allocate memory for gpio_keys\n");
+        return -ENOMEM;
+    }
 
-    /**
-     * 申请内存空间，用于保存 gpio 的 flags 和 irq
-     * kzalloc : k 表示内核， z 表示清零， alloc 表示分配内存, 分配好了之后 把内容清空
-     * kzalloc 传参
-     *  1、申请的内存大小
-     *  2、内存分配的标志
-     *  3、返回值是一个指针，指向分配的内存空间
-     * 
-     * GFP_KERNEL: 用于内核线程，可以睡眠
-     * GFP_ATOMIC: 用于中断上下文，不可以睡眠
-     * GFP_DMA: 用于DMA内存，可以睡眠
-     * GFP_USER: 用于用户空间，可以睡眠
-     * GFP_HIGHMEM: 用于高端内存，可以睡眠
-     * GFP_ZERO: 分配内存后，将内存清零
-     * GFP_NOIO: 不允许分配高端内存
-     * GFP_NOFS: 不允许分配文件系统内存
-     * GFP_NOWAIT: 不等待内存分配成功
-     * GFP_ATOMIC: 不允许睡眠
-     */
-    gpio_keys = kzalloc(sizeof(struct gpio_key) * count, GFP_KERNEL);
-    int i;
-    // 要把设备 节点 里面 的 的每一个 gpio 引脚 都 取出来，取出来之后 再转换成 中断号
-    for (i = 0; i < count; i++)
-    {
-        // gpiod_get_index(node, i, );
+    for (i = 0; i < gpio_count; i++) {
+        struct gpio_desc *desc;
+        unsigned int gpio_num;
 
+        /* 从设备树解析 GPIO 编号 */
+        // gpio_num = of_get_gpio(node, i);
+        gpio_num = of_get_named_gpio(node, "interrupt-gpios", i);
+        if (gpio_num < 0) {
+            dev_err(dev, "Failed to parse GPIO %d from DT: %d\n", i, gpio_num);
+            err = gpio_num;
+            goto free_gpios;
+        }
+        printk(KERN_INFO "%s: GPIO %d parsed as %u\n", DEVICE_NAME, i, gpio_num);
 
-        // 获得 gpio 的 flags, 获取 i 个 gpio 的编号 ， 从 device_node 里面取出来,
-        //  第 i 个 gpio 
-        // 并且把 flags 保存下来
-        gpio = of_get_gpio_flags(node, i, &flag);
-        // 使用 gpio 转换成 中断号， 需要知道这个 引脚的 编号
-        irq = gpio_to_irq(gpio);
+        /* 获取 GPIO 描述符 */
+        desc = gpiod_get_index(dev, "interrupt", i, GPIOD_IN);
+        if (IS_ERR(desc)) {
+            err = PTR_ERR(desc);
+            dev_err(dev, "Failed to get GPIO %d (num %u): %d\n", i, gpio_num, err);
+            if (err == -ENOENT)
+                dev_err(dev, "GPIO %u not found in system\n", gpio_num);
+            else if (err == -EBUSY)
+                dev_err(dev, "GPIO %u is busy\n", gpio_num);
+            else if (err == -EPROBE_DEFER)
+                dev_err(dev, "GPIO %u probe deferred\n", gpio_num);
+            goto free_gpios;
+        }
 
+        int irq = gpiod_to_irq(desc);
+        if (irq < 0) {
+            dev_err(dev, "Failed to get IRQ for GPIO %d: %d\n", i, irq);
+            gpiod_put(desc);
+            err = irq;
+            goto free_gpios;
+        }
 
-        gpio_keys[i].gpio = gpio;
+        gpio_keys[i].desc = desc;
         gpio_keys[i].irq = irq;
-        gpio_keys[i].flag = flag;
+        gpio_keys[i].index = i;
 
-        
-        // 申请中断，中断号，中断处理函数，中断标志
-        // 参数
-        // 1、中断号； 申请 哪一个中断，
-        // 2、中断处理函数； gpio_key_isr; 当发生中断的时候内核 会 调用 gpio_key_isr 函数， 并且会把 &gpio_keys[i]  参数 传给 gpio_key_isr
-        // 3、中断标志; flags 用来描述中断的类型，是上升沿触发，还是下降沿触发，还是高电平触发，还是低电平触发; IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING  双边沿 触发
+        err = devm_request_irq(dev, irq, gpio_key_isr,
+                               IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
+                               "my_gpio_key", &gpio_keys[i]);
+        if (err) {
+            dev_err(dev, "Failed to request IRQ %d for GPIO %d: %d\n", irq, i, err);
+            gpiod_put(desc);
+            goto free_gpios;
+        }
 
-        // 4、中断处理函数的名称
-        // 5、中断处理函数 的 指针
-
-        err = request_irq(irq, gpio_key_isr, IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, "gpio_key", &gpio_keys[i]);
+        dev_info(dev, "Registered IRQ %d for GPIO %d\n", irq, i);
     }
-    
 
+    major = register_chrdev(0, DEVICE_NAME, &my_fops);
+    if (major < 0) {
+        dev_err(dev, "Failed to register character device: %d\n", major);
+        err = major;
+        goto free_gpios;
+    }
 
+    gpio_class = class_create(DEVICE_NAME);
+    if (IS_ERR(gpio_class)) {
+        err = PTR_ERR(gpio_class);
+        dev_err(dev, "Failed to create class: %d\n", err);
+        unregister_chrdev(major, DEVICE_NAME);
+        goto free_class;
+    }
+
+    device_create(gpio_class, NULL, MKDEV(major, 0), NULL, DEVICE_NAME);
+
+    dev_info(dev, "Driver initialized successfully, major = %d\n", major);
     return 0;
 
-
-}
-
-/// @brief 清除驱动
-/// @param pdev 
-/// @return 
-static int _chip_gpio_remove(struct platform_device *pdev){
-
-
-    int count;// gpio 的数量
-    struct device_node *node = pdev->dev.of_node;// 获取设备节点
-
-    count = of_gpio_count(node);
-    int i;
-    for (i = 0; i < count; i++)
-    {
-        free_irq(gpio_keys[i].irq, &gpio_keys[i]);// 释放中断
+free_gpios:
+    for (i = i - 1; i >= 0; i--) {
+        gpiod_put(gpio_keys[i].desc);
     }
-    
-
-
-
-
-    device_destroy(_class, MKDEV(major, 0)); // 销毁设备
-    class_destroy(_class);// 销毁 class
-    unregister_chrdev(major, _NAME);// 卸载驱动 注销字符设备
-    // 清除 gpio
-    gpiod_put(_gpio);
-    return 0;
-}
-
-
-
-static const struct of_device_id _chip_gpio_of_match[] = {
-    { .compatible = "my_interrupts,my_drv" }// my_board_device,my_drv 这个值 在 dtb 上配好的 
-};
-
-static struct platform_driver _chip_gpio_dirver = {
-    .probe = _chip_gpio_probe,
-    .remove = _chip_gpio_remove,
-    .driver = {
-        .name = "my_interrupts",// 名字 用来跟 platform_device 配对 如果配对成功
-        .of_match_table = _chip_gpio_of_match
-    },
-};
-
-
-
-
-
-
-
-// 模块加载时执行的函数 
-static int __init device_init(void) {
-    printk(KERN_INFO "========= %s %s %d  ========= \n", __FILE__, __FUNCTION__, __LINE__);
-    // 入口函数里 注册 _chip_gpio_dirver 结构体
-    int err;
-    err = platform_driver_register(&_chip_gpio_dirver);// 注册 _chip_gpio_dirver 会调用  probe
+free_class:
     return err;
 }
 
-// 模块卸载时执行的函数
-static void __exit device_exit(void) {
-    platform_driver_unregister(&_chip_gpio_dirver);// 会调用 remove
-    printk(KERN_INFO "Entering _exit\n");
+/* 平台设备移除函数 */
+static int my_gpio_remove(struct platform_device *pdev)
+{
+    int i;
+
+    device_destroy(gpio_class, MKDEV(major, 0));
+    class_destroy(gpio_class);
+    unregister_chrdev(major, DEVICE_NAME);
+
+    for (i = 0; i < gpio_count; i++) {
+        gpiod_put(gpio_keys[i].desc);
+    }
+
+    printk(KERN_INFO "%s: Driver removed\n", DEVICE_NAME);
+    return 0;
 }
 
-// 定义模块的加载和卸载函数
-module_init(device_init);
-module_exit(device_exit);
+/* 设备树匹配表 */
+static const struct of_device_id my_gpio_of_match[] = {
+    { .compatible = "my_interrupts,my_drv" },
+    { /* sentinel */ }
+};
+MODULE_DEVICE_TABLE(of, my_gpio_of_match);
+
+/* 平台驱动定义 */
+static struct platform_driver my_gpio_driver = {
+    .probe = my_gpio_probe,
+    .remove = my_gpio_remove,
+    .driver = {
+        .name = "my_interrupts",
+        .of_match_table = my_gpio_of_match,
+    },
+};
+
+/* 模块初始化和退出 */
+static int __init my_module_init(void)
+{
+    printk(KERN_INFO "%s: Initializing module\n", DEVICE_NAME);
+    return platform_driver_register(&my_gpio_driver);
+}
+
+static void __exit my_module_exit(void)
+{
+    platform_driver_unregister(&my_gpio_driver);
+    printk(KERN_INFO "%s: Module exited\n", DEVICE_NAME);
+}
+
+module_init(my_module_init);
+module_exit(my_module_exit);
 
 MODULE_LICENSE("GPL");
-
-
+MODULE_AUTHOR("Your Name");
+MODULE_DESCRIPTION("GPIO Interrupt Driver for Raspberry Pi");
