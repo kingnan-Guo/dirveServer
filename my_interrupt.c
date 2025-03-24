@@ -27,9 +27,11 @@ static int major;
 static struct class *gpio_class;
 
 struct gpio_key {
+    int gpio;
     struct gpio_desc *desc; // GPIO 描述符
     int irq;                // 中断号
     int index;              // GPIO 索引
+    
 };
 
 static struct gpio_key *gpio_keys;
@@ -68,13 +70,16 @@ static const struct file_operations my_fops = {
     .release = my_release,
 };
 
+
+
+
+
 /* 中断处理函数 */
 static irqreturn_t gpio_key_isr(int irq, void *dev_id)
 {
     struct gpio_key *key = dev_id;
     int value = gpiod_get_value(key->desc);
-    printk(KERN_INFO "%s: Interrupt on GPIO %d (IRQ %d), value = %d\n",
-           DEVICE_NAME, key->index, irq, value);
+    printk(KERN_INFO "%s: Interrupt on GPIO %d (IRQ %d), value = %d\n", DEVICE_NAME, key->index, irq, value);
     return IRQ_HANDLED;
 }
 
@@ -87,20 +92,16 @@ static int my_gpio_probe(struct platform_device *pdev)
 
     printk(KERN_INFO "%s: Probing device\n", DEVICE_NAME);
 
-    if (!node) {
-        dev_err(dev, "No device tree node found!\n");
-        return -ENODEV;
-    }
-    printk(KERN_INFO "%s: Device tree node found: %s\n", DEVICE_NAME, node->full_name);
+    // gpio_count = of_count_phandle_with_args(node, "interrupt-gpios", "#gpio-cells");
 
-    gpio_count = of_count_phandle_with_args(node, "interrupt-gpios", "#gpio-cells");
+    gpio_count = gpiod_count(dev, NULL);
     if (gpio_count <= 0) {
         dev_err(dev, "No GPIOs found in device tree, count = %d\n", gpio_count);
         return -EINVAL;
     }
     printk(KERN_INFO "%s: Found %d GPIOs\n", DEVICE_NAME, gpio_count);
 
-    if (!of_find_property(node, "interrupt-gpios", NULL)) {
+    if (!of_find_property(node, "gpios", NULL)) {
         dev_err(dev, "No 'gpios' property in device tree!\n");
         return -EINVAL;
     }
@@ -109,41 +110,31 @@ static int my_gpio_probe(struct platform_device *pdev)
         return -EINVAL;
     }
 
+
+    // gpio_keys = kzalloc(sizeof(struct gpio_key) * gpio_count, GFP_KERNEL);
+    // 设备 卸载的时候 自动清除
     gpio_keys = devm_kzalloc(dev, sizeof(struct gpio_key) * gpio_count, GFP_KERNEL);
     if (!gpio_keys) {
         dev_err(dev, "Failed to allocate memory for gpio_keys\n");
         return -ENOMEM;
     }
 
-    for (i = 0; i < gpio_count; i++) {
-        struct gpio_desc *desc;
+
+    for (i = 0; i < gpio_count; i++)
+    {
         unsigned int gpio_num;
+        struct gpio_desc *desc;
+        // 获取 gpio 的编号
+        // gpio_num = gpiod_get(node, i);
 
-        /* 从设备树解析 GPIO 编号 */
-        // gpio_num = of_get_gpio(node, i);
-        gpio_num = of_get_named_gpio(node, "interrupt-gpios", i);
-        if (gpio_num < 0) {
-            dev_err(dev, "Failed to parse GPIO %d from DT: %d\n", i, gpio_num);
-            err = gpio_num;
-            goto free_gpios;
-        }
-        printk(KERN_INFO "%s: GPIO %d parsed as %u\n", DEVICE_NAME, i, gpio_num);
-
-        /* 获取 GPIO 描述符 */
-        desc = gpiod_get_index(dev, "interrupt", i, GPIOD_IN);
+        desc = gpiod_get_index(dev, NULL, i, GPIOD_IN);
         if (IS_ERR(desc)) {
             err = PTR_ERR(desc);
             dev_err(dev, "Failed to get GPIO %d (num %u): %d\n", i, gpio_num, err);
-            if (err == -ENOENT)
-                dev_err(dev, "GPIO %u not found in system\n", gpio_num);
-            else if (err == -EBUSY)
-                dev_err(dev, "GPIO %u is busy\n", gpio_num);
-            else if (err == -EPROBE_DEFER)
-                dev_err(dev, "GPIO %u probe deferred\n", gpio_num);
             goto free_gpios;
         }
 
-        int irq = gpiod_to_irq(desc);
+        int irq = gpiod_to_irq(desc); // 获取中断号
         if (irq < 0) {
             dev_err(dev, "Failed to get IRQ for GPIO %d: %d\n", i, irq);
             gpiod_put(desc);
@@ -155,44 +146,179 @@ static int my_gpio_probe(struct platform_device *pdev)
         gpio_keys[i].irq = irq;
         gpio_keys[i].index = i;
 
-        err = devm_request_irq(dev, irq, gpio_key_isr,
-                               IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
-                               "my_gpio_key", &gpio_keys[i]);
+
+        err = devm_request_irq(
+            dev,
+            irq,
+            gpio_key_isr,
+            IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, // 设置中断触发方式
+            "my_gpio_key", // 中断名字
+            &gpio_keys[i] // 传递给中断处理函数 gpio_key_isr 的参数
+        );
+
         if (err) {
             dev_err(dev, "Failed to request IRQ %d for GPIO %d: %d\n", irq, i, err);
             gpiod_put(desc);
             goto free_gpios;
         }
 
-        dev_info(dev, "Registered IRQ %d for GPIO %d\n", irq, i);
-    }
 
+        dev_info(dev, "Registered IRQ %d for GPIO %d\n", irq, i);
+
+    }
+    
+
+
+
+
+
+    // 2、 注册  file_operations _fops
     major = register_chrdev(0, DEVICE_NAME, &my_fops);
     if (major < 0) {
         dev_err(dev, "Failed to register character device: %d\n", major);
         err = major;
         goto free_gpios;
+        return major;
     }
 
-    gpio_class = class_create(DEVICE_NAME);
-    if (IS_ERR(gpio_class)) {
-        err = PTR_ERR(gpio_class);
+    gpio_class = class_create("my_gpio_keys_class");
+    if(IS_ERR(gpio_class)){
+        printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
         dev_err(dev, "Failed to create class: %d\n", err);
-        unregister_chrdev(major, DEVICE_NAME);
-        goto free_class;
+		unregister_chrdev(major, DEVICE_NAME);
+        // printk("failed to allocate class\n");
+        // return PTR_ERR(gpio_class);
     }
 
-    device_create(gpio_class, NULL, MKDEV(major, 0), NULL, DEVICE_NAME);
+
+
+    char device_name_buf[30];
+    int minor = 0;
+    snprintf(device_name_buf, sizeof(device_name_buf), "%s_%d", DEVICE_NAME, minor);
+    device_create(gpio_class, NULL, MKDEV(major, minor), NULL, device_name_buf);//创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件  
+    // device_create(_class, NULL, MKDEV(major, 0), NULL, "100ask_led%d", 0);
+
+
+
+
+
+    free_gpios:
+        for (i = i - 1; i >= 0; i--) {
+            gpiod_put(gpio_keys[i].desc);
+        }
+
+
 
     dev_info(dev, "Driver initialized successfully, major = %d\n", major);
-    return 0;
 
-free_gpios:
-    for (i = i - 1; i >= 0; i--) {
-        gpiod_put(gpio_keys[i].desc);
-    }
-free_class:
-    return err;
+
+//     if (!node) {
+//         dev_err(dev, "No device tree node found!\n");
+//         return -ENODEV;
+//     }
+//     printk(KERN_INFO "%s: Device tree node found: %s\n", DEVICE_NAME, node->full_name);
+
+//     gpio_count = of_count_phandle_with_args(node, "gpios", "#gpio-cells");
+//     if (gpio_count <= 0) {
+//         dev_err(dev, "No GPIOs found in device tree, count = %d\n", gpio_count);
+//         return -EINVAL;
+//     }
+//     printk(KERN_INFO "%s: Found %d GPIOs\n", DEVICE_NAME, gpio_count);
+
+//     if (!of_find_property(node, "gpios", NULL)) {
+//         dev_err(dev, "No 'gpios' property in device tree!\n");
+//         return -EINVAL;
+//     }
+//     if (!of_find_property(node, "pinctrl-0", NULL)) {
+//         dev_err(dev, "No 'pinctrl-0' property in device tree!\n");
+//         return -EINVAL;
+//     }
+
+//     gpio_keys = devm_kzalloc(dev, sizeof(struct gpio_key) * gpio_count, GFP_KERNEL);
+//     if (!gpio_keys) {
+//         dev_err(dev, "Failed to allocate memory for gpio_keys\n");
+//         return -ENOMEM;
+//     }
+
+//     for (i = 0; i < gpio_count; i++) {
+//         struct gpio_desc *desc;
+//         unsigned int gpio_num;
+
+//         /* 从设备树解析 GPIO 编号 */
+//         // gpio_num = of_get_gpio(node, i);
+//         gpio_num = of_get_named_gpio(node, "gpios", i);
+//         if (gpio_num < 0) {
+//             dev_err(dev, "Failed to parse GPIO %d from DT: %d\n", i, gpio_num);
+//             err = gpio_num;
+//             goto free_gpios;
+//         }
+//         printk(KERN_INFO "%s: GPIO %d parsed as %u\n", DEVICE_NAME, i, gpio_num);
+
+//         /* 获取 GPIO 描述符 */
+//         desc = gpiod_get_index(dev, NULL, i, GPIOD_IN);
+//         if (IS_ERR(desc)) {
+//             err = PTR_ERR(desc);
+//             dev_err(dev, "Failed to get GPIO %d (num %u): %d\n", i, gpio_num, err);
+//             if (err == -ENOENT)
+//                 dev_err(dev, "GPIO %u not found in system\n", gpio_num);
+//             else if (err == -EBUSY)
+//                 dev_err(dev, "GPIO %u is busy\n", gpio_num);
+//             else if (err == -EPROBE_DEFER)
+//                 dev_err(dev, "GPIO %u probe deferred\n", gpio_num);
+//             goto free_gpios;
+//         }
+
+//         int irq = gpiod_to_irq(desc);
+//         if (irq < 0) {
+//             dev_err(dev, "Failed to get IRQ for GPIO %d: %d\n", i, irq);
+//             gpiod_put(desc);
+//             err = irq;
+//             goto free_gpios;
+//         }
+
+//         gpio_keys[i].desc = desc;
+//         gpio_keys[i].irq = irq;
+//         gpio_keys[i].index = i;
+
+//         err = devm_request_irq(dev, irq, gpio_key_isr,
+//                                IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
+//                                "my_gpio_key", &gpio_keys[i]);
+//         if (err) {
+//             dev_err(dev, "Failed to request IRQ %d for GPIO %d: %d\n", irq, i, err);
+//             gpiod_put(desc);
+//             goto free_gpios;
+//         }
+
+//         dev_info(dev, "Registered IRQ %d for GPIO %d\n", irq, i);
+//     }
+
+//     major = register_chrdev(0, DEVICE_NAME, &my_fops);
+//     if (major < 0) {
+//         dev_err(dev, "Failed to register character device: %d\n", major);
+//         err = major;
+//         goto free_gpios;
+//     }
+
+//     gpio_class = class_create(DEVICE_NAME);
+//     if (IS_ERR(gpio_class)) {
+//         err = PTR_ERR(gpio_class);
+//         dev_err(dev, "Failed to create class: %d\n", err);
+//         unregister_chrdev(major, DEVICE_NAME);
+//         goto free_class;
+//     }
+
+//     device_create(gpio_class, NULL, MKDEV(major, 0), NULL, DEVICE_NAME);
+
+//     dev_info(dev, "Driver initialized successfully, major = %d\n", major);
+//     return 0;
+
+// free_gpios:
+//     for (i = i - 1; i >= 0; i--) {
+//         gpiod_put(gpio_keys[i].desc);
+//     }
+// free_class:
+//     return err;
+    return 0;
 }
 
 /* 平台设备移除函数 */
@@ -211,6 +337,12 @@ static int my_gpio_remove(struct platform_device *pdev)
     printk(KERN_INFO "%s: Driver removed\n", DEVICE_NAME);
     return 0;
 }
+
+
+
+
+
+
 
 /* 设备树匹配表 */
 static const struct of_device_id my_gpio_of_match[] = {

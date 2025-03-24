@@ -310,6 +310,21 @@
     }
 
 
+    关于设备树
+        gpios = <&gpio 25 GPIO_ACTIVE_LOW>, <&gpio 24 GPIO_ACTIVE_LOW>;
+    改成
+        interrupt-gpios = <&gpio 25 GPIO_ACTIVE_LOW>, <&gpio 24 GPIO_ACTIVE_LOW>;
+
+        在 驱动中使用 
+         desc = gpiod_get_index(dev, "interrupt", i, GPIOD_IN);
+
+
+        
+    然后我发现 如果是  gpios = <&gpio 25 GPIO_ACTIVE_LOW>, <&gpio 24 GPIO_ACTIVE_LOW>;
+    那么可以使用   desc = gpiod_get_index(dev, NULL, i, GPIOD_IN);
+
+
+
     可以使用
     
         make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs_clean
@@ -331,3 +346,4 @@
         dmesg | tail
         cat /proc/devices  
         
+
