@@ -50,7 +50,7 @@
 		compatible = "my_interrupts,my_drv";
 		pinctrl-names = "default";
 		pinctrl-0 = <&my_interrupt_pins>;
-		gpios = <&gpio 25 GPIO_ACTIVE_LOW>, <&gpio 24 GPIO_ACTIVE_LOW>;
+		interrupt-gpios = <&gpio 25 GPIO_ACTIVE_LOW>, <&gpio 24 GPIO_ACTIVE_LOW>;
 		interrupt-parent = <&gpio>;
 		interrupts = <24 2>, <25 2>;
 		status = "okay";
