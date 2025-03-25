@@ -40,6 +40,60 @@ static int gpio_count;
 static int global_key = 0;// 用在 
 
 DECLARE_WAIT_QUEUE_HEAD(my_wait_queue);
+
+
+
+
+
+/**
+ * 环形缓冲区
+ *  
+ * 
+ */
+
+// static const int BUFFER_LEN = 128;
+#define BUFFER_LEN 128
+static int global_int_buffer[BUFFER_LEN];
+static int read_index = 0;
+static int write_index = 0;
+
+// 指针的下一个位置
+static int next_pos(int pos){
+    return (pos + 1) % BUFFER_LEN;
+}
+
+// 当 读取指针 等于 写入指针 时, 缓冲区为空
+static int is_int_buffer_empty(void){
+    return (read_index == write_index);
+}
+
+// 当 读取指针 等于 写入指针 的下一个位置 时, 缓冲区为满
+static int is_int_buffer_full(void){
+    return (read_index == next_pos(write_index));
+}
+static void push_int_buffer(int value){
+    // 如果不是满的 就可以写入
+    if(!is_int_buffer_full()){
+        // 写入数据
+        global_int_buffer[write_index] = value;
+        // 写入指针 后移
+        write_index = next_pos(write_index);
+    }
+}
+
+// 从缓冲区中读取数据
+static int get_int_buffer(void){
+    int value = 0;
+    if(!is_int_buffer_empty()){
+        // 读取数据
+        value = global_int_buffer[read_index];
+        // 读取指针后移
+        read_index = next_pos(read_index);
+    }
+    return value;
+}
+
+
 /* 文件操作函数 */
 static int my_open(struct inode *inode, struct file *file)
 {
@@ -52,7 +106,12 @@ static ssize_t my_read(struct file *file, char __user *buffer, size_t len, loff_
     printk(KERN_INFO "%s: Write operation not supported\n", DEVICE_NAME);
 
     int err;
-    wait_event_interruptible(my_wait_queue, global_key);
+    // wait_event_interruptible(my_wait_queue, global_key);
+    wait_event_interruptible(my_wait_queue, !is_int_buffer_empty());
+
+    global_key = get_int_buffer();
+
+    // 将 global_key 写入用户空间
     err = copy_to_user(buffer, &global_key, sizeof(global_key));
     if (err != 0) {
         printk(KERN_INFO "%s: Error copying data to user space\n", DEVICE_NAME);
@@ -96,13 +155,16 @@ static irqreturn_t gpio_key_isr(int irq, void *dev_id)
     int value = gpiod_get_value(key->desc);// 获取 GPIO 的值
     printk(KERN_INFO "%s: Interrupt on GPIO %d (IRQ %d), value = %d\n", DEVICE_NAME, key->index, irq, value);
     
-    
+    // global_key = (key->gpio << 8) | value;// gpio 的编号 和 值 通过或运算 合并, gpio编号 占 高 8 位, 值 占低 8 位
     global_key = (key->gpio << 8) | value;
     // 分别打印 (key->gpio << 8)  和 value
     printk(KERN_INFO "%s: key->gpio = %d\n", DEVICE_NAME, key->gpio);
     printk(KERN_INFO "%s: value = %d\n", DEVICE_NAME, value);
     printk(KERN_INFO "%s: global_key = %d\n", DEVICE_NAME, global_key);
-    // global_key = (key->gpio << 8) | value;// gpio 的编号 和 值 通过或运算 合并, gpio编号 占 高 8 位, 值 占低 8 位
+    
+    // 将 global_key 写入 环形缓冲区
+    push_int_buffer(global_key);
+    
     wake_up_interruptible(&my_wait_queue);
 
 
