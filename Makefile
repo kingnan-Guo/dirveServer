@@ -12,6 +12,15 @@ CFLAGS += -I$(KERNEL_ARCH_INCLUDE_DIR)
 CROSS_COMPILE := aarch64-linux-gnu-
 # 模块地址
 MODULES_DIR := dirverModules
+APP_MODULES_DIR := modules
+
+# 动态获取 modules 下所有子目录作为头文件路径
+APP_SUBDIRS := $(shell find $(APP_MODULES_DIR) -type d)
+USER_CFLAGS := $(foreach dir,$(APP_SUBDIRS),-I$(PWD)/$(dir))
+
+# 收集源文件
+SOURCES := main.c
+MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 # # my_board 的 编译  ---------------------
@@ -53,10 +62,10 @@ MODULES_DIR := dirverModules
 # 有 dtb 
 # obj-m += my_drv.o my_chip_board_button.o
 
-my_chip_board_button-y := $(MODULES_DIR)/my_platform_device_dtb_button/my_chip_board_button.o
-my_drv-y := $(MODULES_DIR)/my_platform_device_dtb_button/my_drv.o
-obj-m += my_chip_board_button.o
-obj-m += my_drv.o
+# my_chip_board_button-y := $(MODULES_DIR)/my_platform_device_dtb_button/my_chip_board_button.o
+# my_drv-y := $(MODULES_DIR)/my_platform_device_dtb_button/my_drv.o
+# obj-m += my_chip_board_button.o
+# obj-m += my_drv.o
 
 
 
@@ -65,8 +74,8 @@ obj-m += my_drv.o
 
 
 # # my_interrupt 中断 的 编译  ---------------------
-# my_interrupt-y := $(MODULES_DIR)/interrupt/my_interrupt.o
-# obj-m := my_interrupt.o
+my_interrupt-y := $(MODULES_DIR)/my_interrupt/my_interrupt.o
+obj-m := my_interrupt.o
 
 
 
@@ -75,7 +84,8 @@ all:
 	make -C $(KERNEL_DIR) M=$(PWD) modules
 	# 交叉编译
 	# $(CROSS_COMPILE)gcc -o main main.c
-	aarch64-linux-gnu-gcc -o main main.c
+	# aarch64-linux-gnu-gcc -o main main.c
+	$(CROSS_COMPILE)gcc $(USER_CFLAGS) -o main $(SOURCES) $(MODULE_SOURCES)
 clean:
 	# 清理
 	make -C $(KERNEL_DIR) M=$(PWD) clean
@@ -86,3 +96,35 @@ clean:
 
 
 
+# KERNEL_DIR := /opt/sources/linux-rpi-6.6.y
+# KERNEL_INCLUDE_DIR := $(KERNEL_DIR)/include
+# KERNEL_ARCH_INCLUDE_DIR := $(KERNEL_DIR)/arch/arm64/include
+
+# # 设置编译器标志（仅用于内核模块，此处可忽略）
+# CFLAGS += -nostdinc
+# CFLAGS += -I$(KERNEL_INCLUDE_DIR)
+# CFLAGS += -I$(KERNEL_ARCH_INCLUDE_DIR)
+
+# # 指定交叉编译工具链
+# CROSS_COMPILE := aarch64-linux-gnu-
+
+# # 模块地址
+# MODULES_DIR := dirverModules
+# APP_MODULES_DIR := modules
+
+# # 动态获取 modules 下所有子目录作为头文件路径
+# APP_SUBDIRS := $(shell find $(APP_MODULES_DIR) -type d)
+# USER_CFLAGS := $(foreach dir,$(APP_SUBDIRS),-I$(PWD)/$(dir))
+
+# # 收集源文件
+# SOURCES := main.c
+# MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
+
+# all:
+# 	# 编译用户空间程序，包含所有源文件
+# 	$(CROSS_COMPILE)gcc $(USER_CFLAGS) -o main $(SOURCES) $(MODULE_SOURCES)
+
+# clean:
+# 	# 清理
+# 	rm -rf modules.order
+# 	rm -rf main

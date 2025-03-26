@@ -39,7 +39,8 @@ include_directories(
 
     # 模块 ===========
     modules/dirveServerLog   
-    modules/DRIVETEMP        
+    modules/DRIVETEMP
+    modules/app_interrupt_sleep_wake_up_poll      
 
 )
 
