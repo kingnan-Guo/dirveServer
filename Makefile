@@ -23,6 +23,15 @@ SOURCES := main.c
 MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
+
+# obj-m := devMain.o
+
+
+
+
+
+
+
 # # my_board 的 编译  ---------------------
 # my_device-y := my_drv.o my_board.o
 # obj-m += my_device.o
@@ -74,8 +83,15 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 # # my_interrupt 中断 的 编译  ---------------------
-interrupt_sleep_wake_up_circle-y := $(MODULES_DIR)/interrupt_sleep_wake_up_circle/interrupt_sleep_wake_up_circle.o
-obj-m := interrupt_sleep_wake_up_circle.o
+# interrupt_sleep_wake_up_circle-y := $(MODULES_DIR)/interrupt_sleep_wake_up_circle/interrupt_sleep_wake_up_circle.o
+# obj-m := interrupt_sleep_wake_up_circle.o
+
+
+
+# poll 
+interrupt_sleep_wake_up_poll-y := $(MODULES_DIR)/interrupt_sleep_wake_up_poll/interrupt_sleep_wake_up_poll.o
+obj-m := interrupt_sleep_wake_up_poll.o
+
 
 
 

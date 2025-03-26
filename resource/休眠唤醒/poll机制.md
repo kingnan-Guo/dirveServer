@@ -65,5 +65,3 @@ poll 执行流程
     POLLIN | POLLRDNORM | POLLOUT | POLLWRNORM ：有数据可读，有空间可写
 
     POLLIN | POLLRDNORM | POLLOUT | POLLWRNORM | POLLERR | POLLHUP | POLLNVAL ：有数据可读，有空间可写，有错误，有挂起，无效请求
-
-    
