@@ -33,6 +33,11 @@ cmake_minimum_required(VERSION 3.29)
 project(DirvesServer)
 
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# 指定交叉编译工具链
+set(CMAKE_C_COMPILER "aarch64-linux-gnu-gcc")
+set(CMAKE_CXX_COMPILER "aarch64-linux-gnu-g++")
 
 # 指定包含目录
 include_directories(

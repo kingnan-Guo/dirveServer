@@ -74,8 +74,8 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 # # my_interrupt 中断 的 编译  ---------------------
-my_interrupt-y := $(MODULES_DIR)/my_interrupt/my_interrupt.o
-obj-m := my_interrupt.o
+interrupt_sleep_wake_up_circle-y := $(MODULES_DIR)/interrupt_sleep_wake_up_circle/interrupt_sleep_wake_up_circle.o
+obj-m := interrupt_sleep_wake_up_circle.o
 
 
 
