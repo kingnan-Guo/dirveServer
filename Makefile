@@ -37,16 +37,26 @@ MODULES_DIR := dirverModules
 
 
 
-# my_platform 总线设备驱动模型  的 编译  出三个 ko 程序---------------------
+# my_platform_device_gpio 总线设备驱动模型  的 编译  出三个 ko 程序---------------------
 # obj-m += my_drv.o my_chip_board_gpio.o my_board_n.o
 
-# my_drv-y := $(MODULES_DIR)/my_platform/my_drv.o
-# my_chip_board_gpio-y := $(MODULES_DIR)/my_platform/my_chip_board_gpio.o
-# my_board_n-y := $(MODULES_DIR)/my_platform/my_board_n.o
+# my_drv-y := $(MODULES_DIR)/my_platform_device_gpio/my_drv.o
+# my_chip_board_gpio-y := $(MODULES_DIR)/my_platform_device_gpio/my_chip_board_gpio.o
+# my_board_n-y := $(MODULES_DIR)/my_platform_device_gpio/my_board_n.o
 # obj-m += my_drv.o
 # obj-m += my_chip_board_gpio.o
 # obj-m += my_board_n.o
 
+
+
+# my_platform_device_dtb_button 
+# 有 dtb 
+# obj-m += my_drv.o my_chip_board_button.o
+
+my_chip_board_button-y := $(MODULES_DIR)/my_platform_device_dtb_button/my_chip_board_button.o
+my_drv-y := $(MODULES_DIR)/my_platform_device_dtb_button/my_drv.o
+obj-m += my_chip_board_button.o
+obj-m += my_drv.o
 
 
 
@@ -55,8 +65,8 @@ MODULES_DIR := dirverModules
 
 
 # # my_interrupt 中断 的 编译  ---------------------
-my_interrupt-y := $(MODULES_DIR)/interrupt/my_interrupt.o
-obj-m := my_interrupt.o
+# my_interrupt-y := $(MODULES_DIR)/interrupt/my_interrupt.o
+# obj-m := my_interrupt.o
 
 
 

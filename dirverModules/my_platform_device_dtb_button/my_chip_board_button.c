@@ -310,5 +310,3 @@ static void __exit my_chip_board_gpio_dirver_exit(void) {
 module_init(my_chip_board_gpio_dirver_init);
 module_exit(my_chip_board_gpio_dirver_exit);
 MODULE_LICENSE("GPL");
-
-
