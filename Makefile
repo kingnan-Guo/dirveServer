@@ -7,25 +7,57 @@ CFLAGS += -nostdinc
 CFLAGS += -I$(KERNEL_INCLUDE_DIR)
 CFLAGS += -I$(KERNEL_ARCH_INCLUDE_DIR)
 
+
+# 指定交叉编译工具链
+CROSS_COMPILE := aarch64-linux-gnu-
+# 模块地址
+MODULES_DIR := dirverModules
+
+
 # # my_board 的 编译  ---------------------
 # my_device-y := my_drv.o my_board.o
-# # obj-m := my_drv.o
+# obj-m += my_device.o
+
+# my_device-y := $(MODULES_DIR)/my_board/my_drv.o $(MODULES_DIR)/my_board/my_board.o
 # obj-m += my_device.o
 
 
 
-# # my_chip_device 的 编译 ---------------------
+
+
+
+
+# # # my_chip_device 的 编译 ---------------------
 # my_chip_device-y := my_drv.o my_chip_board_gpio.o my_board_n.o
+
+# my_chip_device-y := $(MODULES_DIR)/my_chip_device/my_drv.o $(MODULES_DIR)/my_chip_device/my_chip_board_gpio.o $(MODULES_DIR)/my_chip_device/my_board_n.o
 # obj-m += my_chip_device.o
 
 
-# 总线设备驱动模型 的 编译  出三个 ko 程序---------------------
-# obj-m += my_drv.o my_chip_board_gpio.o
+
+
+
+# my_platform 总线设备驱动模型  的 编译  出三个 ko 程序---------------------
+# obj-m += my_drv.o my_chip_board_gpio.o my_board_n.o
+
+# my_drv-y := $(MODULES_DIR)/my_platform/my_drv.o
+# my_chip_board_gpio-y := $(MODULES_DIR)/my_platform/my_chip_board_gpio.o
+# my_board_n-y := $(MODULES_DIR)/my_platform/my_board_n.o
+# obj-m += my_drv.o
+# obj-m += my_chip_board_gpio.o
+# obj-m += my_board_n.o
+
+
+
+
 
 # obj-m := my_drv.o
 
 
+# # my_interrupt 中断 的 编译  ---------------------
+my_interrupt-y := $(MODULES_DIR)/interrupt/my_interrupt.o
 obj-m := my_interrupt.o
+
 
 
 all:

@@ -139,7 +139,7 @@ static struct my_operations board_operations = {
 };
 
 // 返回 `board_operations` 结构体指针
-struct my_operations *get_board_operations(void) {
+struct my_operations *my_board_operations(void) {
     return &board_operations;
 }
 

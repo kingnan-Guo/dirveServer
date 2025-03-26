@@ -89,4 +89,3 @@ static void __exit my_board_n_exit(void){
 module_init(my_board_n_init);
 module_exit(my_board_n_exit);
 MODULE_LICENSE("GPL");
-
