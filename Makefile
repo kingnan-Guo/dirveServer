@@ -97,11 +97,13 @@ obj-m := interrupt_sleep_wake_up_poll.o
 
 all:
 	# 进入内核源码目录并构建模块
-	make -C $(KERNEL_DIR) M=$(PWD) modules
+	# make -C $(KERNEL_DIR) M=$(PWD) modules
+	make -C $(KERNEL_DIR) M=$(PWD) modules CROSS_COMPILE=$(CROSS_COMPILE) CC=$(CROSS_COMPILE)gcc
 	# 交叉编译
 	# $(CROSS_COMPILE)gcc -o main main.c
 	# aarch64-linux-gnu-gcc -o main main.c
 	$(CROSS_COMPILE)gcc $(USER_CFLAGS) -o main $(SOURCES) $(MODULE_SOURCES)
+	# $(CROSS_COMPILE)gcc $(USER_CFLAGS) $(CFLAGS) -o main $(SOURCES) $(MODULE_SOURCES)  # CFLAGS 的目的 是 为了让内核模块的头文件能够被找到，但是加上会报错
 clean:
 	# 清理
 	make -C $(KERNEL_DIR) M=$(PWD) clean
@@ -109,7 +111,7 @@ clean:
 	rm -rf main
 
 
-
+.PHONY: all clean
 
 
 # KERNEL_DIR := /opt/sources/linux-rpi-6.6.y
