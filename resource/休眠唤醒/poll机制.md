@@ -45,3 +45,25 @@ poll 执行流程
     POLLOUT = POLLWRNORM（兼容性）
 
     APP 调用poll 后，很有可能会休眠，对应的 ，在案件驱动的中断服务程序中，也要有唤醒 操作
+
+
+
+
+    使用poll/select 函数的 时候 可以检测多个文件
+
+    POLLIN：有数据可读
+    POLLOUT：有空间可写
+    POLLERR：发生错误
+    POLLHUP：挂起
+    POLLNVAL：无效请求，比如请求的文件描述符不是一个有效的文件描述符，或者文件描述符没有连接到一个套接字上
+
+    POLLIN | POLLRDNORM ：有数据可读
+    POLLOUT | POLLWRNORM ：有空间可写
+
+    POLLIN | POLLRDNORM | POLLERR | POLLHUP | POLLNVAL ：有数据可读，有错误，有挂起，无效请求
+
+    POLLIN | POLLRDNORM | POLLOUT | POLLWRNORM ：有数据可读，有空间可写
+
+    POLLIN | POLLRDNORM | POLLOUT | POLLWRNORM | POLLERR | POLLHUP | POLLNVAL ：有数据可读，有空间可写，有错误，有挂起，无效请求
+
+    
