@@ -1159,3 +1159,9 @@ ls /sys/class/gpio/gpio*
 
 
 
+
+
+
+当前 有个 想法就是 在编译 应用层 app 的时候 也使用 sources/linux-rpi-6.6.y 中的 编译器，
+1、比如说 在 main.c  中 的 #include <stdio.h> 使用的是 内核 的 #include <stdio.h> 这样就可以使用 内核的 头文件，
+2、这样就可以使用 内核的 函数，比如 ioctl 函数
