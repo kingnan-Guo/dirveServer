@@ -347,3 +347,8 @@
         cat /proc/devices  
         
 
+
+Makefile
+
+    interrupt_sleep_wake_up_circle-y := $(MODULES_DIR)/interrupt_sleep_wake_up_circle/interrupt_sleep_wake_up_circle.o
+    obj-m := interrupt_sleep_wake_up_circle.o

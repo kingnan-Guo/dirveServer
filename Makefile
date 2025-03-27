@@ -89,9 +89,13 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 # poll 
-interrupt_sleep_wake_up_poll-y := $(MODULES_DIR)/interrupt_sleep_wake_up_poll/interrupt_sleep_wake_up_poll.o
-obj-m := interrupt_sleep_wake_up_poll.o
+# interrupt_sleep_wake_up_poll-y := $(MODULES_DIR)/interrupt_sleep_wake_up_poll/interrupt_sleep_wake_up_poll.o
+# obj-m := interrupt_sleep_wake_up_poll.o
 
+
+# fasync
+interrupt_sleep_wake_up_fasync-y := $(MODULES_DIR)/interrupt_sleep_wake_up_fasync/interrupt_sleep_wake_up_fasync.o
+obj-m := interrupt_sleep_wake_up_fasync.o
 
 
 

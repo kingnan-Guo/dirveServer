@@ -1,4 +1,4 @@
-#include "app_interrupt_sleep_wake_up_circle.h"
+#include "app_interrupt_sleep_wake_up_poll.h"
 
 
 int app_interrupt_sleep_wake_up_poll_init(int argc, char *argv[]){
