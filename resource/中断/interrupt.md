@@ -348,7 +348,44 @@
         
 
 
+
+
+# 参数解析
+
+IORESOURCE_IRQ	start 表示 IRQ 号
+IORESOURCE_MEM	start 表示 物理地址（通常是寄存器基地址）
+IORESOURCE_IO	start 表示 I/O 端口地址
+IORESOURCE_DMA	start 表示 DMA 通道
+IORESOURCE_BUSY	资源已被占用（用于标记已使用的资源）
+
+
+
+当 flags = IORESOURCE_IRQ 时： start 表示 IRQ 号，即中断号。
+当 flags = IORESOURCE_MEM 时：start 表示 物理内存地址（用于 MMIO 设备）。
+当 flags = IORESOURCE_IO 时：start 表示 I/O 端口地址（用于 x86 的 I/O 端口映射设备）。
+
+
+
+
+
+
+
+
+
+
+
+
 Makefile
 
     interrupt_sleep_wake_up_circle-y := $(MODULES_DIR)/interrupt_sleep_wake_up_circle/interrupt_sleep_wake_up_circle.o
     obj-m := interrupt_sleep_wake_up_circle.o
+
+
+
+
+
+
+
+
+
+
