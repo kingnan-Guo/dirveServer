@@ -103,8 +103,13 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 # # tasklet ---------------------
-interrupt_sleep_wake_up_tasklet-y := $(MODULES_DIR)/interrupt_sleep_wake_up_tasklet/interrupt_sleep_wake_up_tasklet.o
-obj-m := interrupt_sleep_wake_up_tasklet.o
+# interrupt_sleep_wake_up_tasklet-y := $(MODULES_DIR)/interrupt_sleep_wake_up_tasklet/interrupt_sleep_wake_up_tasklet.o
+# obj-m := interrupt_sleep_wake_up_tasklet.o
+
+
+# # workqueue ---------------------
+interrupt_sleep_wake_up_workqueue-y := $(MODULES_DIR)/interrupt_sleep_wake_up_workqueue/interrupt_sleep_wake_up_workqueue.o
+obj-m := interrupt_sleep_wake_up_workqueue.o
 
 
 all:

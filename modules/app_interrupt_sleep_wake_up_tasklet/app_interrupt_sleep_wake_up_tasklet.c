@@ -45,7 +45,7 @@ int app_interrupt_sleep_wake_up_tasklet_init(int argc, char *argv[]){
 
     while (1)
     {
-        printf("app_interrupt_sleep_wake_up_timer \n");
+        printf("app_interrupt_sleep_wake_up_tasklet \n");
 
         // if(read(fd, &val, sizeof(val)) == 4){
         //     printf("BLOCK get value: %d\n", val);
@@ -54,7 +54,7 @@ int app_interrupt_sleep_wake_up_tasklet_init(int argc, char *argv[]){
         // }
 
         read(fd, &val, sizeof(val));
-        printf("app_interrupt_sleep_wake_up_timer get value: %d\n", val); 
+        printf("app_interrupt_sleep_wake_up_tasklet get value: %d\n", val); 
 
         // sleep(2);
     }

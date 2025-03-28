@@ -28,7 +28,7 @@
 #include <asm/current.h>
 
 
-#define DEVICE_NAME "my_gpio_tasklet"
+#define DEVICE_NAME "my_gpio_workqueue"
  
 static int major;
 static struct class *gpio_class;
@@ -205,16 +205,16 @@ static void my_tasklet_func(unsigned long data){
     int value = gpiod_get_value(key->desc);// 获取 GPIO 的值
     
 
-    printk(KERN_INFO "%s: my_timer_expire on GPIO %d , value = %d\n", DEVICE_NAME, key->gpio, value);
+    printk(KERN_INFO "%s:my_tasklet_func  on GPIO %d , value = %d\n", DEVICE_NAME, key->gpio, value);
 
 }
 
 // work 函数 my_work_func
 static void my_work_func(struct work_struct *work){
-    struct gpio_key *key = container_of();
+    struct gpio_key *key = container_of(work, struct gpio_key, key_work);// 通过 work 找到 gpio_key
     int value = gpiod_get_value(key->desc);// 获取 GPIO 的值
-    printk(KERN_INFO "%s: my_work_func on GPIO %d , value = %d\n", DEVICE_NAME, key->gpio, value);
-
+    printk(KERN_INFO "%s: my_work_func  on GPIO %d , value = %d\n", DEVICE_NAME, key->gpio, value);
+    printk(KERN_INFO "%s: my_work_func the process is %s pid %d\n", DEVICE_NAME,current->comm, current->pid);
 }
 
 
