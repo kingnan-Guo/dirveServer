@@ -97,9 +97,13 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 # fasync ---------------------
-interrupt_sleep_wake_up_fasync-y := $(MODULES_DIR)/interrupt_sleep_wake_up_fasync/interrupt_sleep_wake_up_fasync.o
-obj-m := interrupt_sleep_wake_up_fasync.o
+# interrupt_sleep_wake_up_fasync-y := $(MODULES_DIR)/interrupt_sleep_wake_up_fasync/interrupt_sleep_wake_up_fasync.o
+# obj-m := interrupt_sleep_wake_up_fasync.o
 
+
+# noblock
+interrupt_sleep_wake_up_noblock-y := $(MODULES_DIR)/interrupt_sleep_wake_up_noblock/interrupt_sleep_wake_up_noblock.o
+obj-m := interrupt_sleep_wake_up_noblock.o
 
 
 all:

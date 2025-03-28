@@ -25,7 +25,7 @@
 #include <linux/fcntl.h>
 
 
-#define DEVICE_NAME "my_gpio_fasync"
+#define DEVICE_NAME "my_gpio_noblock"
 
 static int major;
 static struct class *gpio_class;
@@ -111,6 +111,12 @@ static ssize_t my_read(struct file *file, char __user *buffer, size_t len, loff_
     printk(KERN_INFO "%s: Write operation not supported\n", DEVICE_NAME);
 
     int err;
+
+    if(is_int_buffer_empty() && (file->f_flags & O_NONBLOCK)){
+        return -EAGAIN;
+    }
+
+
     // wait_event_interruptible(my_wait_queue, global_key);
     wait_event_interruptible(my_wait_queue, !is_int_buffer_empty());
 
@@ -316,7 +322,7 @@ static int my_gpio_probe(struct platform_device *pdev)
         return major;
     }
 
-    gpio_class = class_create("my_gpio_poll_class");
+    gpio_class = class_create("my_gpio_noblock_class");
     if(IS_ERR(gpio_class)){
         printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
         dev_err(dev, "Failed to create class: %d\n", err);
