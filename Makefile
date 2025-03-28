@@ -2,10 +2,13 @@ KERNEL_DIR := /opt/sources/linux-rpi-6.6.y
 KERNEL_INCLUDE_DIR := $(KERNEL_DIR)/include
 KERNEL_ARCH_INCLUDE_DIR := $(KERNEL_DIR)/arch/arm64/include
 
-# 设置编译器标志
-CFLAGS += -nostdinc
-CFLAGS += -I$(KERNEL_INCLUDE_DIR)
-CFLAGS += -I$(KERNEL_ARCH_INCLUDE_DIR)
+# 设置编译器标志 CFLAGS（Compiler Flags）是 传递给 C 语言编译器 gcc 的编译选项。
+# CFLAGS += -nostdinc
+# CFLAGS += -I$(KERNEL_INCLUDE_DIR)
+# CFLAGS += -I$(KERNEL_ARCH_INCLUDE_DIR)
+# # 只用于内核模块的 CFLAGS
+KERNEL_CFLAGS := -nostdinc -I$(KERNEL_INCLUDE_DIR) -I$(KERNEL_ARCH_INCLUDE_DIR)
+
 
 
 # 指定交叉编译工具链
@@ -88,12 +91,12 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 
-# poll 
+# poll ---------------------
 # interrupt_sleep_wake_up_poll-y := $(MODULES_DIR)/interrupt_sleep_wake_up_poll/interrupt_sleep_wake_up_poll.o
 # obj-m := interrupt_sleep_wake_up_poll.o
 
 
-# fasync
+# fasync ---------------------
 interrupt_sleep_wake_up_fasync-y := $(MODULES_DIR)/interrupt_sleep_wake_up_fasync/interrupt_sleep_wake_up_fasync.o
 obj-m := interrupt_sleep_wake_up_fasync.o
 
@@ -102,12 +105,15 @@ obj-m := interrupt_sleep_wake_up_fasync.o
 all:
 	# 进入内核源码目录并构建模块
 	# make -C $(KERNEL_DIR) M=$(PWD) modules
-	make -C $(KERNEL_DIR) M=$(PWD) modules CROSS_COMPILE=$(CROSS_COMPILE) CC=$(CROSS_COMPILE)gcc
-	# 交叉编译
+	# make -C $(KERNEL_DIR) M=$(PWD) modules CROSS_COMPILE=$(CROSS_COMPILE) CC=$(CROSS_COMPILE)gcc
+	# CFLAGS="$(KERNEL_CFLAGS)" 的目的是 传递给 C 语言编译器 gcc 的编译选项, 只在内核生效
+	make -C $(KERNEL_DIR) M=$(PWD) modules CROSS_COMPILE=$(CROSS_COMPILE) CC=$(CROSS_COMPILE)gcc CFLAGS="$(KERNEL_CFLAGS)"
+
+	# 交叉编译 应用层 程序
 	# $(CROSS_COMPILE)gcc -o main main.c
 	# aarch64-linux-gnu-gcc -o main main.c
 	$(CROSS_COMPILE)gcc $(USER_CFLAGS) -o main $(SOURCES) $(MODULE_SOURCES)
-	# $(CROSS_COMPILE)gcc $(USER_CFLAGS) $(CFLAGS) -o main $(SOURCES) $(MODULE_SOURCES)  # CFLAGS 的目的 是 为了让内核模块的头文件能够被找到，但是加上会报错
+
 clean:
 	# 清理
 	make -C $(KERNEL_DIR) M=$(PWD) clean
@@ -118,14 +124,21 @@ clean:
 .PHONY: all clean
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 # KERNEL_DIR := /opt/sources/linux-rpi-6.6.y
 # KERNEL_INCLUDE_DIR := $(KERNEL_DIR)/include
 # KERNEL_ARCH_INCLUDE_DIR := $(KERNEL_DIR)/arch/arm64/include
-
-# # 设置编译器标志（仅用于内核模块，此处可忽略）
-# CFLAGS += -nostdinc
-# CFLAGS += -I$(KERNEL_INCLUDE_DIR)
-# CFLAGS += -I$(KERNEL_ARCH_INCLUDE_DIR)
 
 # # 指定交叉编译工具链
 # CROSS_COMPILE := aarch64-linux-gnu-
@@ -134,19 +147,32 @@ clean:
 # MODULES_DIR := dirverModules
 # APP_MODULES_DIR := modules
 
-# # 动态获取 modules 下所有子目录作为头文件路径
+# # 获取应用层的头文件路径
 # APP_SUBDIRS := $(shell find $(APP_MODULES_DIR) -type d)
 # USER_CFLAGS := $(foreach dir,$(APP_SUBDIRS),-I$(PWD)/$(dir))
+
+# # 只用于内核模块的 CFLAGS
+# KERNEL_CFLAGS := -nostdinc -I$(KERNEL_INCLUDE_DIR) -I$(KERNEL_ARCH_INCLUDE_DIR)
 
 # # 收集源文件
 # SOURCES := main.c
 # MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
+# # fasync
+# interrupt_sleep_wake_up_fasync-y := $(MODULES_DIR)/interrupt_sleep_wake_up_fasync/interrupt_sleep_wake_up_fasync.o
+# obj-m := interrupt_sleep_wake_up_fasync.o
+
 # all:
-# 	# 编译用户空间程序，包含所有源文件
+# 	# 进入内核源码目录并构建模块
+# 	make -C $(KERNEL_DIR) M=$(PWD) modules CROSS_COMPILE=$(CROSS_COMPILE) CC=$(CROSS_COMPILE)gcc CFLAGS="$(KERNEL_CFLAGS)"
+
+# 	# 编译应用层程序（不加 -nostdinc）
 # 	$(CROSS_COMPILE)gcc $(USER_CFLAGS) -o main $(SOURCES) $(MODULE_SOURCES)
 
 # clean:
 # 	# 清理
+# 	make -C $(KERNEL_DIR) M=$(PWD) clean
 # 	rm -rf modules.order
 # 	rm -rf main
+
+# .PHONY: all clean
