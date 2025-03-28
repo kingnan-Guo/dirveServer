@@ -28,6 +28,9 @@
                 "/opt/sources/linux-rpi-6.6.y/include/uapi/**/*"           // 包含uapi头文件
 
 
+                // 代码中的 inclue
+                
+
             ],
             // 定义预处理器宏
             "defines": [],

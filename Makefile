@@ -26,30 +26,21 @@ SOURCES := main.c
 MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
-
+# ---------------------
 # obj-m := devMain.o
 
 
-
-
-
-
-
 # # my_board 的 编译  ---------------------
-# my_device-y := my_drv.o my_board.o
-# obj-m += my_device.o
+# # my_device-y := my_drv.o my_board.o
+# #obj-m += my_device.o
 
 # my_device-y := $(MODULES_DIR)/my_board/my_drv.o $(MODULES_DIR)/my_board/my_board.o
 # obj-m += my_device.o
 
 
 
-
-
-
-
-# # # my_chip_device 的 编译 ---------------------
-# my_chip_device-y := my_drv.o my_chip_board_gpio.o my_board_n.o
+# # my_chip_device 的 编译 ---------------------
+# # my_chip_device-y := my_drv.o my_chip_board_gpio.o my_board_n.o
 
 # my_chip_device-y := $(MODULES_DIR)/my_chip_device/my_drv.o $(MODULES_DIR)/my_chip_device/my_chip_board_gpio.o $(MODULES_DIR)/my_chip_device/my_board_n.o
 # obj-m += my_chip_device.o
@@ -58,8 +49,8 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 
-# my_platform_device_gpio 总线设备驱动模型  的 编译  出三个 ko 程序---------------------
-# obj-m += my_drv.o my_chip_board_gpio.o my_board_n.o
+# # my_platform_device_gpio 总线设备驱动模型  的 编译  出三个 ko 程序---------------------
+# # obj-m += my_drv.o my_chip_board_gpio.o my_board_n.o
 
 # my_drv-y := $(MODULES_DIR)/my_platform_device_gpio/my_drv.o
 # my_chip_board_gpio-y := $(MODULES_DIR)/my_platform_device_gpio/my_chip_board_gpio.o
@@ -70,9 +61,9 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 
-# my_platform_device_dtb_button 
-# 有 dtb 
-# obj-m += my_drv.o my_chip_board_button.o
+# # my_platform_device_dtb_button  ---------------------
+# #有 dtb 
+# # obj-m += my_drv.o my_chip_board_button.o
 
 # my_chip_board_button-y := $(MODULES_DIR)/my_platform_device_dtb_button/my_chip_board_button.o
 # my_drv-y := $(MODULES_DIR)/my_platform_device_dtb_button/my_drv.o
@@ -81,7 +72,7 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 
-
+# #-----------------------
 # obj-m := my_drv.o
 
 
@@ -91,23 +82,29 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 
-# poll ---------------------
+# # poll ---------------------
 # interrupt_sleep_wake_up_poll-y := $(MODULES_DIR)/interrupt_sleep_wake_up_poll/interrupt_sleep_wake_up_poll.o
 # obj-m := interrupt_sleep_wake_up_poll.o
 
 
-# fasync ---------------------
+# # fasync ---------------------
 # interrupt_sleep_wake_up_fasync-y := $(MODULES_DIR)/interrupt_sleep_wake_up_fasync/interrupt_sleep_wake_up_fasync.o
 # obj-m := interrupt_sleep_wake_up_fasync.o
 
 
-# noblock
+# # noblock ---------------------
 # interrupt_sleep_wake_up_noblock-y := $(MODULES_DIR)/interrupt_sleep_wake_up_noblock/interrupt_sleep_wake_up_noblock.o
 # obj-m := interrupt_sleep_wake_up_noblock.o
 
-# timer
-interrupt_sleep_wake_up_timer-y := $(MODULES_DIR)/interrupt_sleep_wake_up_timer/interrupt_sleep_wake_up_timer.o
-obj-m := interrupt_sleep_wake_up_timer.o
+# # timer ---------------------
+# interrupt_sleep_wake_up_timer-y := $(MODULES_DIR)/interrupt_sleep_wake_up_timer/interrupt_sleep_wake_up_timer.o
+# obj-m := interrupt_sleep_wake_up_timer.o
+
+
+
+# # tasklet ---------------------
+interrupt_sleep_wake_up_tasklet-y := $(MODULES_DIR)/interrupt_sleep_wake_up_tasklet/interrupt_sleep_wake_up_tasklet.o
+obj-m := interrupt_sleep_wake_up_tasklet.o
 
 
 all:
