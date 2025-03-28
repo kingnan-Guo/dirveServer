@@ -102,8 +102,12 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 # noblock
-interrupt_sleep_wake_up_noblock-y := $(MODULES_DIR)/interrupt_sleep_wake_up_noblock/interrupt_sleep_wake_up_noblock.o
-obj-m := interrupt_sleep_wake_up_noblock.o
+# interrupt_sleep_wake_up_noblock-y := $(MODULES_DIR)/interrupt_sleep_wake_up_noblock/interrupt_sleep_wake_up_noblock.o
+# obj-m := interrupt_sleep_wake_up_noblock.o
+
+#timer
+interrupt_sleep_wake_up_timer-y := $(MODULES_DIR)/interrupt_sleep_wake_up_timer/interrupt_sleep_wake_up_timer.o
+obj-m := interrupt_sleep_wake_up_timer.o
 
 
 all:
