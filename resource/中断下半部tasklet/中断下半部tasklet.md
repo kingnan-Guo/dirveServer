@@ -132,14 +132,88 @@
 
 
 
-
+# 使用过程
+    1、先定义 tasklet ，需要使用的时候调用 tasklet_schedule 函数，不需要的时候调用 tasklet_kill 函数
+    2、tasklet_schedule 只是把 tasklet 放入内核队列， 它 func 函数会在 软件中断执行 过程中被调用
+    3、调用一次 tasklet_schedule ，只会导致 tasklet 的函数被执行一次
+    4、如果 tasklet 还未执行， 多次调用 tasklet_schedule 也是无效的， 只会放入 队列 一次
 
 
 
 # 内部机制
+    1、 tasklet 属于 TASKLET_SOFTIRQ 类型的软中断，在内核初始化的时候，会调用 open_softirq(TASKLET_SOFTIRQ, tasklet_action); 把 tasklet_action 函数 放入 softirq_vec[] 数组中
+    2、入口函数 是 tasklet_action ，在 kernel/softirq.c 中
+
+
+```c
+
+
+// 初始化软中断
+void __init softirq_init(void)
+{
+	int cpu;
+
+	// 遍历所有可能的CPU
+	for_each_possible_cpu(cpu) {
+		// 将每个CPU的tasklet_vec的tail指针指向head指针
+		per_cpu(tasklet_vec, cpu).tail =
+			&per_cpu(tasklet_vec, cpu).head;
+		// 将每个CPU的tasklet_hi_vec的tail指针指向head指针
+		per_cpu(tasklet_hi_vec, cpu).tail =
+			&per_cpu(tasklet_hi_vec, cpu).head;
+	}
+
+	// 打开TASKLET_SOFTIRQ软中断，并指定处理函数为tasklet_action
+	open_softirq(TASKLET_SOFTIRQ, tasklet_action);// 这里 是 调用  tasklet 的关键
+	// 打开HI_SOFTIRQ软中断，并指定处理函数为tasklet_hi_action
+	open_softirq(HI_SOFTIRQ, tasklet_hi_action);
+}
 
 
 
+```
+
+
+
+```c
+
+// tasklet_action
+
+static __latent_entropy void tasklet_action(struct softirq_action *a)
+{
+	tasklet_action_common(a, this_cpu_ptr(&tasklet_vec), TASKLET_SOFTIRQ);
+}
+
+
+```
+从链表里取出 每一项，
+判断 如果不是 SCHED 状态 
+执行 函数
+执行完成之后 把 SCHED 状态 清零，把它从 链表里删除
+
+
+
+
+```C
+
+static void __tasklet_schedule_common(struct tasklet_struct *t,
+				      struct tasklet_head __percpu *headp,
+				      unsigned int softirq_nr)
+{
+	struct tasklet_head *head;
+	unsigned long flags;
+
+	local_irq_save(flags);
+	head = this_cpu_ptr(headp);
+	t->next = NULL;
+	*head->tail = t;
+	head->tail = &(t->next);
+	raise_softirq_irqoff(softirq_nr);
+	local_irq_restore(flags);
+}
+
+
+```
 
 
 
