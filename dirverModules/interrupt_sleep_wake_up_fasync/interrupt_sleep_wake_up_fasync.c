@@ -362,7 +362,9 @@ static int my_gpio_remove(struct platform_device *pdev)
 
     for (i = 0; i < gpio_count; i++) {
         gpiod_put(gpio_keys[i].desc);
+        free_irq(gpio_keys[i].irq, &gpio_keys[i]);
     }
+    kfree(gpio_keys);
 
     printk(KERN_INFO "%s: Driver removed\n", DEVICE_NAME);
     return 0;
