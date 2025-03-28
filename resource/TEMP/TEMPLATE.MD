@@ -42,3 +42,7 @@ dmesg | tail
 cat /proc/devices  
 cd /sys/class 
 
+
+
+# 扩展
+
