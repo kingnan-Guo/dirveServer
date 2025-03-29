@@ -274,6 +274,19 @@ static irqreturn_t gpio_key_isr(int irq, void *dev_id)
     schedule_work(&key->key_work);
     
     
+    // return IRQ_HANDLED;
+    return IRQ_WAKE_THREAD;
+}
+
+
+static irqreturn_t gpio_key_thread_func(int irq, void *data){
+    struct gpio_key *key = data;
+    int value = gpiod_get_value(key->desc);// 获取 GPIO 的值
+    printk(KERN_INFO "%s: gpio_key_thread_func  on GPIO %d , value = %d\n", DEVICE_NAME, key->gpio, value);
+    printk(KERN_INFO "%s: gpio_key_thread_func the process is %s pid %d\n", DEVICE_NAME,current->comm, current->pid);
+
+    //  这里可以 使用  wake_threads_waitq()唤醒 等待 内核线程 执行成的 等待队列
+
     return IRQ_HANDLED;
 }
 
@@ -371,10 +384,21 @@ static int my_gpio_probe(struct platform_device *pdev)
         INIT_WORK(&gpio_keys[i].key_work, my_work_func);
 
 
-        err = devm_request_irq(
+        // 注册中断
+        // err = devm_request_irq(
+        //     dev,
+        //     irq,
+        //     gpio_key_isr,
+        //     IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, // 设置中断触发方式
+        //     "my_gpio_poll", // 中断名字
+        //     &gpio_keys[i] // 传递给中断处理函数 gpio_key_isr 的参数
+        // );
+
+        err = devm_request_threaded_irq(
             dev,
             irq,
             gpio_key_isr,
+            gpio_key_thread_func,
             IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING, // 设置中断触发方式
             "my_gpio_poll", // 中断名字
             &gpio_keys[i] // 传递给中断处理函数 gpio_key_isr 的参数

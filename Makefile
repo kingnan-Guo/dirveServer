@@ -108,9 +108,13 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 # # workqueue ---------------------
-interrupt_sleep_wake_up_workqueue-y := $(MODULES_DIR)/interrupt_sleep_wake_up_workqueue/interrupt_sleep_wake_up_workqueue.o
-obj-m := interrupt_sleep_wake_up_workqueue.o
+# interrupt_sleep_wake_up_workqueue-y := $(MODULES_DIR)/interrupt_sleep_wake_up_workqueue/interrupt_sleep_wake_up_workqueue.o
+# obj-m := interrupt_sleep_wake_up_workqueue.o
 
+
+# # threadedirq ---------------------
+interrupt_sleep_wake_up_threadedirq-y := $(MODULES_DIR)/interrupt_sleep_wake_up_threadedirq/interrupt_sleep_wake_up_threadedirq.o
+obj-m := interrupt_sleep_wake_up_threadedirq.o
 
 all:
 	# 进入内核源码目录并构建模块
