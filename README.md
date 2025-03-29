@@ -1165,3 +1165,60 @@ ls /sys/class/gpio/gpio*
 当前 有个 想法就是 在编译 应用层 app 的时候 也使用 sources/linux-rpi-6.6.y 中的 编译器，
 1、比如说 在 main.c  中 的 #include <stdio.h> 使用的是 内核 的 #include <stdio.h> 这样就可以使用 内核的 头文件，
 2、这样就可以使用 内核的 函数，比如 ioctl 函数
+
+
+
+
+
+
+
+
+
+
+
+
+不知道的知识点
+
+驱动 -----
+
+1、互斥量 信号量
+2、设备驱动模型 
+    bus-dev-dir
+    kobject
+    kset
+
+bus_device总线
+
+
+3、设备树深入
+
+
+
+pice 
+mmc驱动
+usb 驱动
+输入设备驱动，input 子系统
+
+RTC 驱动
+PWM 驱动
+I2C 驱动
+SPI 驱动
+网络驱动
+字符设备驱动
+块设备驱动
+misc 设备驱动 ；misc 是 miscellaneous 的缩写，表示杂项设备驱动。
+platform 驱动
+PCI 驱动
+DMA 驱动
+
+
+
+PID 控制
+
+uboot ----- 
+
+根文件系统
+dtb
+uboot 裸机驱动
+
+
