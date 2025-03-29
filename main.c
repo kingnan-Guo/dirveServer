@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #include "app_interrupt_sleep_wake_up_circle.h"
-// #include "app_interrupt_sleep_wake_up_poll.h"
-// #include "app_interrupt_sleep_wake_up_fasync.h"
-// #include "app_interrupt_sleep_wake_up_noblock.h"
-// #include "app_interrupt_sleep_wake_up_timer.h"
-// #include "app_interrupt_sleep_wake_up_tasklet.h"
-#include "app_interrupt_sleep_wake_up_workqueue.h"
+// #include "app_interrupt_sleep_wake_up_circle.h" // 环形缓冲区
+// #include "app_interrupt_sleep_wake_up_poll.h" // poll
+// #include "app_interrupt_sleep_wake_up_fasync.h"// fasync
+// #include "app_interrupt_sleep_wake_up_noblock.h"// 阻塞和非阻塞
+// #include "app_interrupt_sleep_wake_up_timer.h"// 定时器
+// #include "app_interrupt_sleep_wake_up_tasklet.h"// tasklet
+// #include "app_interrupt_sleep_wake_up_workqueue.h"// 工作队列
+#include "app_interrupt_sleep_wake_up_threadedirq.h" // 内核线程中断
 
 
 int main(int argc, char *argv[]){
@@ -22,7 +23,9 @@ int main(int argc, char *argv[]){
 
     // app_interrupt_sleep_wake_up_tasklet_main(argc, argv);
 
-    app_interrupt_sleep_wake_up_workqueue_main(argc, argv);
+    // app_interrupt_sleep_wake_up_workqueue_main(argc, argv);
+
+    app_interrupt_sleep_wake_up_threadedirq_main(argc, argv);
     
 
     return 0;
