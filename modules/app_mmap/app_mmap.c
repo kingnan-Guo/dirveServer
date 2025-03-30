@@ -49,11 +49,11 @@ int app_mmap_init(int argc, char *argv[]){
         printf("mmap failed 失败 \n");
         return -1;
     }
-    printf("mmap address = 0x%s\n", buf);
-    printf("buffer data  原始数据 还没写数据 = 0x%s\n", buf);
+    printf("mmap address = 0x%x \n", buf);// 打印 地址 
+    printf("buffer data  原始数据 还没写数据 = %s\n", buf);
 
     // 写数据, 
-    strcpy(buf, "kingnan data ");// 直接写 这块 内存
+    strcpy(buf, "new Data ");// 直接写 这块 内存
 
     // 读数据  并且 比较 写的数据
     read(fd, str, 1024);
@@ -64,8 +64,8 @@ int app_mmap_init(int argc, char *argv[]){
 
     } else {
         printf("compare failed!\n");
-		printf("str = %s!\n", str);  /* old */
-		printf("buf = %s!\n", buf);  /* new */
+		printf("str = %s \n", str);  /* old */
+		printf("buf = %s \n", buf);  /* new */
     }
 
 

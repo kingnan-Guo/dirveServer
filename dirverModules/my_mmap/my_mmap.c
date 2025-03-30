@@ -37,7 +37,9 @@ static int my_open(struct inode *node, struct file *file) {
 static ssize_t my_read(struct file *file, char __user *buffer, size_t len, loff_t *offset) {
     printk(KERN_INFO "%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
-    int err = copy_to_user(kernel_buffer, buffer, MIN(buffer_size, len));
+    int err = copy_to_user(buffer, kernel_buffer, MIN(buffer_size, len));
+    // kernel_buffer
+    printk(KERN_INFO "read %s\n", kernel_buffer);
     if(err){
         return -EFAULT;
     }
@@ -46,11 +48,13 @@ static ssize_t my_read(struct file *file, char __user *buffer, size_t len, loff_
 
 static ssize_t my_write(struct file *file, const char __user *buffer, size_t len, loff_t *offset) {
     printk(KERN_INFO "%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-    int err = copy_from_user(kernel_buffer, buffer, MIN(buffer_size, len));
+    int err = copy_from_user(kernel_buffer, buffer, MIN(1024, len));
+    // kernel_buffer
+    printk(KERN_INFO "write %s\n", kernel_buffer);
     if(err){
         return -EFAULT;
     }
-    return  MIN(buffer_size, len);
+    return  MIN(1024, len);
 }
 
 static int my_release(struct inode *inode, struct file *file) {
@@ -134,7 +138,7 @@ static int __init my_mmap_init(void) {
     kernel_buffer = kmalloc(buffer_size, GFP_KERNEL);
 
     // 在使用private 的时候  先 测试写入 数据 这个时候写入的是 old 老数据
-    strcpy(kernel_buffer, "old data");
+    strcpy(kernel_buffer, "old Data");
 
 
 
