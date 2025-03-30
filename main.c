@@ -8,7 +8,8 @@
 // #include "app_interrupt_sleep_wake_up_timer.h"// 定时器
 // #include "app_interrupt_sleep_wake_up_tasklet.h"// tasklet
 // #include "app_interrupt_sleep_wake_up_workqueue.h"// 工作队列
-#include "app_interrupt_sleep_wake_up_threadedirq.h" // 内核线程中断
+// #include "app_interrupt_sleep_wake_up_threadedirq.h" // 内核线程中断
+#include "app_mmap.h"
 
 
 int main(int argc, char *argv[]){
@@ -25,7 +26,9 @@ int main(int argc, char *argv[]){
 
     // app_interrupt_sleep_wake_up_workqueue_main(argc, argv);
 
-    app_interrupt_sleep_wake_up_threadedirq_main(argc, argv);
+    // app_interrupt_sleep_wake_up_threadedirq_main(argc, argv);
+
+    app_mmap_main(argc, argv);
     
 
     return 0;

@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <signal.h>
+#include <sys/mman.h>
 
 
 void app_mmap_main(int argc, char *argv[]);

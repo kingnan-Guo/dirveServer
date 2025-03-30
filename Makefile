@@ -113,8 +113,13 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 # # threadedirq ---------------------
-interrupt_sleep_wake_up_threadedirq-y := $(MODULES_DIR)/interrupt_sleep_wake_up_threadedirq/interrupt_sleep_wake_up_threadedirq.o
-obj-m := interrupt_sleep_wake_up_threadedirq.o
+# interrupt_sleep_wake_up_threadedirq-y := $(MODULES_DIR)/interrupt_sleep_wake_up_threadedirq/interrupt_sleep_wake_up_threadedirq.o
+# obj-m := interrupt_sleep_wake_up_threadedirq.o
+
+
+# # mmap ---------------------
+my_mmap-y := $(MODULES_DIR)/my_mmap/my_mmap.o
+obj-m := my_mmap.o
 
 all:
 	# 进入内核源码目录并构建模块

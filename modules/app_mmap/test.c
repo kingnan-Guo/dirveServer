@@ -3,7 +3,7 @@
 #include <stdlib.h>
  
 int a;
-int main(int argc, char **argv)
+int test_main(int argc, char **argv)
 {
 	if (argc != 2)
 	{

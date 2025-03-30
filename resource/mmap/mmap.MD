@@ -1,11 +1,11 @@
 2025/03/30 21:00
 # mmap 内存映射
     分支
-        dirver_raspberry_XXXXX_vX.X.X
+        dirver_raspberry_my_mmap_v0.1.14
 
     文件
-        ./modules/app_XXX/app_XXX.c
-        ./dirverModules/dirverModules/XXX.c
+        ./modules/app_mmap/app_mmap.c
+        ./dirverModules/my_mmap/my_mmap.c
 
 # 定义
 
@@ -539,8 +539,17 @@ buffer
 # 流程
 
 
+    APP 
+        1、open之后 会去 mmap 
+        2、通过 mmap 得到的地址写 数据
+        3、 调用 read 函数 读出来
+    驱动程序
+        1、 写一个 提供 read 带有 mmap  的驱动
+        2、驱动程序的入口函数 会去分配 Kmalloc() 8K 的 内存
 
 
+
+    内核使用 mmap 就是 LCD 的 驱动程序
 
 
 
@@ -548,13 +557,23 @@ buffer
 # 执行顺序
 
 
+![alt text](private私有写操作.png)
+buf = mmap(NULL, 1024 * 8, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+0、会是  copy_on_write 模式
+1、如果使用 MAP_PRIVATE 那么 在 内核 这时 会把 映射的内存 去复制出啦一份
+2、这时 进行 写操作，那么 只会对 新复制出的 那部分 操作，不会对 原来的内存进行操作
+3、这时 进行 读操作，那么 会去 原来的内存 中 读，因为 mmap 的参数中 使用了 MAP_PRIVATE
+
+
+
+
 # 内部机制
 
 
 # Makefile
-# # XXXX ---------------------
-XXXX-y := $(MODULES_DIR)/XXXX/XXXX.o
-obj-m := XXXX.o
+# # mmap ---------------------
+my_mmap-y := $(MODULES_DIR)/my_mmap/my_mmap.o
+obj-m := my_mmap.o
 
 
 # 执行命令
