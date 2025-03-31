@@ -26,6 +26,11 @@ SOURCES := main.c
 MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
+# 收集 app 的汇编文件 .S
+ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
+
+
+
 # ---------------------
 # obj-m := devMain.o
 
@@ -118,8 +123,15 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 
 
 # # mmap ---------------------
-my_mmap-y := $(MODULES_DIR)/my_mmap/my_mmap.o
-obj-m := my_mmap.o
+# my_mmap-y := $(MODULES_DIR)/my_mmap/my_mmap.o
+# obj-m := my_mmap.o
+
+
+# # my_dirver_assembly 汇编 ---------------------
+my_dirver_assembly-y := $(MODULES_DIR)/my_dirver_assembly/my_dirver_assembly.o $(MODULES_DIR)/my_dirver_assembly/my_asm_add.o
+obj-m := my_dirver_assembly.o
+
+
 
 all:
 	# 进入内核源码目录并构建模块
@@ -129,7 +141,7 @@ all:
 
 	# 交叉编译 应用层 程序
 	# $(CROSS_COMPILE)gcc -o main main.c
-	$(CROSS_COMPILE)gcc $(USER_CFLAGS) -o main $(SOURCES) $(MODULE_SOURCES)
+	$(CROSS_COMPILE)gcc $(USER_CFLAGS) -o main $(SOURCES) $(MODULE_SOURCES) $(ASM_SOURCES)
 	# 反汇编
 	$(CROSS_COMPILE)objdump -d main > main.dis
 

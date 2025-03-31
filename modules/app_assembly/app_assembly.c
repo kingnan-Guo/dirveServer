@@ -1,14 +1,15 @@
 #include "app_assembly.h"
+#include "app_assembly_add.h"
 
 static int fd;
 
-
-int add(int a, int b){
+int my_add(int a, int b){
     return a + b;
 }
 int app_assembly_init(int argc, char *argv[]){
-
-    add(1, 2);
+    // my_add(1, 2);
+    // add(1, 2);
+    printf("app_assembly_add %d \n", app_assembly_add(2, 3));
     return 0;
 }
 
