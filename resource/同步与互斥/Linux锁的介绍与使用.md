@@ -120,7 +120,7 @@
     sources/linux-rpi-6.6.y/include/linux/mutex.h
 ```C
 struct mutex {
-	atomic_long_t		owner;          // 互斥量持有者的进程ID, 指向一个进程，意味着 被进程 A 获取之后，只能 被进程 A 释放
+	atomic_long_t		owner;          // 互斥量持有者的进程ID, 
 	raw_spinlock_t		wait_lock;      // 互斥量等待队列的锁
 };
 
