@@ -24,5 +24,13 @@
 #include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/select.h>
+
 
 void app_get_device_info_main(int argc, char *argv[]);
+
+void app_get_device_info_poll_main(int argc, char *argv[]);
+
+void app_get_device_info_select_main(int argc, char *argv[]);
+
+void app_get_device_info_fasync_main(int argc, char *argv[]);

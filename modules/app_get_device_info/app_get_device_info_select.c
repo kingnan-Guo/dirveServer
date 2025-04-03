@@ -1,11 +1,13 @@
 #include "app_get_device_info.h"
 
-int app_get_device_info_init(int argc, char *argv[]){
+int app_get_device_info_select_init(int argc, char *argv[]){
 
     static int fd;
     struct input_id id; // 存储设备信息
 
     unsigned int evbit[EV_CNT/32 + 1]; // 0x1f 等于 31（十进制）
+
+
 
     
 
@@ -112,12 +114,33 @@ int app_get_device_info_init(int argc, char *argv[]){
     }
 
     struct input_event event;
+    int nfds;
+    fd_set readfds;
+    struct timeval timeValue;
     while (1)
     {
+        // 设置 超时时间 
+        timeValue.tv_sec = 5; // 5 秒
+        timeValue.tv_usec = 0; // 0 毫秒
 
-        len = read(fd, &event, sizeof(event));
-        if (len == sizeof(event)) {
-            printf("type: %d, code: %d, value: %d\n", event.type, event.code, event.value);
+        FD_ZERO(&readfds); // 清空文件描述符集合
+        //设置要检测 的 文件描述符
+        FD_SET(fd, &readfds);
+
+        // fd + 1 是为了兼容 select 函数的参数，因为 select 函数的参数是文件描述符的个数，而不是文件描述符的值;fd 是 文件描述符，fd + 1 是文件描述符的个数
+        nfds = select(fd + 1, &readfds, NULL, NULL, &timeValue); // 调用 select 函数
+
+        int ret = read(fd, &event, sizeof(event));
+        if(ret > 0){
+            if(FD_ISSET(fd, &readfds)){// 判断文件描述符是否可读
+                while (read(fd, &event, sizeof(event)) == sizeof(event))
+                {
+                    printf("type: %d, code: %d, value: %d\n", event.type, event.code, event.value);
+                }
+                
+            }
+        } else if(ret == 0){
+            printf("timeout\n");
         }
         else {
             printf("read error\n");
@@ -130,8 +153,8 @@ int app_get_device_info_init(int argc, char *argv[]){
     return 0;
 }
 
-void app_get_device_info_main(int argc, char *argv[]){
-    app_get_device_info_init(argc, argv);
+void app_get_device_info_select_main(int argc, char *argv[]){
+    app_get_device_info_select_init(argc, argv);
 };
 
 

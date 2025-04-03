@@ -35,7 +35,9 @@ int main(int argc, char *argv[]){
 
     // app_assembly_main(argc, argv);
 
-    app_get_device_info_main(argc, argv);
+    // app_get_device_info_main(argc, argv);
+    // app_get_device_info_poll_main(argc, argv);
+    app_get_device_info_select_main(argc, argv);
     
 
     return 0;

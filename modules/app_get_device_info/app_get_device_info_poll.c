@@ -1,12 +1,15 @@
 #include "app_get_device_info.h"
 
-int app_get_device_info_init(int argc, char *argv[]){
+int app_get_device_info_poll_init(int argc, char *argv[]){
 
     static int fd;
     struct input_id id; // 存储设备信息
 
     unsigned int evbit[EV_CNT/32 + 1]; // 0x1f 等于 31（十进制）
 
+
+    struct pollfd fds[1];
+    nfds_t nfds = 1;
     
 
 
@@ -115,9 +118,20 @@ int app_get_device_info_init(int argc, char *argv[]){
     while (1)
     {
 
-        len = read(fd, &event, sizeof(event));
-        if (len == sizeof(event)) {
-            printf("type: %d, code: %d, value: %d\n", event.type, event.code, event.value);
+        fds[0].events = POLLIN;
+        fds[0].fd = fd;
+        fds[0].revents = 0;
+        int ret = poll(fds, nfds, 2000);// 可以监听多个  文件描述符
+        if(ret > 0){
+            if(fds[0].revents == POLLIN){
+                while (read(fd, &event, sizeof(event)) == sizeof(event))
+                {
+                    printf("type: %d, code: %d, value: %d\n", event.type, event.code, event.value);
+                }
+                
+            }
+        } else if(ret == 0){
+            printf("timeout\n");
         }
         else {
             printf("read error\n");
@@ -130,75 +144,6 @@ int app_get_device_info_init(int argc, char *argv[]){
     return 0;
 }
 
-void app_get_device_info_main(int argc, char *argv[]){
-    app_get_device_info_init(argc, argv);
+void app_get_device_info_poll_main(int argc, char *argv[]){
+    app_get_device_info_poll_init(argc, argv);
 };
-
-
-// ./app_get_device_info /dev/input/event0
-
-
-// "EV_SYN",                   
-// "EV_KEY",
-// "EV_REL",
-// "EV_ABS",
-// "EV_MSC",
-// "EV_SW",
-// "NULL",
-// "NULL",
-// "NULL",
-// "NULL",
-// "NULL",
-// "EV_LED",
-// "EV_SND",
-// "NULL",
-// "EV_REP",
-// "EV_FF",
-// "EV_PWR",
-// "EV_FF_STATUS",
-// "EV_MAX",
-// "EV_CNT"
-
-
-// "EV_SYN"                    
-// "EV_KEY"
-// "EV_REL"
-// "EV_ABS"
-// "EV_MSC"
-// "EV_SW"
-// "NULL"
-// "NULL"
-// "NULL"
-// "NULL"
-// "NULL"
-// "EV_LED"
-// "EV_SND"
-// "NULL"
-// "EV_REP"
-// "EV_FF"
-// "EV_PWR"
-// "EV_FF_STATUS"
-// "EV_MAX"
-// "EV_CNT"
-
-
-// "EV_SYN"			0x00
-// "EV_KEY"			0x01
-// "EV_REL"			0x02
-// "EV_ABS"			0x03
-// "EV_MSC"			0x04
-// "EV_SW"			0x05
-// "NULL"
-// "NULL"
-// "NULL"
-// "NULL"
-// "NULL"
-// "EV_LED"			0x11
-// "EV_SND"			0x12
-// "NULL"
-// "EV_REP"			0x14
-// "EV_FF"			0x15
-// "EV_PWR"			0x16
-// "EV_FF_STATUS"	0x17
-// "EV_MAX"			0x1f
-// "EV_CNT"			(EV_MAX+1)

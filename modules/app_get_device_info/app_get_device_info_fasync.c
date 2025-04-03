@@ -1,6 +1,13 @@
 #include "app_get_device_info.h"
 
-int app_get_device_info_init(int argc, char *argv[]){
+void app_get_device_info_fasync_signal_handler(int signo){
+    printf("app_get_device_info_fasync_signal_handler\n");
+
+
+}
+
+
+int app_get_device_info_fasync_init(int argc, char *argv[]){
 
     static int fd;
     struct input_id id; // 存储设备信息
@@ -41,6 +48,9 @@ int app_get_device_info_init(int argc, char *argv[]){
         printf("Usage: %s <filename>\n", argv[0]);
         return -1;
     }
+
+    // 注册信号处理韩式 
+    signal(SIGIO, app_get_device_info_fasync_signal_handler);
 
     if(argc == 3 && !strcmp(argv[2], "noblock")){
         fd = open(argv[1], O_RDWR | O_NONBLOCK);
@@ -103,25 +113,19 @@ int app_get_device_info_init(int argc, char *argv[]){
                 }
             }
         }
-        // for (int i = 0; i < len * 8; i++) {  // 遍历所有 32 位
-        //     if (evbit[i / 32] & (1 << (i % 32))) {
-        //         printf("  EV_%d is supported\n", i);
-        //     }
-        // }
 
     }
 
-    struct input_event event;
+    fcntl(fd, F_SETOWN, getpid()); // 设置 文件描述符的 owner 为当前进程
+    unsigned int flags = fcntl(fd, F_GETFL);// 取出 文件描述符的 flag
+    fcntl(fd, F_SETFL, flags | FASYNC); // 设置 文件描述符的 flag 为 FASYNC
+    
+
+    int count = 0;
     while (1)
     {
-
-        len = read(fd, &event, sizeof(event));
-        if (len == sizeof(event)) {
-            printf("type: %d, code: %d, value: %d\n", event.type, event.code, event.value);
-        }
-        else {
-            printf("read error\n");
-        }
+		printf("main loop count = %d\n", count++);
+		sleep(2);
     }
     
 
@@ -130,12 +134,12 @@ int app_get_device_info_init(int argc, char *argv[]){
     return 0;
 }
 
-void app_get_device_info_main(int argc, char *argv[]){
-    app_get_device_info_init(argc, argv);
+void app_get_device_info_fasync_main(int argc, char *argv[]){
+    app_get_device_info_fasync_init(argc, argv);
 };
 
 
-// ./app_get_device_info /dev/input/event0
+// ./app_get_device_info_fasync /dev/input/event0
 
 
 // "EV_SYN",                   
