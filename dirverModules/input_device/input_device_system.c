@@ -1,35 +1,25 @@
-// SPDX-License-Identifier: GPL-2.0-only
-/*
- * Driver for keys on GPIO lines capable of generating interrupts.
- *
- * Copyright 2005 Phil Blundell
- * Copyright 2010, 2011 David Jander <david@protonic.nl>
- */
 
- #include <linux/module.h>
+#include <linux/module.h>
 
- #include <linux/hrtimer.h>
- #include <linux/init.h>
- #include <linux/fs.h>
- #include <linux/interrupt.h>
- #include <linux/irq.h>
- #include <linux/sched.h>
- #include <linux/pm.h>
- #include <linux/slab.h>
- #include <linux/sysctl.h>
- #include <linux/proc_fs.h>
- #include <linux/delay.h>
- #include <linux/platform_device.h>
- #include <linux/input.h>
- #include <linux/input_device.h>
- #include <linux/workqueue.h>
- #include <linux/gpio.h>
- #include <linux/gpio/consumer.h>
- #include <linux/of.h>
- #include <linux/of_irq.h>
- #include <linux/spinlock.h>
- #include <dt-bindings/input/gpio-keys.h>
-
+#include <linux/init.h>
+#include <linux/fs.h>
+#include <linux/interrupt.h>
+#include <linux/irq.h>
+#include <linux/sched.h>
+#include <linux/pm.h>
+#include <linux/slab.h>
+#include <linux/sysctl.h>
+#include <linux/proc_fs.h>
+#include <linux/delay.h>
+#include <linux/platform_device.h>
+#include <linux/input.h>
+#include <linux/gpio_keys.h>
+#include <linux/workqueue.h>
+#include <linux/gpio.h>
+#include <linux/gpio/consumer.h>
+#include <linux/of.h>
+#include <linux/of_irq.h>
+#include <linux/spinlock.h>
 
 
 
@@ -46,13 +36,13 @@ static int input_device_remove(struct platform_device *pdev)
     return 0;
 }
 
-static void gpio_keys_shutdown(struct platform_device *pdev)
+static void input_device_shutdown(struct platform_device *pdev)
 {
 
 }
 
  static const struct of_device_id input_device_of_match[] = {
-    { .compatible = "input_device,dirve", },
+    { .compatible = "dirve,input_device", },
     { },
 };
 
@@ -60,11 +50,10 @@ static void gpio_keys_shutdown(struct platform_device *pdev)
 static struct platform_driver input_device_device_driver = {
     .probe      = input_device_probe,
     .shutdown   = input_device_shutdown,
-    .remove     = my_gpio_remove,
+    .remove     = input_device_remove,
     .driver     = {
         .name   = "input_device",
         .of_match_table = input_device_of_match,
-
     }
 };
 

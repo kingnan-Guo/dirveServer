@@ -1,6 +1,6 @@
 /{
     input_device {
-        compatible = "input_device,dirve";
+        compatible = "dirve,input_device";
         interrupt="";
     }
 }
