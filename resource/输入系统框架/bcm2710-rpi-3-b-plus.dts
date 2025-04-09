@@ -8,70 +8,35 @@
 #include "bcm271x-rpi-bt.dtsi"
 #include "bcm283x-rpi-led-deprecated.dtsi"
 
-#define GROUP_PIN(group, pin) ((group << 16) | pin)
-
 / {
 	compatible = "raspberrypi,3-model-b-plus", "brcm,bcm2837";
 	model = "Raspberry Pi 3 Model B+";
 
-    my_board_n@0{
-        compatible = "my_board_device,my_drv";
-        pin = <GROUP_PIN(3, 1)>;
-		data = "2710";
-    };
-    my_board_n@1{
-        compatible = "my_board_device,my_drv";
-        pin = <GROUP_PIN(5, 8)>;
-		data = "2710";
-    };
-
-
 	/** 输出 27 */
-
 	my_outputs {
 		compatible = "my_outputs,my_drv";
 		pinctrl-names = "default";
 		pinctrl-0 = <&my_output_pins>;
 		output_1-gpios = <&gpio 27 GPIO_ACTIVE_HIGH>;
 	};
-	/** 输入 26 */
-	my_inputs {
-		compatible = "my_inputs,my_drv";
-		pinctrl-names = "default";
-		pinctrl-0 = <&my_input_pins>;
-		input_1-gpios = <&gpio 26 GPIO_ACTIVE_HIGH>;
-		input_1-linux,code = <28>;
-		input_1-debounce-interval = <50>; // 消抖时间 50ms
-	};
-
-
-	/* my interrupt */
-	my_interrupts {
-		compatible = "my_interrupts,my_drv";
-		pinctrl-names = "default";
-		pinctrl-0 = <&my_interrupt_pins>;
-		gpios = <&gpio 25 GPIO_ACTIVE_LOW>, <&gpio 24 GPIO_ACTIVE_LOW>;
-		interrupt-parent = <&gpio>;
-		interrupts = <24 2>, <25 2>;
-		status = "okay";
-	};
-
 
 	/* 添加 gpio-keys 节点，使用 GPIO25 */
 	gpio-keys {
 		compatible = "gpio-keys";
 		autorepeat; /* 支持按键自动重复 */
-		label = "gpio25-keys"; /* 输入设备名称 */
+		label = "gpio26-keys"; /* 输入设备名称 */
 
-		button@25 {
+		button@26 {
 			label = "enter_button";
-			gpios = <&gpio 25 1>; /* GPIO25，active-low */
+			gpios = <&gpio 26 1>; /* GPIO26，active-low */
 			linux,code = <28>; /* KEY_ENTER */
 			debounce-interval = <10>; /* 去抖时间 10ms */
 			wakeup-source; /* 支持唤醒 */
 			linux,can-disable; /* 可通过 sysfs 禁用 */
 		};
 	};
+
+
 
 
 
@@ -211,22 +176,9 @@
 		brcm,pull = <0>;
 	};
 
-
 	my_output_pins: my_output_pins{
 		brcm,pins = <27>;
 		brcm,function = <1>;
-	};
-
-	my_input_pins: my_input_pins{
-		brcm,pins = <26>;
-		brcm,function = <0>;
-		brcm,pull = <2>;
-	};
-
-	my_interrupt_pins: my_interrupt_pins {
-		brcm,pins = <24 25>;
-		brcm,function = <0>;
-		brcm,pull = <2>;
 	};
 
 };

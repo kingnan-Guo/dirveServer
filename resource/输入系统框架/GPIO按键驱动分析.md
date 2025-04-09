@@ -1,5 +1,5 @@
 2025/04/09 22:19
-# 名称
+# GPIO按键驱动分析
     分支
         dirver_raspberry_XXXXX_vX.X.X
 
@@ -41,6 +41,27 @@ input_device 设置
             linux,code = <KEY_ENTER>;
             debounce-interval = <10>;
         };
+
+        button@17 {
+            label = "power_button"; /* 可选，描述 */
+            gpios = <&gpio 17 1>; /* GPIO17，active-low */
+            linux,code = <116>; /* KEY_POWER 的代码 */
+            debounce-interval = <15>; /* 去抖时间 15ms */
+            wakeup-event-action = <1>; /* EV_ACT_ASSERTED */
+        };
+
+
+
+        button@25 {
+            label = "enter_button"; /* 可选，描述 */
+            gpios = <&gpio 25 1>; /* GPIO25，active-low */
+            linux,code = <28>; /* KEY_ENTER 的代码 */
+            debounce-interval = <10>; /* 去抖时间 10ms */
+            wakeup-source; /* 支持唤醒 */
+            linux,can-disable; /* 可通过 sysfs 禁用 */
+        };
+
+
     };
 
 
@@ -57,10 +78,12 @@ input_device 设置
 
 # 流程
 
+GPIO 输入子系统 只需要 写设备树 就可以
+
 
 # 执行顺序
 
-
+ 
 # 内部机制
 
 
@@ -91,3 +114,43 @@ cd /sys/class
 
 # 扩展
 
+
+   在  
+    /opt/sources/linux-rpi-6.6.y/scripts/dtc/include-prefixes/arm/broadcom/bcm2710-rpi-3-b-plus.dts
+
+
+
+    make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-  dtbs  V=1 
+
+
+
+    编译结果
+    arch/arm64/boot/dts/broadcom/bcm2710-rpi-3-b-plus.dtb
+
+    替换  
+    /boot/firmware 下的 设备树
+
+
+
+    ls /proc/device-tree/
+
+    ls /proc/device-tree/gpio-keys
+
+    打印出
+
+    I: Bus=0019 Vendor=0001 Product=0001 Version=0100
+    N: Name="gpio26-keys"
+    P: Phys=gpio-keys/input0
+    S: Sysfs=/devices/platform/gpio-keys/input/input6
+    U: Uniq=
+    H: Handlers=kbd event5 
+    B: PROP=0
+    B: EV=100003
+    B: KEY=10000000
+
+
+    hexdump /dev/input/event5 -o -v -e '16/1 "%02x " "\n"'
+
+
+
+    ps -ef | grep hexdump
