@@ -1,0 +1,47 @@
+/{
+    input_device {
+        compatible = "dirve,input_device";
+        reg = <0x021B4000 16>;// 设备树里面指定 寄存器 基地址; 0x021B4000 是寄存器基地址，16是寄存器长度
+        // 指定中断号  属于哪个gpio， 上升下降沿都会触发； 指定用哪个中断，并且指定中断触发 类型
+		gpios = <&gpio 25  GPIO_ACTIVE_LOW｜GPIO_ACTIVE_HEIGH >;// 上升下降沿都会触发；
+		interrupt-parent = <&gpio>;
+		interrupts = <25 3>;
+    }
+
+
+    input_device {
+        compatible = "dirve,input_device";
+        gpios = <&gpio 25 1>; /* GPIO26，active-low */
+        linux,code = <28>; /* KEY_ENTER */
+		interrupt-parent = <&gpio>;
+		interrupts = <25 3>;
+    };
+
+} 
+
+
+
+
+
+
+
+
+这种写法 不知道如何使用，应该是单独放在 一个 文件里
+
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2837";
+
+    fragment@0 {
+        target-path = "/";
+        __overlay__ {
+            input_device {
+                compatible = "dirve,input_device";
+                gpios = <&gpio 26 1>; /* GPIO26，active-low */
+                linux,code = <28>; /* KEY_ENTER */
+            };
+        };
+    };
+};

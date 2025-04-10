@@ -30,6 +30,13 @@
 static struct input_dev *global_input_device;
 static int input_device_irq;
 
+struct input_device_data {
+    struct input_dev *input_device; //  输入设备
+    struct gpio_desc * gpiod;// GPIO描述符
+    int irq;// 中断号
+    unsigned int key_code;// 按键码
+}
+
 
 
 /* 中断处理函数 */
@@ -50,19 +57,33 @@ static int input_device_probe(struct platform_device *pdev)
     int err;
     struct resource *irq;
     struct device *dev = &pdev->dev;
+    struct input_device_data *input_device_data;
+
+
+    input_device_data = devm_kzalloc(dev, sizeof(*input_device_data), GFP_KERNEL);
+
     /** 从设备树里面 获得 设备信息 */
 
     /** / alloc / set / register       struct input_device */
-    global_input_device = devm_input_allocate_device(dev);// 分配输入设备
+    // global_input_device = devm_input_allocate_device(dev);// 分配输入设备
+    
 
-	global_input_device->name = pdev->name;
-	global_input_device->phys = pdev->name;
-	global_input_device->dev.parent = dev;
+	// global_input_device->name = pdev->name;
+	// global_input_device->phys = pdev->name;
+	// global_input_device->dev.parent = dev;
 
-	global_input_device->id.bustype = BUS_HOST;
-	global_input_device->id.vendor = 0x0001;
-	global_input_device->id.product = 0x0001;
-	global_input_device->id.version = 0x0100;
+	// global_input_device->id.bustype = BUS_HOST;
+	// global_input_device->id.vendor = 0x0001;
+	// global_input_device->id.product = 0x0001;
+	// global_input_device->id.version = 0x0100;
+
+
+    input_device_data->input_device = devm_input_allocate_device(dev);// 分配输入设备;
+
+    input_device_data->gpiod = devm_gpiod_get(dev, NULL, GPIOD_IN);// 
+
+
+
 
     // set 1 设置哪一类型事件
     __set_bit(EV_KEY, global_input_device->evbit);// 设置 按键 
@@ -70,7 +91,7 @@ static int input_device_probe(struct platform_device *pdev)
 
     // set 2 设置哪些事件 
     // /include/uapi/linux/input-event-codes.h
-    __set_bit(BIN_TOUCH, global_input_device->keybit);// 对于 触摸屏来说 支持哪一个 按键 BIN_TOUCH
+    __set_bit(BTN_TOUCH, global_input_device->keybit);// 对于 触摸屏来说 支持哪一个 按键 BIN_TOUCH
     __set_bit(ABS_MT_SLOT, global_input_device->keybit);// 触摸屏 支持的 绝对位移 是 具体是哪一个  
     __set_bit(ABS_MT_POSITION_X, global_input_device->keybit);
     __set_bit(ABS_MT_POSITION_Y, global_input_device->keybit);
