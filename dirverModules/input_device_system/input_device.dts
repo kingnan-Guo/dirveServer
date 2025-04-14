@@ -45,3 +45,44 @@
         };
     };
 };
+
+
+
+
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2837";
+
+    fragment@0 {
+        target-path = "/";
+        __overlay__ {
+            input_device {
+                compatible = "dirve,input_device";
+                #address-cells = <1>;
+                #size-cells = <0>;
+
+                /* 按键 1：GPIO26 */
+                button@0 {
+                    reg = <0>; /* 子节点标识 */
+                    gpios = <&gpio 26 1>; /* GPIO26, active-low */
+                    linux,code = <28>; /* KEY_ENTER */
+                    label = "enter_button";
+                    interrupt-parent = <&gpio>;
+                    interrupts = <26 3>;
+                };
+
+                /* 按键 2：GPIO27 */
+                button@1 {
+                    reg = <1>;
+                    gpios = <&gpio 27 1>; /* GPIO27, active-low */
+                    linux,code = <116>; /* KEY_POWER */
+                    label = "power_button";
+                                        interrupt-parent = <&gpio>;
+                    interrupts = <26 3>;
+                };
+            };
+        };
+    };
+};

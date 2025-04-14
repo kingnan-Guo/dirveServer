@@ -78,10 +78,20 @@ static int input_device_probe(struct platform_device *pdev)
 	// global_input_device->id.version = 0x0100;
 
 
-    input_device_data->input_device = devm_input_allocate_device(dev);// 分配输入设备;
+    // input_device_data->input_device = devm_input_allocate_device(dev);// 分配输入设备;
 
-    input_device_data->gpiod = devm_gpiod_get(dev, NULL, GPIOD_IN);// 
+    // input_device_data->gpiod = devm_gpiod_get(dev, NULL, GPIOD_IN);// 
 
+
+    int nbuttons = device_get_child_node_count(dev);
+    printk(KERN_INFO "nbuttons = %d\n", nbuttons);
+
+
+    // device_get_child_node_count(dev);
+
+    // for_each_child_of_node(){
+        
+    // }
 
 
 
