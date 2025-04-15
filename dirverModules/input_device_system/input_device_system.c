@@ -26,6 +26,7 @@
 #include <linux/of.h>
 #include <linux/of_irq.h>
 #include <linux/spinlock.h>
+#include <dt-bindings/input/gpio-keys.h>
 
 static struct input_dev *global_input_device;
 static int input_device_irq;
@@ -87,47 +88,55 @@ static int input_device_probe(struct platform_device *pdev)
     printk(KERN_INFO "nbuttons = %d\n", nbuttons);
 
 
-    // device_get_child_node_count(dev);
-
-    // for_each_child_of_node(){
-        
-    // }
 
 
-
-    // set 1 设置哪一类型事件
-    __set_bit(EV_KEY, global_input_device->evbit);// 设置 按键 
-    __set_bit(EV_ABS, global_input_device->evbit);// 绝对位移
-
-    // set 2 设置哪些事件 
-    // /include/uapi/linux/input-event-codes.h
-    __set_bit(BTN_TOUCH, global_input_device->keybit);// 对于 触摸屏来说 支持哪一个 按键 BIN_TOUCH
-    __set_bit(ABS_MT_SLOT, global_input_device->keybit);// 触摸屏 支持的 绝对位移 是 具体是哪一个  
-    __set_bit(ABS_MT_POSITION_X, global_input_device->keybit);
-    __set_bit(ABS_MT_POSITION_Y, global_input_device->keybit);
-
-
-    // set 3 设置 参数 ，例如 最大值 最小值
-    input_set_abs_params(global_input_device, ABS_MT_POSITION_X, 0, 0xFFFF, 0, 0);// 设置 绝对位移 的参数
-
-
-
-    // register 设置完成 后 开始 注册
-
-    err = input_register_device(global_input_device);
-
-
-    /** 硬件相关操作 */
-    //从 平台设备 platform device 中获取 中断号
-    irq =  platform_get_resource(pdev, IORESOURCE_IRQ, 0);
-    if (!irq) {
-        dev_err(dev, "Failed to get IRQ resource\n");
-        return -EINVAL;
+    for_each_child_of_node(node, child){
+        input_device_data->gpiod = devm_fwnode_gpiod_get(dev, child, NULL, GPIOD_IN, "button");
+        u32 key_code;
+        fwnode_property_read_u32(child, "linux,code", &key_code);
     }
-    // 获取中断号
 
-    // err = devm_request_irq(dev, irq->start, input_device_irq_handler, IRQF_TRIGGER_RISING, "input_device_irq", NULL);
-    err = devm_request_irq(dev, irq->start, input_device_irq_handler, irq->flags, "input_device_irq", NULL);
+
+
+
+
+
+
+
+
+    // // set 1 设置哪一类型事件
+    // __set_bit(EV_KEY, global_input_device->evbit);// 设置 按键 
+    // __set_bit(EV_ABS, global_input_device->evbit);// 绝对位移
+
+    // // set 2 设置哪些事件 
+    // // /include/uapi/linux/input-event-codes.h
+    // __set_bit(BTN_TOUCH, global_input_device->keybit);// 对于 触摸屏来说 支持哪一个 按键 BIN_TOUCH
+    // __set_bit(ABS_MT_SLOT, global_input_device->keybit);// 触摸屏 支持的 绝对位移 是 具体是哪一个  
+    // __set_bit(ABS_MT_POSITION_X, global_input_device->keybit);
+    // __set_bit(ABS_MT_POSITION_Y, global_input_device->keybit);
+
+
+    // // set 3 设置 参数 ，例如 最大值 最小值
+    // input_set_abs_params(global_input_device, ABS_MT_POSITION_X, 0, 0xFFFF, 0, 0);// 设置 绝对位移 的参数
+
+
+
+    // // register 设置完成 后 开始 注册
+
+    // err = input_register_device(global_input_device);
+
+
+    // /** 硬件相关操作 */
+    // //从 平台设备 platform device 中获取 中断号
+    // irq =  platform_get_resource(pdev, IORESOURCE_IRQ, 0);
+    // if (!irq) {
+    //     dev_err(dev, "Failed to get IRQ resource\n");
+    //     return -EINVAL;
+    // }
+    // // 获取中断号
+
+    // // err = devm_request_irq(dev, irq->start, input_device_irq_handler, IRQF_TRIGGER_RISING, "input_device_irq", NULL);
+    // err = devm_request_irq(dev, irq->start, input_device_irq_handler, irq->flags, "input_device_irq", NULL);
 
     return 0;
 }
