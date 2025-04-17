@@ -31,13 +31,19 @@
 static struct input_dev *global_input_device;
 static int input_device_irq;
 
-struct input_device_data {
+struct input_device_button_data {
     struct input_dev *input_device; //  输入设备
     struct gpio_desc * gpiod;// GPIO描述符
     int irq;// 中断号
     unsigned int key_code;// 按键码
 }
 
+struct input_device_data {
+    struct input_dev *input_dev;
+    int n_buttons;
+    struct input_device_button_data button_data[];
+    // struct input_device_button_data *button_data;
+}
 
 
 /* 中断处理函数 */
@@ -61,13 +67,42 @@ static int input_device_probe(struct platform_device *pdev)
     struct input_device_data *input_device_data;
 
 
-    input_device_data = devm_kzalloc(dev, sizeof(*input_device_data), GFP_KERNEL);
+    // input_device_data = devm_kzalloc(dev, sizeof(*input_device_data), GFP_KERNEL);
+
+    // 获取子节点的数量
+    int nbuttons = device_get_child_node_count(dev);
+    printk(KERN_INFO "nbuttons = %d\n", nbuttons);
+
+    // 分配私有数据 
+    // 这是 分配 一个 input_device_data 大小 + 数组 大小的 内存
+    // input_device_data = devm_kzalloc(dev, sizeof(*input_device_data) + nbuttons  * sizeof(input_device_data->button_data[0]), GFP_KERNEL);
+    input_device_data = devm_kzalloc(dev, struct_size(input_device_data, button_data, nbuttons), GFP_KERNEL);// 跟上面是相同的意思
+   
+    // 储存 子节点数量
+    input_device_data->n_buttons = nbuttons;
+
+
+
+
+
+
 
     /** 从设备树里面 获得 设备信息 */
 
     /** / alloc / set / register       struct input_device */
-    // global_input_device = devm_input_allocate_device(dev);// 分配输入设备
-    
+
+
+    input_device_data->input_dev = devm_input_allocate_device(dev);// 分配输入设备
+    if (!input_device_data->input) {
+        dev_err(dev, "Failed to allocate input device\n");
+        return -ENOMEM;
+    }
+
+
+    input_device_data->input_dev->name = "input_device";
+    input_device_data->input_dev->phys = "input_device";
+    input_device_data
+
 
 	// global_input_device->name = pdev->name;
 	// global_input_device->phys = pdev->name;
@@ -84,16 +119,22 @@ static int input_device_probe(struct platform_device *pdev)
     // input_device_data->gpiod = devm_gpiod_get(dev, NULL, GPIOD_IN);// 
 
 
-    int nbuttons = device_get_child_node_count(dev);
-    printk(KERN_INFO "nbuttons = %d\n", nbuttons);
 
 
 
 
+    __set_bit(EV_KEY, input_device_data->input_device->evbit);
+    
     for_each_child_of_node(node, child){
-        input_device_data->gpiod = devm_fwnode_gpiod_get(dev, child, NULL, GPIOD_IN, "button");
-        u32 key_code;
-        fwnode_property_read_u32(child, "linux,code", &key_code);
+        input_device_data->gpiod = devm_fwnode_gpiod_get(dev, child, NULL, GPIOD_IN, "button");// 获取 GPIO 描述符
+        // u32 key_code;// 按键码
+        // err = fwnode_property_read_u32(child, "linux,code", &key_code);// 获取按键码
+        err = fwnode_property_read_u32(child, "linux,code", input_device_data->key_code);// 获取按键码
+    
+        __set_bit(key_code, input_device_data->input_device->keybit);// 设置按键码
+        // 获取中断号
+        
+
     }
 
 
@@ -105,7 +146,7 @@ static int input_device_probe(struct platform_device *pdev)
 
 
     // // set 1 设置哪一类型事件
-    // __set_bit(EV_KEY, global_input_device->evbit);// 设置 按键 
+    __set_bit(EV_KEY, global_input_device->evbit);// 设置 按键 
     // __set_bit(EV_ABS, global_input_device->evbit);// 绝对位移
 
     // // set 2 设置哪些事件 
