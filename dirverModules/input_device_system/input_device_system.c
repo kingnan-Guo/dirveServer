@@ -71,7 +71,8 @@ static irqreturn_t input_device_irq_handler(int irq, void *dev_id){
 
 
     // printk(KERN_INFO "input_device_irq_handler irq %d\n", irq);
-    dev_info(dev, "nbuttons = %d\n", nbuttons);
+    dev_dbg(&button_data->input_device->dev, "IRQ %d triggered, key_code=%d, state=%d\n",
+        irq, button_data->key_code, state);
     return IRQ_HANDLED;
 }
 
