@@ -82,6 +82,16 @@
                     interrupt-parent = <&gpio>;
                     interrupts = <26 3>;
                 };
+
+                /* 按键 3：GPIO25 */
+                button@2 {
+                    reg = <2>;
+                    gpios = <&gpio 25 1>; /* GPIO25, active-low */
+                    linux,code = <114>; /* KEY_BACK */
+                    label = "back_button";
+                    interrupt-parent = <&gpio>;
+                    interrupts = <26 3>;
+                };
             };
         };
     };
