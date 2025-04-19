@@ -80,7 +80,7 @@
                     linux,code = <116>; /* KEY_POWER */
                     label = "power_button";
                     interrupt-parent = <&gpio>;
-                    interrupts = <26 3>;
+                    interrupts = <27 3>;
                 };
 
                 /* 按键 3：GPIO25 */
@@ -90,7 +90,7 @@
                     linux,code = <114>; /* KEY_BACK */
                     label = "back_button";
                     interrupt-parent = <&gpio>;
-                    interrupts = <26 3>;
+                    interrupts = <25 3>;
                 };
             };
         };
