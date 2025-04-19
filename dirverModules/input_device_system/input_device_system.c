@@ -47,34 +47,65 @@ struct input_device_data {
 
 
 /* 中断处理函数 */
-static irqreturn_t input_device_irq_handler(int irq, void *dev_id){
-    /** 读取硬件 得到数据 */
+// static irqreturn_t input_device_irq_handler(int irq, void *dev_id){
+//     /** 读取硬件 得到数据 */
 
 
 
-    /** 上报数据  input_event */
-    // input_event(global_input_device, EV_KEY, XX, 0);// 上报 按键事件
-    // input_sync(global_input_device);// 同步事件
+//     /** 上报数据  input_event */
+//     // input_event(global_input_device, EV_KEY, XX, 0);// 上报 按键事件
+//     // input_sync(global_input_device);// 同步事件
 
+//     struct input_device_button_data *button_data = dev_id;
+
+//     int state = gpiod_get_value(button_data->gpiod);
+//     if (state < 0) {
+//         dev_err(&button_data->input_device->dev, "Failed to read GPIO: %d\n", state);
+//         return IRQ_HANDLED;
+//     }
+
+
+//     // 上报按键事件
+//     input_event(button_data->input_device, EV_KEY, button_data->key_code, state);
+//     input_sync(button_data->input_device);
+
+
+//     // printk(KERN_INFO "input_device_irq_handler irq %d\n", irq);
+//     dev_dbg(&button_data->input_device->dev, "IRQ %d triggered, key_code=%d, state=%d\n",
+//         irq, button_data->key_code, state);
+//     return IRQ_HANDLED;
+// }
+
+static irqreturn_t input_device_irq_handler(int irq, void *dev_id)
+{
     struct input_device_button_data *button_data = dev_id;
+    static unsigned long last_time;
+    unsigned long now = jiffies;
+    int state;
 
-    int state = gpiod_get_value(button_data->gpiod);
+    /* 忽略 50ms 内的重复中断 */
+    if (time_before(now, last_time + msecs_to_jiffies(50)))
+        return IRQ_HANDLED;
+    last_time = now;
+
+    state = gpiod_get_value(button_data->gpiod);
     if (state < 0) {
         dev_err(&button_data->input_device->dev, "Failed to read GPIO: %d\n", state);
         return IRQ_HANDLED;
     }
 
-
-    // 上报按键事件
     input_event(button_data->input_device, EV_KEY, button_data->key_code, state);
     input_sync(button_data->input_device);
-
-
-    // printk(KERN_INFO "input_device_irq_handler irq %d\n", irq);
     dev_dbg(&button_data->input_device->dev, "IRQ %d triggered, key_code=%d, state=%d\n",
-        irq, button_data->key_code, state);
+            irq, button_data->key_code, state);
+
+    dev_info(&button_data->input_device->dev, "IRQ %d triggered, key_code=%d, state=%d\n",
+            irq, button_data->key_code, state);
     return IRQ_HANDLED;
 }
+
+
+
 
 
 static int input_device_probe(struct platform_device *pdev)

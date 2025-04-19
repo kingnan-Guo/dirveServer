@@ -11,7 +11,8 @@
 // #include "app_interrupt_sleep_wake_up_threadedirq.h" // 内核线程中断
 // #include "app_mmap.h"
 // #include "app_assembly.h"
-#include "app_get_device_info.h"
+// #include "app_get_device_info.h"
+#include "app_input_device_system.h"
 
 
 int main(int argc, char *argv[]){
@@ -37,7 +38,8 @@ int main(int argc, char *argv[]){
 
     // app_get_device_info_main(argc, argv);
     // app_get_device_info_poll_main(argc, argv);
-    app_get_device_info_select_main(argc, argv);
+    // app_get_device_info_select_main(argc, argv);
+    app_input_device_system_main(argc, argv);
     
 
     return 0;

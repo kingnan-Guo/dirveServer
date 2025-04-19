@@ -136,6 +136,7 @@ cd /sys/class
 
     ls /proc/device-tree/gpio-keys
 
+    cat /proc/bus/input/devices
     打印出
 
     I: Bus=0019 Vendor=0001 Product=0001 Version=0100
