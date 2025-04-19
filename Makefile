@@ -128,9 +128,14 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 
 
 # # my_dirver_assembly 汇编 ---------------------
-my_dirver_assembly-y := $(MODULES_DIR)/my_dirver_assembly/my_dirver_assembly.o $(MODULES_DIR)/my_dirver_assembly/my_asm_add.o
-obj-m := my_dirver_assembly.o
+# my_dirver_assembly-y := $(MODULES_DIR)/my_dirver_assembly/my_dirver_assembly.o $(MODULES_DIR)/my_dirver_assembly/my_asm_add.o
+# obj-m := my_dirver_assembly.o
 
+
+
+# # input_device_system 输入系统 	---------------------
+input_device_system-y := $(MODULES_DIR)/input_device_system/input_device_system.o
+obj-m := input_device_system.o
 
 
 all:
