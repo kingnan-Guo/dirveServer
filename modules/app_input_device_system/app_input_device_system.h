@@ -11,6 +11,10 @@
 #include <poll.h>
 #include <signal.h>
 #include <sys/mman.h>
+#include <errno.h>
+#include <sys/ioctl.h>
+#include <linux/input.h>
+#include <time.h>
 
 
 
