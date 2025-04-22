@@ -19,3 +19,5 @@
 
 
 void app_input_device_system_main(int argc, char *argv[]);
+
+void app_input_device_system_poll_main(int argc, char *argv[]);

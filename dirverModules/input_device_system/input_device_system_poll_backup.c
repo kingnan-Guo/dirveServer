@@ -31,7 +31,6 @@
 
 #define DEVICE_NAME "my_input_device"
 #define CLASS_NAME "my_input_device_class"
-#define BUFFER_LEN 128
 // static struct input_dev *global_input_device;
 // static int input_device_irq;
 
@@ -51,7 +50,15 @@ struct input_device_data {
 };
 
 
-
+struct my_input_device{
+    struct input_device_data *input_data;
+    struct cdev cdev;// 字符设备
+    dev_t dev_no;// 设备号
+    struct class *class;//储存  class_create创建的 类 的返回值
+    struct device *device;// 储存  device_create 的返回值
+}
+/* 全局设备数据 */
+static struct my_input_device *my_input_dev;
 
 
 /* 环形缓冲区 */
@@ -62,32 +69,11 @@ struct button_event {
     unsigned long press_count;     /* 按下次数 */
 }
 
-
-// static struct button_event event_buffer[BUFFER_LEN];
-// static DEFINE_SPINLOCK(buffer_lock); // 环形缓冲区的锁 ; 
+#define BUFFER_LEN 128
+static struct button_event event_buffer[BUFFER_LEN];
+static DEFINE_SPINLOCK(buffer_lock); // 环形缓冲区的锁 ; 
 static int read_index = 0;
 static int write_index = 0;
-
-
-
-
-struct my_input_device{
-    struct input_device_data *input_data;
-    struct cdev cdev;// 字符设备
-    dev_t dev_no;// 设备号
-    struct class *class;//储存  class_create创建的 类 的返回值
-    struct device *device;// 储存  device_create 的返回值
-
-    struct button_event event_buffer[BUFFER_LEN];
-    spinlock_t buffer_lock;
-    int read_index = 0;
-    int write_index = 0;
-    wait_queue_head_t wait_queue;// 等待队列
-}
-/* 全局设备数据 */
-static struct my_input_device *my_input_dev;
-
-
 
 /* 环形缓冲区操作 */
 static int next_pos(int pos)
@@ -95,46 +81,25 @@ static int next_pos(int pos)
     return (pos + 1) % BUFFER_LEN;
 }
 
-static int is_buffer_empty(struct my_input_device *my_input_dev)
+static int is_buffer_empty(void)
 {
-    // return (read_index == write_index);
-    return (my_input_dev->read_index == my_input_dev->write_index);
+    return (read_index == write_index);
 }
 
-static int is_buffer_full(struct my_input_device *my_input_dev)
+static int is_buffer_full(void)
 {
-    // return (read_index == next_pos(write_index));
-    return (my_input_dev->read_index == my_input_dev->next_pos(my_input_dev->write_index));
+    return (read_index == next_pos(write_index));
 }
 
 
-static void push_event(struct my_input_device *my_input_dev, struct button_event *event){
-    // unsigned long flags;
-    // spin_lock_irqsave(&buffer_lock, flags);// 获取锁
-    // if (!is_buffer_full()) {
-    //     event_buffer[write_index] = *event;
-    //     write_index = next_pos(write_index);
-    // }
-    // spin_unlock_irqrestore(&buffer_lock, flags);// 释放锁
-
-
+static void push_event(struct button_event *event){
     unsigned long flags;
-    int was_buffer_empty;
-    spin_lock_irqsave(&my_input_dev->buffer_lock, flags);// 获取锁
-    was_buffer_empty = is_buffer_empty(my_input_dev);
-    if(!is_buffer_full(my_input_dev)){
-        my_input_dev->event_buffer[my_input_dev->write_index] = *event;
-        my_input_dev->write_index = next_pos(my_input_dev->write_index);
-
-        if(was_buffer_empty){
-            wake_up_interruptible(&my_input_dev->wait_queue);// 唤醒等待队列
-        }
-
+    spin_lock_irqsave(&buffer_lock, flags);// 获取锁
+    if (!is_buffer_full()) {
+        event_buffer[write_index] = *event;
+        write_index = next_pos(write_index);
     }
-
-    spin_unlock_irqrestore(&my_input_dev->buffer_lock, flags);// 释放锁
-    
-
+    spin_unlock_irqrestore(&buffer_lock, flags);// 释放锁
 }
 
 static int get_event(struct button_event *event){
