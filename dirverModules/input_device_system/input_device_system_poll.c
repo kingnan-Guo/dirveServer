@@ -125,28 +125,36 @@ static void push_event(struct my_input_device *my_input_dev, struct button_event
     if(!is_buffer_full(my_input_dev)){
         my_input_dev->event_buffer[my_input_dev->write_index] = *event;
         my_input_dev->write_index = next_pos(my_input_dev->write_index);
-
         if(was_buffer_empty){
             wake_up_interruptible(&my_input_dev->wait_queue);// 唤醒等待队列
         }
-
     }
-
     spin_unlock_irqrestore(&my_input_dev->buffer_lock, flags);// 释放锁
-    
-
 }
 
-static int get_event(struct button_event *event){
+static int get_event(struct my_input_device *my_input_dev, struct button_event *event){
+    // unsigned long flags;
+    // spin_lock_irqsave(&buffer_lock, flags);// 获取锁
+    // int ret = 0;
+    // if (!is_buffer_empty()) {
+    //     *event = event_buffer[read_index];
+    //     read_index = next_pos(read_index);
+    //     ret = 1;
+    // }
+    // spin_unlock_irqrestore(&buffer_lock, flags);// 释放锁
+    // return ret;
+
+
     unsigned long flags;
-    spin_lock_irqsave(&buffer_lock, flags);// 获取锁
     int ret = 0;
-    if (!is_buffer_empty()) {
-        *event = event_buffer[read_index];
-        read_index = next_pos(read_index);
+    spin_lock_irqsave(&my_input_dev->buffer_lock, flags);// 获取锁
+
+    if(!is_buffer_full(my_input_dev)){
+        *event = my_input_dev->event_buffer[my_input_dev->read_index];
+        my_input_dev->read_index = next_pos(my_input_dev->read_index);
         ret = 1;
     }
-    spin_unlock_irqrestore(&buffer_lock, flags);// 释放锁
+    spin_unlock_irqrestore(&my_input_dev->buffer_lock, flags);// 释放锁
     return ret;
 }
 
@@ -196,6 +204,7 @@ static irqreturn_t input_device_irq_handler(int irq, void *dev_id)
     unsigned long now = jiffies;
     int state;
     struct button_event event;
+    struct my_input_device *dev = my_input_dev;
 
     /* 忽略 50ms 内的重复中断 */
     if (time_before(now, last_time + msecs_to_jiffies(50)))
@@ -231,7 +240,7 @@ static irqreturn_t input_device_irq_handler(int irq, void *dev_id)
     // event.input_ev.time = ktime_get();
     getnstimeofday(&event.input_ev.time);
     event.press_count = button_data->press_count;
-    push_event(&event);
+    push_event(dev, &event);
 
 
 
@@ -259,7 +268,7 @@ static ssize_t my_input_read(struct file *file, char __user *buf, size_t count, 
     int ret = 0;
 
     // 这段 拿到了 event
-    if(!get_event(&event)){
+    if(!get_event(dev, &event)){
         return -EAGAIN;
     }
 
@@ -294,10 +303,11 @@ static int my_input_release(struct inode *inode, struct file *file)
 
 static unsigned int my_poll(struct file *file, struct poll_table_struct *wait)
 {
+    struct my_input_device *dev = file->private_data;
     // printk(KERN_INFO "%s: Poll operation not supported\n", DEVICE_NAME);
     // poll_wait(file, &my_wait_queue, wait);//  这里会休眠不会休眠
 
-
+    poll_wait(file, &dev->wait_queue, wait);//  这里会休眠不会休眠
 
 
     // 判断是否为 空 为 空 返回 0, 否则返回 POLLIN | POLLRDNORM； POLLIN | POLLRDNORM 表示有数据可读
@@ -376,6 +386,16 @@ static int input_device_probe(struct platform_device *pdev)
     }
     my_input_dev->input_data = input_device_data;
 
+
+    // 初始化自旋锁  
+    spin_lock_init(&my_input_dev->buffer_lock);
+    my_input_dev->read_inx = 0;// 初始化读索引
+    my_input_dev->write_inx = 0;// 初始化写索引
+    // 初始化等待队列头
+    init_waitqueue_head(&my_input_dev->wait_queue);// 
+
+    
+
     // 初始化字符设备 结构体， 跟之前 的 register_chrdev 有些不太一样
     err = alloc_chrdev_region(&my_input_dev->dev_no, 0, 1, DEVICE_NAME);// 分配设备号, 存放在 my_input_dev->dev_no 中 
     if (err < 0) {
@@ -452,6 +472,12 @@ static int input_device_probe(struct platform_device *pdev)
 	// global_input_device->id.version = 0x0100;
     // input_device_data->input_device = devm_input_allocate_device(dev);// 分配输入设备;
     // input_device_data->gpiod = devm_gpiod_get(dev, NULL, GPIOD_IN);// 
+
+
+
+
+
+
 
 
 
