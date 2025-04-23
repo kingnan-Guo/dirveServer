@@ -39,7 +39,8 @@ int main(int argc, char *argv[]){
     // app_get_device_info_main(argc, argv);
     // app_get_device_info_poll_main(argc, argv);
     // app_get_device_info_select_main(argc, argv);
-    app_input_device_system_main(argc, argv);
+    // app_input_device_system_main(argc, argv);
+    app_input_device_system_poll_main(argc, argv);
     
 
     return 0;

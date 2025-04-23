@@ -134,8 +134,13 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 
 
 # # input_device_system 输入系统 	---------------------
-input_device_system-y := $(MODULES_DIR)/input_device_system/input_device_system.o
-obj-m := input_device_system.o
+# input_device_system-y := $(MODULES_DIR)/input_device_system/input_device_system.o
+# obj-m := input_device_system.o
+
+
+# # input_device_system_poll 	---------------------
+input_device_system_poll-y := $(MODULES_DIR)/input_device_system/input_device_system_poll.o
+obj-m := input_device_system_poll.o
 
 
 all:
