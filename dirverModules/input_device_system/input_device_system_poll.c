@@ -317,9 +317,28 @@ static unsigned int my_poll(struct file *file, struct poll_table_struct *wait)
 
 
 // ioctl 是 用户空间 和 内核空间 通信 的一个接口
+// ioctl 函数的参数：
+// file：指向文件对象的指针，通常由 open 函数返回。
+// cmd：要执行的操作的命令码，通常是一个宏定义。
+// arg：操作所需的参数，可以是任意类型的数据。
 static long my_input_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
     struct my_input_device *dev = file->private_data;
+    switch (cmd) {
+        case IOCTL_RESET_COUNT:
+            // 重置按键计数
+            unsigned int button_idx;
+            if (copy_from_user(&button_idx, (unsigned int *)arg, sizeof(button_idx))) {
+                return -EFAULT;
+            }
+            if (button_idx >= dev->input_data->n_buttons) {
+                return -EINVAL;
+            }
+            dev->input_data->button_data[button_idx].press_count = 0;
+
+        default:
+            return -EINVAL;
+    }
 
 
     return -ENOTTY;
