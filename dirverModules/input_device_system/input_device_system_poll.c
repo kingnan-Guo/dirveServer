@@ -20,8 +20,6 @@
 #include <linux/spinlock.h>
 #include <linux/poll.h>
 #include <linux/cdev.h>
-#include <linux/time.h>
-#include <linux/time64.h>
 #include <dt-bindings/input/gpio-keys.h>
 #include <linux/kobject.h>
 
@@ -125,7 +123,6 @@ static irqreturn_t input_device_irq_handler(int irq, void *dev_id)
     struct button_event event;
     struct my_input_device *dev = my_input_dev;
     struct input_device_data *input_data = input_get_drvdata(button_data->input_device);
-    struct timespec64 ts;
 
     if (time_before(now, button_data->last_time + msecs_to_jiffies(50)))
         return IRQ_HANDLED;
@@ -144,9 +141,6 @@ static irqreturn_t input_device_irq_handler(int irq, void *dev_id)
     event.input_ev.type = EV_KEY;
     event.input_ev.code = button_data->key_code;
     event.input_ev.value = state;
-    ktime_get_real_ts64(&ts);
-    event.input_ev.time.tv_sec = ts.tv_sec;
-    event.input_ev.time.tv_usec = ts.tv_nsec / 1000;
     event.press_count = button_data->press_count;
     push_event(dev, &event);
 
@@ -182,10 +176,9 @@ static ssize_t my_input_read(struct file *file, char __user *buf, size_t count, 
     }
 
     len = snprintf(tmp, sizeof(tmp),
-                   "按键 %u: 类型=%u, 代码=%u, 值=%d, 按下次数=%lu, 时间=%ld.%06ld\n",
+                   "按键 %u: 类型=%u, 代码=%u, 值=%d, 按下次数=%lu\n",
                    event.button_idx, event.input_ev.type, event.input_ev.code,
-                   event.input_ev.value, event.press_count,
-                   (long)event.input_ev.time.tv_sec, event.input_ev.time.tv_usec);
+                   event.input_ev.value, event.press_count);
     if (len > count)
         len = count;
     if (copy_to_user(buf, tmp, len))

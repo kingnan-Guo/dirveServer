@@ -72,8 +72,8 @@ int app_input_device_system_poll_init(int argc, char *argv[])
         n = read(fd_input, &ev, sizeof(ev));
         if (n == sizeof(ev)) {
             if (ev.type == EV_KEY) {
-                printf("输入事件: type=%u, code=%u, value=%d, time=%ld.%06ld\n",
-                       ev.type, ev.code, ev.value, ev.time.tv_sec, ev.time.tv_usec);
+                printf("输入事件: type=%u, code=%u, value=%d\n",
+                       ev.type, ev.code, ev.value);
             }
         } else if (n < 0 && errno != EAGAIN) {
             perror("无法读取输入事件");
