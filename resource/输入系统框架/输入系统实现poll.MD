@@ -1,5 +1,5 @@
 2025/04/26 10:10
-# 名称
+# 输入系统实现poll
     分支
         dirver_raspberry_input_device_system_poll_v0.2.4
 
@@ -8,7 +8,7 @@
         ./dirverModules/app_input_device_system_poll/app_input_device_system_poll.c
 
 # 定义
-
+    使用 pol 机制 监听 输入 上报的信息，并推送到 输入子系统中， 使用 main  从 输入子系统 的  event 内监听信息 上报 并解析
 
 # 流程
 
