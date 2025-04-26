@@ -1,7 +1,7 @@
-2025/04/26 00:10
+2025/04/26 10:10
 # 名称
     分支
-        dirver_raspberry_input_device_system_poll_X.X.X
+        dirver_raspberry_input_device_system_poll_v0.2.4
 
     文件
         ./modules/input_device_system_poll/input_device_system_poll.c
@@ -47,9 +47,12 @@ cd /sys/class
 # 扩展
 
 
+在 github/dirveServer/dirverModules/input_device_system/input_device_system_poll_backup2.c  是 原始代码，但是错误有点多，经过改正后 是 input_device_system_poll
 
 
-hexdump /dev/input/event0 -o -v -e '16/1 "%02x " "\n"'
+
+
+
 
 
 
@@ -92,4 +95,57 @@ by-id  by-path  event0  event1  event2  event3  event4  event5  event6  event7  
 
 
 
-./main /dev/input/event7
+root@raspberrypi:/home/kingnan/TEMP/input输入系统框架/pol# ./main /dev/my_input_device
+输入设备路径: /dev/input/event0
+已重置按键 0 的计数
+等待按键事件（按 Ctrl+C 退出）...
+字符设备事件: 按键 1: 类型=1, 代码=114, 值=1, 按下次数=4
+输入事件: type=1, code=114, value=1
+字符设备事件: 按键 1: 类型=1, 代码=114, 值=0, 按下次数=4
+输入事件: type=1, code=114, value=0
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+hexdump /dev/input/event7 -o -v -e '16/1 "%02x " "\n"'
+
+会打印事件
+
+0000000  015225  064013  000000  000000  115113  000011  000000  000000
+95 1a 0b 68 00 00 00 00 4b 9a 09 00 00 00 00 00
+0000010  000001  000162  000001  000000  015225  064013  000000  000000
+01 00 72 00 01 00 00 00 95 1a 0b 68 00 00 00 00
+0000020  115113  000011  000000  000000  000000  000000  000000  000000
+4b 9a 09 00 00 00 00 00 00 00 00 00 00 00 00 00
+0000030  015227  064013  000000  000000  014017  000001  000000  000000
+97 1a 0b 68 00 00 00 00 0f 18 01 00 00 00 00 00
+0000040  000001  000162  000000  000000  015227  064013  000000  000000
+
+
+
+
+卸载驱动 
+
+
+rmmod input_device_system_poll.ko 
+
+后 
+
+
+cat /proc/bus/input/devices
+
+
+中找不到 input17
+
+root@raspberrypi:/dev/input# ls
+by-id  by-path  event0  event1  event2  event3  event4  event5  event6  mice  mouse0  mouse1
