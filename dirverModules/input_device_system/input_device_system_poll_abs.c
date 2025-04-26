@@ -30,6 +30,7 @@
 
 #include <linux/ioport.h>
 
+// 这里是重点，要根据 实际的硬件来修改。 对应硬件的寄存器的 映射地址 对应 寄存器 的 内容
 struct qemu_ts_con
 {
     volatile unsigned int pressure;
@@ -168,6 +169,21 @@ static irqreturn_t input_device_irq_handler(int irq, void *dev_id)
     input_sync(button_data->input_device);
     dev_err(&button_data->input_device->dev, "中断 %d 触发, 按键码=%d, 状态=%d\n",
             irq, button_data->key_code, state);
+
+
+
+    // 上报触屏事件
+    if(ts_con->pressure){
+        input_event(button_data->input_device, EV_ABS, ABS_X, ts_con->x);
+        input_event(button_data->input_device, EV_ABS, ABS_Y, ts_con->y);
+        input_event(button_data->input_device, EV_KEY, BTN_TOUCH, 1);// 按下
+        input_sync(button_data->input_device);
+    }
+    else {
+
+        input_event(button_data->input_device, EV_KEY, BTN_TOUCH, 0);// 松开
+        input_sync(button_data->input_device);
+    }
 
     return IRQ_HANDLED;
 }
@@ -491,6 +507,9 @@ static int input_device_remove(struct platform_device *pdev)
     class_destroy(my_input_dev->class);
     cdev_del(&my_input_dev->cdev);
     unregister_chrdev_region(my_input_dev->dev_no, 1);
+
+    iounmap(ts_con);// 取消映射
+
 
     dev_info(&pdev->dev, "已移除, 按键数量=%d\n", data->n_buttons);
     return 0;
