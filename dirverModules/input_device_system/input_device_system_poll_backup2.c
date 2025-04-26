@@ -252,8 +252,8 @@ static irqreturn_t input_device_irq_handler(int irq, void *dev_id)
 
 
 
-    input_event(button_data->input_device, EV_KEY, button_data->key_code, state);
-    input_sync(button_data->input_device);
+    input_event(button_data->input_device, EV_KEY, button_data->key_code, state);// 上报按键事件
+    input_sync(button_data->input_device);// 同步事件
     dev_dbg(&button_data->input_device->dev, "IRQ %d triggered, key_code=%d, state=%d\n", irq, button_data->key_code, state);
 
     dev_info(&button_data->input_device->dev, "IRQ %d triggered, key_code=%d, state=%d\n", irq, button_data->key_code, state);

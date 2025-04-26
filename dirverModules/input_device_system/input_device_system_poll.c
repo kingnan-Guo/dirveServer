@@ -20,8 +20,10 @@
 #include <linux/spinlock.h>
 #include <linux/poll.h>
 #include <linux/cdev.h>
+#include <linux/kdev_t.h>
 #include <dt-bindings/input/gpio-keys.h>
 #include <linux/kobject.h>
+#include <linux/string.h>
 
 #define DEVICE_NAME "my_input_device"
 #define CLASS_NAME "my_input_device_class"
@@ -43,6 +45,7 @@ struct input_device_button_data {
 struct input_device_data {
     struct input_dev *input_device;
     int n_buttons;
+    int event_number;
     struct input_device_button_data button_data[];
 };
 
@@ -133,6 +136,7 @@ static irqreturn_t input_device_irq_handler(int irq, void *dev_id)
         dev_err(&button_data->input_device->dev, "无法读取 GPIO: %d\n", state);
         return IRQ_HANDLED;
     }
+    state = !state;
 
     if (state == 1)
         button_data->press_count++;
@@ -146,7 +150,7 @@ static irqreturn_t input_device_irq_handler(int irq, void *dev_id)
 
     input_event(button_data->input_device, EV_KEY, button_data->key_code, state);
     input_sync(button_data->input_device);
-    dev_dbg(&button_data->input_device->dev, "中断 %d 触发, 按键码=%d, 状态=%d\n",
+    dev_err(&button_data->input_device->dev, "中断 %d 触发, 按键码=%d, 状态=%d\n",
             irq, button_data->key_code, state);
 
     return IRQ_HANDLED;
@@ -226,8 +230,9 @@ static long my_input_ioctl(struct file *file, unsigned int cmd, unsigned long ar
     case IOCTL_GET_EVENT_PATH:
         {
             char event_path[256];
-            snprintf(event_path, sizeof(event_path), "/dev/input/event%d",
-                     MINOR(dev->input_data->input_device->dev.devt));
+            int event_num = dev->input_data->event_number;
+            snprintf(event_path, sizeof(event_path), "/dev/input/event%d", event_num);
+            dev_info(&dev->input_data->input_device->dev, "IOCTL 返回事件路径: %s\n", event_path);
             if (copy_to_user((void __user *)arg, event_path, sizeof(event_path))) {
                 dev_err(&dev->input_data->input_device->dev, "无法复制事件路径\n");
                 return -EFAULT;
@@ -368,13 +373,6 @@ static int input_device_probe(struct platform_device *pdev)
             return err;
         }
 
-        u32 debounce_ms;
-        if (fwnode_property_read_u32(&child->fwnode, "debounce-interval", &debounce_ms))
-            debounce_ms = 50;
-        err = gpiod_set_debounce(input_data->button_data[i].gpiod, debounce_ms * 1000);
-        if (err)
-            dev_warn(dev, "无法为 %s 设置去抖: %d\n", child->name, err);
-
         dev_info(dev, "添加按键 %s: GPIO %d, 中断 %d, 按键码 %d\n",
                  child->name, desc_to_gpio(input_data->button_data[i].gpiod),
                  input_data->button_data[i].irq, input_data->button_data[i].key_code);
@@ -387,7 +385,14 @@ static int input_device_probe(struct platform_device *pdev)
         return err;
     }
 
-    dev_info(dev, "输入设备注册为 %s\n", dev_name(&input_data->input_device->dev));
+    /* 正确获取事件号：通过 dev_t 解析出次设备号 */
+    input_data->event_number = MINOR(input_data->input_device->dev.devt);
+
+    dev_info(dev, "输入设备注册为 %s, devt=%d, minor=%d, event_number=%d\n",
+             dev_name(&input_data->input_device->dev),
+             input_data->input_device->dev.devt,
+             MINOR(input_data->input_device->dev.devt),
+             input_data->event_number);
 
     platform_set_drvdata(pdev, my_input_dev);
     dev_info(dev, "输入设备探测成功\n");
@@ -424,7 +429,7 @@ static struct platform_driver input_device_driver = {
     .remove = input_device_remove,
     .shutdown = input_device_shutdown,
     .driver = {
-        .name = "input_device",
+        .name = "input_device_system_poll",
         .of_match_table = input_device_of_match,
     }
 };

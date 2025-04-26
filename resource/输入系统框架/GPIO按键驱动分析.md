@@ -11,7 +11,7 @@
 
 平台 platform device 在probe 阶段分配/设置 /注册 input_device 
 
-
+sources/linux-rpi-6.6.y/drivers/input/keyboard/gpio_keys.c
 
 
 input_device 设置

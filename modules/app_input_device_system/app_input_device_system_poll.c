@@ -34,7 +34,8 @@ int app_input_device_system_poll_init(int argc, char *argv[])
     }
     printf("输入设备路径: %s\n", event_path);
 
-    fd_input = open(event_path, O_RDONLY);
+    strcpy(event_path, "/dev/input/event7");
+    fd_input = open(event_path, O_RDONLY | O_NONBLOCK);
     if (fd_input < 0) {
         perror("无法打开输入设备");
         close(fd_char);
@@ -82,7 +83,6 @@ int app_input_device_system_poll_init(int argc, char *argv[])
 
     close(fd_input);
     close(fd_char);
-    return 0;
 }
 
 // 主函数，用于调用输入设备系统轮询的初始化函数
