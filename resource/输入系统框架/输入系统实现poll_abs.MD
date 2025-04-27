@@ -1,7 +1,7 @@
 2025/04/26 10:10
 # 输入系统实现poll 实现 abs 功能 
     分支
-        dirver_raspberry_input_device_system_poll_abs_v0.2.4
+        dirver_raspberry_input_device_system_poll_abs_v0.2.5
 
     文件
         ./modules/input_device_system/input_device_system_poll_abs.c
