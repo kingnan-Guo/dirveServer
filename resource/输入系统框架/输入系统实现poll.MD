@@ -13,6 +13,40 @@
 # 流程
 
 
+输入子系统的流程
+
+以 evd.c 为例
+
+注册流程  ，就是 匹配 处理 input_dev input_handler 的流程， 最终 把处理好的结构体 放到 左右 的 链表中
+
+
+左侧 input_dev 结构体，里面储存 输入的事件类型，每一种事件的 具体操作 如 x y ， 还有一个队列
+
+
+右侧 input_handler 结构体 ， 里面有一些可以处理 事件的函数 ，connect ，当有新设备 连接的时候会调用 connect 函数， 将 input_dev  和 input_handler 连接起来，
+
+    右侧也有一个 队列 ，储存 input_dev input_handler 的 信息
+
+
+    在 input_handler 中 还有 event events filter match 函数
+        event 是 当有事件上报的时候，会调用 event 函数
+        events 是 事件队列，储存事件
+        filter 是 过滤器，当有事件上报的时候，会调用 filter 函数，过滤事件
+        match 是 匹配函数，当有新设备连接的时候，会调用 match 函数，匹配设备
+
+
+
+
+APP 端
+    open(/dev/input/event7)
+
+    
+    1、在open 中 ，创建一个  evdev_clinet 结构体，里面储存了 input_dev 和 input_handler， 一个 clinet 就代表了一个用户端
+    2、 打开一个设备节点的时候 ，会有一个 evdev 与他对应， 根据 /dev/input/event7 找到 一个 dev， 并且把 这个 clinet 放入这个设备的链表， 可以由多个 应用程序打开这个设备节点
+    3、app 会读取数据，最开始没有数据，所以 会休眠，应用程序 进入内核态进入驱动程序 的 evdev_read
+    4、当 操作 输入设备的时候 会产生中断， 在中断中 会读数据，也会 上报数据， 使用  input_event 上报数据 ； 上报就是中爱队列中 找到 input_dev ,然后找到 对应的 input_handler ，然后调用 input_handler 的 event 函数，或者 evnets 函数进行处理，  过程中 会有多个函数传递， 最终会 唤醒 休眠的 read 
+
+
 # 执行顺序
 
 
