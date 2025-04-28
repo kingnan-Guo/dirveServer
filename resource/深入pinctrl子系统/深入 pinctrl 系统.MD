@@ -73,7 +73,14 @@
 
 
 
-实现一个 pinctrl 子系统的驱动
+实现一个虚拟的  pinctrl 子系统的驱动
+
+
+
+分为 两部分 
+	1、client 的设备树， clinet 设备驱动 : virtual_client_driver.c
+	2、pincontroller 的设备树，pincontroller  驱动： virtual_controller_driver.c
+
 
 
 
