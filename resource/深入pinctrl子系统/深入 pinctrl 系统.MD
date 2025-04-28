@@ -82,6 +82,8 @@
 	2、pincontroller 的设备树，pincontroller  驱动： virtual_controller_driver.c
 
 
+sources/linux-rpi-6.6.y/include/linux/pinctrl/pinctrl.h
+
 
 
 
