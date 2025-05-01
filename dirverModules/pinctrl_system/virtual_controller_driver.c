@@ -116,16 +116,48 @@ struct pinctrl_map {
 	} data;
 };
 
+# 一个 引脚 对应 两个 pinctrl_map
+    1、其中 一个 是  引脚 复用 mux ，要把 设备树中 的 pino0 设置为 i2c 功能， 
+    2、还需要 另一个 pinctrl_map 来 表示 config 配置值
 
-要把 设备树中 的 pino0 设置为 i2c 功能， 
-还需要 另一个 pinctrl_map 来 表示 config 配置值
-一个 引脚 对应 两个 pinctrl_map
 
 
 */
 
 static int virtual_dt_node_to_map(struct pinctrl_dev *pctldev, struct device_node *np, struct pinctrl_map **map, unsigned long *nmaps){
     //1、 确定 引脚个数 ， 分配 pinctrl_map 结构体
+    int num_pin = 0;
+    char *name;
+
+    // num_pin = 
+
+    while (1)
+    {
+        // 读取 设备树中 group 内的 字符串
+        /**
+         * of_property_read_string_index
+         *  参数
+         *      np 设备树节点 ： 读取哪个 device_node 节点 ： np
+         *      propname 属性名称：读取哪个 属性 名字 ： group
+         *      index 索引： 读取这个 group 属性里的 第几个 值 ： 0
+         *      out_value 输出值： 取出来的 值放到 哪里: name
+         *   
+         *  如果读取到的值 为0 的时候 ，表示读取成功
+         * 
+         */
+        if(of_property_read_string_index(np, "group", num_pin, &name) == 0){
+            // 读取成功
+            num_pin++
+        }else{
+            break;// 读取失败，跳出循环
+        }
+    }
+
+
+    struct pinctrl_map * pctrl_map = NULL;
+
+    pctrl_map = kmalloc(sizeof(struct pctrl_map), num_pin * 2, "GFP_KERNEL");//  num_pin * 2 是因为 要使用 连个 pinctrl_map 来存储信息
+    
     
     //2、 逐个 取出 引脚 引脚功能 引脚个数
 
