@@ -1,0 +1,16 @@
+virtual_pincontroller{
+    compatible = "kingnan,virtual_pincontroller";
+    i2cgrp {
+        functions = "i2c", "i2c";
+        group = "pin0", "pin1";
+        config = <0x11 0x22>;// 配置值, 会在 virtual_pinconf_get 中获得到 配置值 
+    }
+}
+
+
+
+virtual_i2c{
+    compatible = "kingnan,virtual_i2c";
+    pinctrl-name = "default";
+    pinctrl-0 = <&i2cgrp>;
+}
