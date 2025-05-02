@@ -128,6 +128,11 @@ static int virtual_dt_node_to_map(struct pinctrl_dev *pctldev, struct device_nod
     //1、 确定 引脚个数 ， 分配 pinctrl_map 结构体
     int num_pin = 0;
     char *name;
+    char *pin;// 储存 
+    char *group;// 储存 group
+    char *functions;// 储存 functions
+    unsigned int config;// 储存 配置值
+    unsigned long *configs;// 指针
 
     // num_pin = 
 
@@ -161,18 +166,67 @@ static int virtual_dt_node_to_map(struct pinctrl_dev *pctldev, struct device_nod
     
     //2、 逐个 取出 引脚 引脚功能 引脚个数
 
+    for (size_t i = 0; i < num_pin; i++)
+    {
+        // get pin function config
+        // 使用 of_property_read_string_index 读取 设备树中 group 属性的值
+      
+        // 使用 of_property_read_string_index 读取 设备树中 functions 属性的值
+        // 使用 of_property_read_u32_index 读取 设备树中 config 属性的值
+        of_property_read_string_index(np, "group", i, &pin);// 读取 group 属性的值
+        of_property_read_string_index(np, "functions", i, &functions);// 读取 config 属性的值
+        of_property_read_u32_index(np, "config", i, &config);// 读取 config 属性的值
 
-    //3、 存入 pinctrl_map 结构体中
+
+        // 分配 configs 数组指针
+        configs = kmalloc(sizeof(*configs), GFP_KERNEL);// 分配 configs 数组指针
+
+
+
+        //3、 存入 pinctrl_map 结构体中
+        // 每个引脚对应两个 pinctrl_map 结构体
+
+        pctrl_map[i * 2].type = PIN_MAP_TYPE_MUX_GROUP;// 复用功能
+        pctrl_map[i * 2].data.mux.function = functions;// 复用功能
+        pctrl_map[i * 2].data.mux.group = pin;// 引脚组
+
+
+
+        pctrl_map[i * 2 + 1].type = PIN_MAP_TYPE_CONFIGS_PIN;//  要把某一个引脚 配置 成什么值
+        pctrl_map[i * 2 + 1].data.configs.group_or_pin = pin;// 引脚组
+        pctrl_map[i * 2 + 1].data.configs.configs = configs; // configs 是个素组，当前只有一项
+
+        // 将 读出来的 config  存入 configs
+        configs[0] = config;// 读取到的配置值
+
+        pctrl_map[i * 2 + 1].data.configs.num_configs = 1;// 配置数量
+
+    }
     
+
+
+    *map = pctrl_map;// 将 pinctrl_map 结构体指针 赋值给 map
+    *nmaps = num_pin * 2;// 将 nmaps 赋值为 num_pin * 2
     
-    
-    return -EINVAL;
+    return 0;
 }
 
 
-// virtual_dt_free_map
+// virtual_dt_free_map 释放 在 dt_node_to_map 中分配的 pinctrl_map 结构体 内存 等
+// 在 注册 pinctrl_map 内存的时候  两个 pinctrl_map 结构体 是一起分配的， 所以放在一起了？？？
 static void virtual_dt_free_map(struct pinctrl_dev *pctldev, struct pinctrl_map *map, unsigned long nmaps){
-    kfree(map);// 释放 map
+    
+    while (nmaps--)
+    {
+        if (map->type == PIN_MAP_TYPE_CONFIGS_PIN)
+        {
+            kfree(map->data.configs.configs);// 释放 configs 数组指针
+        }
+        
+        kfree(map);// 释放 map
+        map++;// 指向下一个 pinctrl_map 结构体
+    }
+    
 }
 
 static const struct pinctrl_ops virtual_pctrl_ops = {
