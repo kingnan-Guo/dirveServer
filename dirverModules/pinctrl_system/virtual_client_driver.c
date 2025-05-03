@@ -6,19 +6,39 @@
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/of_address.h>
-#include <linux/pinctrl/machine.h>
-#include <linux/pinctrl/pinconf.h>
-#include <linux/pinctrl/pinctrl.h>
-#include <linux/pinctrl/pinmux.h>
+#include <linux/pinctrl/consumer.h> // 添加 pinctrl 消费者头文件
+#include <linux/platform_device.h>
 #include <linux/slab.h>
-#include <linux/regmap.h>
 
 // virtual_client_driver_probe
 static int virtual_client_driver_probe(struct platform_device *pdev)
 {
+    struct pinctrl *pinctrl;
+    struct pinctrl_state *state;
+
     dev_info(&pdev->dev, "virtual_client_driver_probe\n");
 
-    // struct pinctrl_desc *pictrl;
+    // 获取 pinctrl
+    pinctrl = devm_pinctrl_get(&pdev->dev);
+    if (IS_ERR(pinctrl)) {
+        dev_err(&pdev->dev, "Failed to get pinctrl: %ld\n", PTR_ERR(pinctrl));
+        return PTR_ERR(pinctrl);
+    }
+
+    // 查找 default 状态
+    state = pinctrl_lookup_state(pinctrl, PINCTRL_STATE_DEFAULT);
+    if (IS_ERR(state)) {
+        dev_err(&pdev->dev, "Failed to lookup default state: %ld\n", PTR_ERR(state));
+        return PTR_ERR(state);
+    }
+
+    // 应用 pinctrl 配置
+    if (pinctrl_select_state(pinctrl, state)) {
+        dev_err(&pdev->dev, "Failed to select default state\n");
+        return -EINVAL;
+    }
+
+    dev_info(&pdev->dev, "Applied pinctrl configuration\n");
 
     return 0;
 }
@@ -26,8 +46,6 @@ static int virtual_client_driver_probe(struct platform_device *pdev)
 static int virtual_client_driver_remove(struct platform_device *pdev)
 {
     dev_info(&pdev->dev, "virtual_client_driver_remove\n");
-    /* 1.1 反注册platform_driver */
-    // platform_driver_unregister(&virtual_controller_driver_device_driver);
     return 0;
 }
 
@@ -49,7 +67,6 @@ static struct platform_driver virtual_client_driver_device_driver = {
 static int __init virtual_client_driver_init(void)
 {
     int ret;
-
     ret = platform_driver_register(&virtual_client_driver_device_driver);
     if (ret) {
         pr_err("Failed to register virtual_client_driver: %d\n", ret);
@@ -67,3 +84,5 @@ module_init(virtual_client_driver_init);
 module_exit(virtual_client_driver_exit);
 
 MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Your Name");
+MODULE_DESCRIPTION("Virtual I2C client driver for pinctrl testing");

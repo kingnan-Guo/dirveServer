@@ -178,17 +178,21 @@ pin 3 (pin3): (MUX UNCLAIMED) (GPIO UNCLAIMED)
 
 
 
-echo “modify config_pin virtual_i2c default pin0 0xaabb” > /sys/kernel/debug/pinctrl/virtual_pincontroller/pinctrl-configs
+echo “modify config_pin virtual_i2c default pin0 0xaabb” > /sys/kernel/debug/pinctrl/virtual_pincontroller/pinctrl-configs 设置 值 到 pinctrl-configs
 
-
+但是没有 pinctrl-configs
 
 bash: /sys/kernel/debug/pinctrl/virtual_pincontroller/pinctrl-configs: Permission denied
-root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# echo “modify config_pin virtual_i2c default pin0 0xaabb” > /sys/kernel/debug/pinctrl/virtual_pincontroller/pinconf-config
 
-/pinconf-config 是没有的
+/pinconf-config 是没有的， 所以无法写入
 
 
-cat pinconf-config
+cat pinconf-config 所以 这报错
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# cat pinconf-config
+cat: pinconf-config: No such file or directory
+
+
+
 
 
 # 扩展
