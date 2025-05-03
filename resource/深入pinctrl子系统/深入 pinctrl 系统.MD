@@ -1,12 +1,12 @@
-2025/03/29 00:10
+2025/05/04 00:10
 # 深入 pinctrl 系统
     分支
-        dirver_raspberry_XXXXX_vX.X.X
+        dirver_raspberry_pinctrl_system_v2.5.0
 
     文件
         ./modules/app_XXX/app_XXX.c
-        ./dirverModules/dirverModules/XXX.c
-
+        ./dirverModules/pinctrl_system/virtual_controller_driver.c
+		./dirverModules/pinctrl_system/virtual_client_driver.c
 # 定义
 
 
@@ -94,9 +94,13 @@ sources/linux-rpi-6.6.y/include/linux/pinctrl/pinctrl.h
 
 
 # Makefile
-# # XXXX ---------------------
-XXXX-y := $(MODULES_DIR)/XXXX/XXXX.o
-obj-m := XXXX.o
+# # pinctrl_system  pinctrl 子系统 ---------------------		
+	
+pinctrl_system_dirver-y := $(MODULES_DIR)/pinctrl_system/virtual_controller_driver.o
+obj-m := pinctrl_system.o
+pinctrl_system_clinet-y := $(MODULES_DIR)/pinctrl_system/virtual_client_driver.o
+obj-m := pinctrl_system_clinet.o
+
 
 
 # 执行命令
@@ -118,5 +122,86 @@ cd /sys/class
 
 
 
+
+
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs -j$(nproc) 
+
+
+
+
+insmod -f pinctrl_system_dirver.ko 
+-f 	强制安装驱动 ，但是这里 不需要 强制
+
+
+root@raspberrypi:/home/kingnan# cd /sys/kernel/debug/pinctrl/
+root@raspberrypi:/sys/kernel/debug/pinctrl# ls
+3f200000.gpio-pinctrl-bcm2835  pinctrl-devices  pinctrl-handles  pinctrl-maps  virtual_pincontroller
+root@raspberrypi:/sys/kernel/debug/pinctrl# cd virtual_pincontroller/
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# ls
+gpio-ranges  pinconf-groups  pinconf-pins  pingroups  pinmux-functions  pinmux-pins  pinmux-select  pins
+
+
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# cat pins			获取引脚信息
+registered pins: 4
+pin 0 (pin0) 0:? pin virtual_pincontroller
+
+pin 1 (pin1) 0:? pin virtual_pincontroller
+
+pin 2 (pin2) 0:? pin virtual_pincontroller
+
+pin 3 (pin3) 0:? pin virtual_pincontroller
+
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# cat pingroups 	获取引脚组信息
+registered pin groups:
+group: pin0
+pin 0 (pin0)
+
+group: pin1
+pin 1 (pin1)
+
+group: pin2
+pin 2 (pin2)
+
+group: pin3
+pin 3 (pin3)
+
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# cat pinmux-pins 	获取引脚和功能映射关系， 单个引脚配置信息，当前这些 是 复用为gpio 功能
+Pinmux settings per pin
+Format: pin (name): mux_owner gpio_owner hog?
+pin 0 (pin0): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 1 (pin1): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 2 (pin2): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 3 (pin3): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+
+
+
+
+
+
+echo “modify config_pin virtual_i2c default pin0 0xaabb” > /sys/kernel/debug/pinctrl/virtual_pincontroller/pinctrl-configs
+
+
+
+bash: /sys/kernel/debug/pinctrl/virtual_pincontroller/pinctrl-configs: Permission denied
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# echo “modify config_pin virtual_i2c default pin0 0xaabb” > /sys/kernel/debug/pinctrl/virtual_pincontroller/pinconf-config
+
+/pinconf-config 是没有的
+
+
+cat pinconf-config
+
+
 # 扩展
 
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# ls
+gpio-ranges  pinconf-groups  pinconf-pins  pingroups  pinmux-functions  pinmux-pins  pinmux-select  pins
+
+pins	单个引脚信息
+pingroups	引脚组信息
+pinmux-functions	引脚功能信息， 在某个 function 下面支持的 groups， 支持 group 功能的 f
+pinmux-pins	引脚和功能映射关系， 单个引脚配置信息
+pinmux-select	引脚和功能映射关系
+pinconf-pins	引脚配置信息， 
+pinconf-groups	引脚组配置信息
+gpio-ranges	引脚范围信息
+pinctrl-configs	引脚配置信息， 可以通过写它修改制定设备，制动状态下，指定（组）引脚的 config 值

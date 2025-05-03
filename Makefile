@@ -139,8 +139,16 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 
 
 # # input_device_system_poll 	---------------------
-input_device_system_poll-y := $(MODULES_DIR)/input_device_system/input_device_system_poll.o
-obj-m := input_device_system_poll.o
+# input_device_system_poll-y := $(MODULES_DIR)/input_device_system/input_device_system_poll.o
+# obj-m := input_device_system_poll.o
+
+
+
+# # pinctrl_system  pinctrl 子系统 ---------------------		
+pinctrl_system_dirver-y := $(MODULES_DIR)/pinctrl_system/virtual_controller_driver.o
+obj-m += pinctrl_system_dirver.o
+pinctrl_system_clinet-y := $(MODULES_DIR)/pinctrl_system/virtual_client_driver.o
+obj-m += pinctrl_system_clinet.o
 
 
 all:
