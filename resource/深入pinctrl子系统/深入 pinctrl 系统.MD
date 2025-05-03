@@ -177,6 +177,23 @@ pin 3 (pin3): (MUX UNCLAIMED) (GPIO UNCLAIMED)
 
 
 
+这路 
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# insmod /home/kingnan/TEMP/pinctrl\ 子系统/printctrl\ 实现/pinctrl_system_clinet.ko  后 没有生效，
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# cat pinmux-pins  还是 以前的值，新的 pinctrl_system_clinet并没有发生什么， 所以 
+Pinmux settings per pin
+Format: pin (name): mux_owner gpio_owner hog?
+pin 0 (pin0): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 1 (pin1): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 2 (pin2): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 3 (pin3): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# cat pinconf-pins  获取到的值 本应该是  pin 0 (pin0): 0x11 0x22， 
+Pin config settings per pin
+Format: pin (name): configs
+pin 0 (pin0): 0x0
+pin 1 (pin1): 0x0
+pin 2 (pin2): 0x0
+pin 3 (pin3): 0x0
+
 
 echo “modify config_pin virtual_i2c default pin0 0xaabb” > /sys/kernel/debug/pinctrl/virtual_pincontroller/pinctrl-configs 设置 值 到 pinctrl-configs
 
