@@ -177,7 +177,7 @@ pin 3 (pin3): (MUX UNCLAIMED) (GPIO UNCLAIMED)
 
 
 
-这路 
+这里
 root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# insmod /home/kingnan/TEMP/pinctrl\ 子系统/printctrl\ 实现/pinctrl_system_clinet.ko  后 没有生效，
 root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# cat pinmux-pins  还是 以前的值，新的 pinctrl_system_clinet并没有发生什么， 所以 
 Pinmux settings per pin
