@@ -1,7 +1,7 @@
 2025/05/04 00:10
 # 深入 pinctrl 系统
     分支
-        dirver_raspberry_pinctrl_system_v2.5.0
+        dirver_raspberry_pinctrl_system_v2.6.0
 
     文件
         ./modules/app_XXX/app_XXX.c
