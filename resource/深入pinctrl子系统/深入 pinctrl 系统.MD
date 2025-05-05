@@ -97,9 +97,9 @@ sources/linux-rpi-6.6.y/include/linux/pinctrl/pinctrl.h
 # # pinctrl_system  pinctrl 子系统 ---------------------		
 	
 pinctrl_system_dirver-y := $(MODULES_DIR)/pinctrl_system/virtual_controller_driver.o
-obj-m := pinctrl_system.o
+obj-m += pinctrl_system_dirver.o
 pinctrl_system_clinet-y := $(MODULES_DIR)/pinctrl_system/virtual_client_driver.o
-obj-m := pinctrl_system_clinet.o
+obj-m += pinctrl_system_clinet.o
 
 
 
