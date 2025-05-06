@@ -64,4 +64,3 @@ module_exit(virtual_gpio_client_exit);
 
 MODULE_LICENSE("GPL");
 
-
