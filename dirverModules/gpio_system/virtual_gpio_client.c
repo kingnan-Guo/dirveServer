@@ -20,7 +20,7 @@
 
 
 static const struct of_device_id virtual_gpio_clients[] = {
-    { .compatible = "100ask,virtual_gpio_clientdrv" },
+    { .compatible = "kingnan,virtual_gpio_clientdrv" },
     { },
 };
 
