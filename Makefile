@@ -145,10 +145,15 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 
 
 # # pinctrl_system  pinctrl 子系统 ---------------------		
-pinctrl_system_dirver-y := $(MODULES_DIR)/pinctrl_system/virtual_controller_driver.o
-obj-m += pinctrl_system_dirver.o
-pinctrl_system_clinet-y := $(MODULES_DIR)/pinctrl_system/virtual_client_driver.o
-obj-m += pinctrl_system_clinet.o
+# pinctrl_system_dirver-y := $(MODULES_DIR)/pinctrl_system/virtual_controller_driver.o
+# obj-m += pinctrl_system_dirver.o
+# pinctrl_system_clinet-y := $(MODULES_DIR)/pinctrl_system/virtual_client_driver.o
+# obj-m += pinctrl_system_clinet.o
+
+
+# # gpio_system gpio 子系统 ---------------------
+gpio_system_dirver-y := $(MODULES_DIR)/gpio_system/virtual_gpio_driver.o
+obj-m := gpio_system_dirver.o
 
 
 all:
