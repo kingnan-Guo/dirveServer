@@ -1,7 +1,7 @@
 2025/05/08 00:10
-# 编写虚拟的gpio控制器
+# gpio子系统与pinctrl子系统之间的联系 使用 gpio-ranges
     分支
-        dirver_raspberry_XXXXX_vX.X.X
+        dirver_raspberry_gpio_pinctrl_system_v0.2.7.2
 
     文件
         ./modules/app_gpio_system/app_gpio_system.c
