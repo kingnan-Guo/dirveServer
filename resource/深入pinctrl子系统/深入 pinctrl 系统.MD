@@ -72,6 +72,24 @@
 
 
 
+	/* 添加 pinctrl 节点 */
+	virtual_pincontroller {
+		compatible = "kingnan,virtual_controller_driver";
+		i2cgrp: i2cgrp {
+			functions = "i2c", "i2c";
+			groups = "pin0", "pin1";
+			configs = <0x11 0x22>;/** 配置值, 会在 virtual_pinconf_get 中获得到 配置值 */
+		};
+	};
+
+	virtual_i2c {
+		compatible = "kingnan,virtual_i2c";
+		pinctrl-names = "default"; /* 修正为 pinctrl-names */
+		pinctrl-0 = <&i2cgrp>;
+	};
+
+
+
 
 实现一个虚拟的  pinctrl 子系统的驱动
 

@@ -171,7 +171,49 @@ root@raspberrypi:/home/kingnan/TEMP/gpio system# dmesg | tail
 root@raspberrypi:/home/kingnan/TEMP/gpio system# 
 
 
+# 再次 进入  virtual_pincontroller ，这里的 cat pinmux-pins 就能看到 pin0 的复用的 功能了
 
+root@raspberrypi:/home/kingnan/TEMP/gpio system# cd /sys/kernel/debug/pinctrl/
+root@raspberrypi:/sys/kernel/debug/pinctrl# ls
+3f200000.gpio-pinctrl-bcm2835  pinctrl-devices  pinctrl-handles  pinctrl-maps  virtual_pincontroller
+root@raspberrypi:/sys/kernel/debug/pinctrl# cd virtual_pincontroller/
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# ls
+gpio-ranges  pinconf-groups  pinconf-pins  pingroups  pinmux-functions  pinmux-pins  pinmux-select  pins
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# cat pingroups
+registered pin groups:
+group: pin0
+pin 0 (pin0)
+
+group: pin1
+pin 1 (pin1)
+
+group: pin2
+pin 2 (pin2)
+
+group: pin3
+pin 3 (pin3)
+
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller#  cat pinmux-pins
+Pinmux settings per pin
+Format: pin (name): mux_owner gpio_owner hog?
+pin 0 (pin0): gpio_virtual_led (GPIO UNCLAIMED) function gpio group pin0
+pin 1 (pin1): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 2 (pin2): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+pin 3 (pin3): (MUX UNCLAIMED) (GPIO UNCLAIMED)
+root@raspberrypi:/sys/kernel/debug/pinctrl/virtual_pincontroller# cat pinconf-pins 
+Pin config settings per pin
+Format: pin (name): configs
+pin 0 (pin0): 0x33
+pin 1 (pin1): 0x0
+pin 2 (pin2): 0x0
+pin 3 (pin3): 0x0
+
+
+
+
+
+# 补充
+	之前在 pinctr 子系统实现里面 运行 /pinctrl_system/virtual_client_driver.c 然后 config 一直获取不到，但是 在 gpio 子系统与 pinctrl 子系统交互后 config 就能获取到了 ，不知道是为什
 
 
 
