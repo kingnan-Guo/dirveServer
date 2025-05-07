@@ -78,7 +78,10 @@
 	
 
 	/* 添加 pinctrl 节点 */
-	virtual_pincontroller {
+
+    /** pinctroller */
+    /** pinctroller */
+	pinctrl_virtual:virtual_pincontroller {
 		compatible = "kingnan,virtual_controller_driver";
 		i2cgrp: i2cgrp {
 			functions = "i2c", "i2c";
@@ -94,6 +97,7 @@
 	};
 
 
+
 	/** 虚拟的 gpio 节点 */
 
 	gpio_virtual: virtual_gpiocontroller {
@@ -101,12 +105,16 @@
 		gpio-controller;
 		#gpio-cells = <2>;/**  两个整数描述 gpio */
 		ngpios = <4>;/**  4个gpio */
+        gpio-ranges = <&pinctrl_virtual 0 0 4>;/**  gpio 子系统 与 pinctrl 子系统 有联系， gpio 的 第0 号 引脚 映射到 pinctrl_virtual 的 0 号引脚 映射 4 个*/
 	};
 
 	gpio_virtual_led{
 		compatible = "kingnan,gpio_virtual_led";
 		led-gpios = <&gpio_virtual 0 0>;/** 使用 虚拟的 gpio 的 第 0 个引脚， 输出 模式 */
 	};
+
+
+
 	
 
 
