@@ -63,7 +63,12 @@ gpio_virtual: virtual_gpiocontroller {
 
 # # gpio_system gpio 子系统 ---------------------
 gpio_system_dirver-y := $(MODULES_DIR)/gpio_system/virtual_gpio_driver.o
-obj-m := gpio_system_dirver.o
+obj-m += gpio_system_dirver.o
+gpio_system_client-y := $(MODULES_DIR)/gpio_system/virtual_gpio_client.o
+obj-m += gpio_system_client.o
+
+
+
 
 
 # 执行命令
