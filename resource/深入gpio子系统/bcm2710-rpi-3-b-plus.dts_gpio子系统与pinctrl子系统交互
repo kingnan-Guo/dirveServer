@@ -109,7 +109,7 @@
 
 	gpio_virtual_led{
 		compatible = "kingnan,gpio_virtual_led";
-		gpio = <&gpio_virtual 0 0>;/** 使用 虚拟的 gpio 的 第 0 个引脚， 输出 模式 */
+		led-gpios = <&gpio_virtual 0 0>;/** 使用 虚拟的 gpio 的 第 0 个引脚， 输出 模式 */
         pinctrl-names = "default";
         pinctrl-0 = <&led_pin>;/** 使用 virtual_pincontroller 节点的  led_pin */
 	};

@@ -107,6 +107,7 @@
 		compatible = "kingnan,gpio_virtual_led";
 		led-gpios = <&gpio_virtual 0 0>;/** 使用 虚拟的 gpio 的 第 0 个引脚， 输出 模式 */
 	};
+	
 
 
 

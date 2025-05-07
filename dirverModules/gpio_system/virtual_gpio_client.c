@@ -83,7 +83,6 @@ static struct file_operations virtual_gpio_client_fops = {
 
 static int virtual_gpio_client_probe(struct platform_device *pdev){
     printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
-    int err;
 
     gpiod = devm_gpiod_get(&pdev->dev, "led", 0);// 获取 设备树中 的  led-gpios = <&gpio_virtual 0 0>;
     if (IS_ERR(gpiod)) {

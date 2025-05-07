@@ -47,7 +47,7 @@
 
  在 gpio程序中 提供 gpio_chip -> request
  在 pinctrl程序中 提供 pmxops -> request 或者 pmxops->gpio_request_enable
- 
+
 
 
 # 执行顺序
@@ -58,6 +58,19 @@
 
 # Makefile
 
+# 同时打包 两个子系统 还有  main.c
+
+# # pinctrl_system  pinctrl 子系统 ---------------------		
+pinctrl_system_dirver-y := $(MODULES_DIR)/pinctrl_system/virtual_controller_driver.o
+obj-m += pinctrl_system_dirver.o
+pinctrl_system_clinet-y := $(MODULES_DIR)/pinctrl_system/virtual_client_driver.o
+obj-m += pinctrl_system_clinet.o
+
+# # gpio_system gpio 子系统 ---------------------
+gpio_system_dirver-y := $(MODULES_DIR)/gpio_system/virtual_gpio_driver.o
+obj-m += gpio_system_dirver.o
+gpio_system_client-y := $(MODULES_DIR)/gpio_system/virtual_gpio_client.o
+obj-m += gpio_system_client.o
 
 
 
