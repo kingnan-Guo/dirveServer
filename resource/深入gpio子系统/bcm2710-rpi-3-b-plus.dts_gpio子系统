@@ -75,6 +75,8 @@
 
 
 
+	
+
 	/* 添加 pinctrl 节点 */
 	virtual_pincontroller {
 		compatible = "kingnan,virtual_controller_driver";
