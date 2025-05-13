@@ -9,6 +9,9 @@
 
 # 定义
 
+
+
+
 gic->domain
 gic里面创建一个 域
 domain里面会有 对应关系
