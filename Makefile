@@ -159,13 +159,22 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 
 
 # # gpio_system pinctrl_system   子系统 ---------------------	
-pinctrl_system_dirver-y := $(MODULES_DIR)/gpio_pinctrl_system/virtual_controller_driver.o
-obj-m += pinctrl_system_dirver.o
-gpio_system_dirver-y := $(MODULES_DIR)/gpio_pinctrl_system/virtual_gpio_driver.o
-obj-m += gpio_system_dirver.o
-gpio_system_client-y := $(MODULES_DIR)/gpio_pinctrl_system/virtual_gpio_client.o
-obj-m += gpio_system_client.o
+# pinctrl_system_dirver-y := $(MODULES_DIR)/gpio_pinctrl_system/virtual_controller_driver.o
+# obj-m += pinctrl_system_dirver.o
+# gpio_system_dirver-y := $(MODULES_DIR)/gpio_pinctrl_system/virtual_gpio_driver.o
+# obj-m += gpio_system_dirver.o
+# gpio_system_client-y := $(MODULES_DIR)/gpio_pinctrl_system/virtual_gpio_client.o
+# obj-m += gpio_system_client.o
 
+
+
+
+
+# # interrupt_system    子系统 ---------------------
+virtual_interrupt_system-y := $(MODULES_DIR)/interrupt_system/virtual_interrupt_system.o
+obj-m += virtual_interrupt_system.o
+gpio_key_drv-y := $(MODULES_DIR)/interrupt_system/gpio_key_drv.o
+obj-m += gpio_key_drv.o
 
 
 
