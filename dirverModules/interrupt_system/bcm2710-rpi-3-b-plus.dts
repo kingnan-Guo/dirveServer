@@ -28,9 +28,9 @@
         interrupt-parent = <&intc>;/** 指定中断控制器 , 向 这个中断控制器 发送 n 号 中断 */
         interrupt-controller;/** 声明这个节点是一个中断控制器 */
         #interrupt-cells = <2>;/** 要使用这个中断控制器的时候  使用两个参数描述 这个中断 */
-        interrupts = <100 1>;/** 这个中断控制器的中断号 */
+        interrupts = <96 1>;/** 这个中断控制器的中断号 */
         reg = <0x7e200000 0x1000>; /** 虚拟寄存器地址*/
-    }
+    };
 
 	&gpio_keys {
 		pinctrl-names = "default";
