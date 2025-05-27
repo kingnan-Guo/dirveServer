@@ -75,11 +75,39 @@ static struct irq_chip virtual_interrupt_irq_chip = {
 static int virtual_interrupt_domain_alloc(struct irq_domain *domain, unsigned int irq, unsigned int nr_irqs, void *data)
 {
     printk("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+
+    struct irq_fwspec *fwspec = data; // 设备树节点 和 中断号
+    struct irq_fwspec parent_fwspec; // 父设备树节点 和 中断号
+    irq_hw_number_t hwirq; // 硬件中断号
+
+    /** 设置irq_desc[irq] */
+
+    /** 1 设置 irq_desc[irq].irq_data 里面含有 virtual_interrupt 的 irq_chip */
+    hwirq = fwspec->param[0]; // 硬件中断号
+
+    // nr_irqs 是 中断号的数量
+    for(int i = 0; i < nr_irqs; i++){
+        // 设置 硬件中断号 和 chip
+        // 这里就是 设置irq_desc[irq] 的 irq_data
+        irq_domain_set_hwirq_and_chip(domain, irq + i, hwirq + i, &virtual_interrupt_irq_chip, NULL);
+    }
+
+
+
+    /** 2 设置 irq_desc[irq].hander_irq , 可能来自 GIC  */
+    // 要看 intc 需要几个参数
+    parent_fwspec.fwnode = domain->parent->fwnode;  // 父设备树节点
+    // parent_fwspec.param_count = 3; // 参数个数
+    // parent_fwspec.param[0] = GIC_SPI; // 中断类型， 这里是 0
+    // parent_fwspec.param[1] = fwspec->param[0] + upper_hwirq_base;// 中断号
+    // parent_fwspec.param[2] = fwspec->param[1];// 0
+
+    // 但是  rbp 的 intc 需要两个参数
+    parent_fwspec.param_count = 2; // 参数个数
+    parent_fwspec.param[0] = fwspec->param[0] + upper_hwirq_base;// 中断号
+    parent_fwspec.param[1] = fwspec->param[1];// 0
     
-    
-    
-    
-    return 0;
+    return irq_domain_alloc_irqs_parent(domain, irq, nr_irqs, &parent_fwspec); // 分配中断号
 
 }
 
@@ -107,6 +135,18 @@ static int virtual_interrupt_domain_translate(struct irq_domain *d, struct irq_f
 }
 
 
+/**
+ * 1 解析 translate
+ * 2 分配 irq_desc
+ * 3 设置 alloc ： {
+ *                  handleA,
+ *                  irq_dataB
+ *                  action
+ *              }
+ * 
+ */
+
+
 static const struct irq_domain_ops virtual_interrupt_domain_ops = {
     .translate = virtual_interrupt_domain_translate, // 设备树节点 和 中断号 转换
     .alloc = virtual_interrupt_domain_alloc, // 分配中断号
@@ -114,53 +154,6 @@ static const struct irq_domain_ops virtual_interrupt_domain_ops = {
 };
 
 
-
-
-
-
-
-
-static int virtual_interrupt_get_hwirq(void){
-    return 0;
-}
-
-/**
- * 读取寄存器，确定发生的是哪一个中断
- * 分辨是哪一个 hardware_irq  调用 对应的 irq_desc[].handle_irq 
- * 
- *  1 先屏蔽中断 chained_irq_enter
- * 
- *  2 读取寄存器，确定发生的是哪一个中断
- * 
- * 
- *  6 恢复中断  chained_irq_exit 
- */
-static void virtual_interrupt_irq_handler(struct irq_desc *desc)
-{
-    // u32 irq_stat;
-    int hardware_irq;// 硬件 中断号
-
-    
-    struct irq_chip *chip = irq_desc_get_chip(desc);// 获得中断控制器
-
-    chained_irq_enter(chip, desc);// 先屏蔽中断
-
-
-    /* a. 分辨中断 */
-
-    hardware_irq = virtual_interrupt_get_hwirq();// 读取 硬件寄存器，分辨 确定发生的是哪一个中断
-
-    /* b. 调用 irq_desc[].handle_irq 也就是 handle_c */
-    /// 根据 domain 找到虚拟中断号， 调用处理函数
-    int virtual_irq = irq_find_mapping(virtual_interrupt_domain, hardware_irq);// 通过 hardware_irq 在 virtual_interrupt_domain 找到虚拟中断号
-    generic_handle_irq(virtual_irq);//通用的 处理 中断； 就是去调用 handle_c 函数
-
-
-    chained_irq_exit(chip, desc);//  恢复中断
-
-
-
-}
 
 static int virtual_interrupt_probe(struct platform_device *pdev)
 {
