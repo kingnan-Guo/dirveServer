@@ -192,7 +192,7 @@ static int virtual_interrupt_remove(struct platform_device *pdev)
 }
 
 static const struct of_device_id virtual_interrupt_of_match[] = {
-    { .compatible = "kingnan,virtual_irq_controller", },
+    { .compatible = "kingnan,virtual_interrupt_controller", },
     { },
 };
 
