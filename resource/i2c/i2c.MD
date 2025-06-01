@@ -12,9 +12,143 @@
 
 # 流程
 
+发起i2c 硬件传输
+使用哪个i2c 控制器
+i2c 控制器 提供读写 RW 能力， 里面有些 传输函数 
+
+使用 struct i2c_adapter 控制器
+
+```C
+
+struct i2c_adapter {
+	struct module *owner;
+	unsigned int class;		  /* classes to allow probing for */
+	const struct i2c_algorithm *algo; /* i2c 算法 the algorithm to access the bus */
+	void *algo_data;
+	const struct i2c_lock_operations *lock_ops;
+	struct rt_mutex bus_lock;
+	struct rt_mutex mux_lock;
+
+	int timeout;			/* in jiffies */
+	int retries;
+	struct device dev;		/* the adapter device */
+	unsigned long locked_flags;	/* owned by the I2C core */
+
+
+	int nr;// 第几个 i2c 控制器
+	char name[48];
+	struct completion dev_released;
+
+	struct mutex userspace_clients_lock;
+	struct list_head userspace_clients;
+
+	struct i2c_bus_recovery_info *bus_recovery_info;
+	const struct i2c_adapter_quirks *quirks;
+
+	struct irq_domain *host_notify_domain;
+	struct regulator *bus_regulator;
+
+};
+
+```
+
+
+通过 nr 找到 i2c_adapter 控制器， 使用 i2c_adapter 里面的函数发生 i2c 数据， 数据 跟 i2c 的设备互相传输
+
+
+
+i2c 设备 在 内核里面 使用  i2c_client 结构体 来描述 ，传输数据的时候 要首先知道 i2c 的地址， i2c_client 里面有一个地址 addr 字段， 通过这个地址字段可以找到对应的 i2c 设备, 里面也有 i2c_adapter 的指针， 通过这个指针可以找到 i2c 控制器, 表示设备 挂载到 哪一个 i2c 控制器 下面
+
+```C
+struct i2c_client {
+	unsigned short flags;		/* div., see below		*/
+
+	unsigned short addr;		/* chip address - NOTE: 7bit	*/
+					/* addresses are stored in the	*/
+					/* _LOWER_ 7 bits		*/
+	char name[I2C_NAME_SIZE];
+	struct i2c_adapter *adapter;	/* the adapter we sit on	*/
+	struct device dev;		/* the device structure		*/
+	int init_irq;			/* irq set at initialization	*/
+	int irq;			/* irq issued by device		*/
+	struct list_head detected;
+
+	void *devres_group_id;		/* ID of probe devres group	*/
+};
+
+
+
+```
+
+
+传输的 数据 使用 i2c_msg 结构体 来描述, 
+buf 是 数据的指针， len 是 数据的长度， addr 是 i2c 设备的地址， flags 是 标志位 读 还是 写， 里面定义了传输的方向，传输的长度等等
+
+
+会使用 i2c_adapter -> i2c_algorithm -> master_xfer 函数 发起传输, 传输 的 数据 是 i2c_msg 结构体 -> i2c_client
+
+使用 i2c_transfer 函数 发起传输, 传输 的 数据 是 i2c_msg 结构体；
+```C
+
+struct i2c_msg {
+	__u16 addr;
+	__u16 flags;
+#define I2C_M_RD		0x0001	/* guaranteed to be 0x0001! */
+#define I2C_M_TEN		0x0010	/* use only if I2C_FUNC_10BIT_ADDR */
+#define I2C_M_DMA_SAFE		0x0200	/* use only in kernel space */
+#define I2C_M_RECV_LEN		0x0400	/* use only if I2C_FUNC_SMBUS_READ_BLOCK_DATA */
+#define I2C_M_NO_RD_ACK		0x0800	/* use only if I2C_FUNC_PROTOCOL_MANGLING */
+#define I2C_M_IGNORE_NAK	0x1000	/* use only if I2C_FUNC_PROTOCOL_MANGLING */
+#define I2C_M_REV_DIR_ADDR	0x2000	/* use only if I2C_FUNC_PROTOCOL_MANGLING */
+#define I2C_M_NOSTART		0x4000	/* use only if I2C_FUNC_NOSTART */
+#define I2C_M_STOP		0x8000	/* use only if I2C_FUNC_PROTOCOL_MANGLING */
+	__u16 len;
+	__u8 *buf;
+};
+
+
+```
 
 # 执行顺序
 
+
+假设 
+    设备地址 0x50 的 EEPROM ， 要读取里面春初地址 为 0x10 的一个字节，应该构造几个 i2c_msg 结构体， 顺序是什么
+
+    1 要构造 2 个 i2c_msg 结构体， 
+    2 第一个i2c_msg 表示写操作，要把访问的储存地址0x10 发给设备（第一个 i2c_msg 结构体 用来 发送 0x50 地址 和 0x10 地址）
+    3 第二个 i2c_msg 结构体 用来 读取 0x50 地址 的数据
+
+
+
+# 代码
+
+```C
+
+u8 data_addr = 0x10;
+u8 data = 0;
+// u8 buf[2] = {data_addr, data};
+struct i2c_msg msgs[2] = {
+	{// 写操作
+		.addr = 0x50,
+		.flags = 0,// 发起 写操作
+		.len = 1,// 写 2 个字节
+		.buf = &data_addr,// 写存储 地址 0x10， 把0x10 存储地址 写，表示 要去访问 地址上的数据
+	},
+	{ // 读擦欧总
+		.addr = 0x50,
+		.flags = I2C_M_RD,// 发起 读操作
+		.len = 1,// 读 1 个字节
+		.buf = &data,// 保存在 data 变量里面
+	},
+};
+
+i2c_transfer(i2c_client, msgs, 2);
+
+```
+
+
+```
 
 # 内部机制
 
@@ -46,3 +180,5 @@ cd /sys/class
 
 # 扩展
 
+ 
+smBus 是 i2c 的子集 ， SMBus 会比 I2C 更快，更可靠，更简单，更便宜。
