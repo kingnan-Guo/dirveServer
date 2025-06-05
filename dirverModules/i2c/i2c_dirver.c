@@ -88,7 +88,7 @@ static int my_i2c_driver_probe(struct i2c_client *client) {
 
     /** 注册字符设备 */
 
-
+    char device_name_buf[30];
     // 2、 注册  file_operations _fops
     major = register_chrdev(0, _NAME, &_fops);
     if (major < 0) {
@@ -96,7 +96,9 @@ static int my_i2c_driver_probe(struct i2c_client *client) {
         return major;
     }
 
-    _class = class_create("my_i2c_diver_class");
+
+    snprintf(device_name_buf, sizeof(device_name_buf), "%s_%s", _NAME, "_class");
+    _class = class_create(device_name_buf);
     if(IS_ERR(_class)){
         printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
 
@@ -109,7 +111,7 @@ static int my_i2c_driver_probe(struct i2c_client *client) {
 
 
 
-    char device_name_buf[30];
+
     int minor = 0;
     snprintf(device_name_buf, sizeof(device_name_buf), "%s_%d", _NAME, minor);
     device_create(_class, NULL, MKDEV(major, minor), NULL, device_name_buf);//创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件  
