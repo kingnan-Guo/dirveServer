@@ -186,8 +186,15 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 
 
 # # i2c 子系统 ---------------------
-# github/dirveServer/dirverModules/i2c/i2cTest.c
-i2c_dirver-y := $(MODULES_DIR)/i2c/i2cTest.o
+# # github/dirveServer/dirverModules/i2c/i2cTest.c
+# i2c_dirver-y := $(MODULES_DIR)/i2c/i2cTest.o
+# obj-m += i2c_dirver.o
+
+
+
+# # i2c 驱动框架
+# /dirveServer/dirverModules/i2c/i2c_dirver.c
+i2c_dirver-y := $(MODULES_DIR)/i2c/i2c_dirver.o
 obj-m += i2c_dirver.o
 
 

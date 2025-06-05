@@ -1,11 +1,11 @@
-2025/03/29 00:10
-# 名称
+2025/06/06 00:10
+#  编写设备驱动 i2c_dirver_example
     分支
-        dirver_raspberry_XXXXX_vX.X.X
+        dirver_raspberry_i2c_vX.X.X
 
     文件
         ./modules/app_XXX/app_XXX.c
-        ./dirverModules/dirverModules/XXX.c
+        ./dirverModules/dirverModules/i2c/i2c_dirver.c
 
 # 定义
 
@@ -20,9 +20,11 @@
 
 
 # Makefile
-# # XXXX ---------------------
-XXXX-y := $(MODULES_DIR)/XXXX/XXXX.o
-obj-m := XXXX.o
+# # i2c 驱动框架
+# /dirveServer/dirverModules/i2c/i2c_dirver.c
+i2c_dirver-y := $(MODULES_DIR)/i2c/i2c_dirver.o
+obj-m += i2c_dirver.o
+
 
 
 # 执行命令
@@ -44,8 +46,13 @@ cd /sys/class
 
 
 
-# 扩展
+i2cset -y 1 0x50 0x00 0xAA  # 向地址 0x00 写入 0xAA
+i2cget -y 1 0x50 0x00       # 从地址 0x00 读取数据
 
+i2cget -y 1 0x51 0x00 
+
+# 扩展
+git clone https://e.coding.net/weidongshan/linux_course/linux_basic_develop.git
 
 
 
