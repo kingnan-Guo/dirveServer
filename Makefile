@@ -178,10 +178,19 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 
 
 # # interrupt_system    子系统  层级---------------------
-virtual_interrupt_system-y := $(MODULES_DIR)/interrupt_system_level/virtual_interrupt_system.o
-obj-m += virtual_interrupt_system.o
-gpio_key_drv-y := $(MODULES_DIR)/interrupt_system/gpio_key_drv.o
-obj-m += gpio_key_drv.o
+# virtual_interrupt_system-y := $(MODULES_DIR)/interrupt_system_level/virtual_interrupt_system.o
+# obj-m += virtual_interrupt_system.o
+# gpio_key_drv-y := $(MODULES_DIR)/interrupt_system/gpio_key_drv.o
+# obj-m += gpio_key_drv.o
+
+
+
+# # i2c 子系统 ---------------------
+# github/dirveServer/dirverModules/i2c/i2cTest.c
+i2c_dirver-y := $(MODULES_DIR)/i2c/i2cTest.o
+obj-m += i2c_dirver.o
+
+
 
 
 all:
