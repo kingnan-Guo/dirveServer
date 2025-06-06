@@ -25,7 +25,8 @@
 #include <linux/slab.h>
 #include <linux/fcntl.h>
 #include <linux/timer.h>
-
+#include "asm/uaccess.h"
+#include "linux/delay.h"
 
 #define _NAME "my_i2c_diver"
 
@@ -47,31 +48,103 @@ static int _open(struct inode *inode, struct file *file) {
 static ssize_t _read(struct file *file, char __user *buffer, size_t len, loff_t *offset) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
     int err;
+    unsigned char *kern_buf;// 内核空间缓冲区
+
 
     struct i2c_msg msgs[2];// i2c 消息结构体数组, 初始化 i2c_msg
+
+
+    
+    /** 从 地址 0 读取 size 字节 */
+
+    kern_buf = kmalloc(size, GFP_KERNEL);// kmalloc 是 申请  ；GFP_KERNEL 是 分配内核空间内存的标志
+
+    /**
+     * 
+     * 读取数据 
+     * 读操作 
+     * 1 发一次写操作， 把 地址 0 发给 AT24C02, 表示要从 0 地址读数据
+     * 2 发一次读操作， 得到数据
+     */
+
+    msgs[0].addr = global_client->addr; // 设置 i2c 设备地址
+    msgs[0].flags = 0;// 0 是 写操作
+    kern_buf[0] = 0; // 要写入的数据
+    msgs[0].buf = kern_buf;// 要写入的数据
+    msgs[0].len = 1;// 要写入的数据长度
+
+    msgs[1].addr = global_client->addr; // 设置 i2c 设备地址
+    msgs[1].flags = I2C_M_RD;// I2C_M_RD 是 1 读操作
+    msgs[1].buf = kern_buf;// 要读取的数据
+    msgs[1].len = size;// 要读取的数据长度
+
+
     // i2c 传输
     err = i2c_transfer(global_client->adapter, msgs, 2);// 
 
-    /** copy to user */
 
+    /** copy to user */
+    err = copy_to_user(buffer, kern_buf, size);
+
+    kfree(kern_buf); // 释放内核空间缓冲区
 
     return 0;  // 返回读取的字节数
 }
 
 // 写入设备
 // write(fd,  &val, sizeof(val));
-static ssize_t _write(struct file *file, const char __user *buffer, size_t len, loff_t *offset) {
+static ssize_t _write(struct file *file, const char __user *buffer, size_t size, loff_t *offset) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
     int err;
+    unsigned char kern_buf[9];// 内核空间缓冲区, 用于存储要写入的数据，为什么是 9 呢？因为 i2c 一次最多可以写入 8 个字节，再加上地址，所以是 9 个字节
+	int len;
+	unsigned char addr = 0;
+    struct i2c_msg msgs[2];// i2c 消息结构体数组, 初始化 i2c_msg
+
 
     /** copy from user */
 
-    struct i2c_msg msgs[2];// i2c 消息结构体数组, 初始化 i2c_msg
+    while (size > 0) {
+    {
+        if(size > 8){
+            len = 8;
+        } else {
+            len = size;
+        }
+        
+        size = size - len;
 
-    // i2c 传输
-    err = i2c_transfer(global_client->adapter, msgs, 2);// 
+        err = copy_from_user(kern_buf + 1, buffer, len);
+        buffer += len;// 这个是  buffer 的偏移量，每次写入 8 个字节，所以每次都要加 8？？？？？
 
-    return len;  // 返回写入的数据字节数
+        /**
+         * 写操作
+         * 
+         * 循环写入数据 ，每次写入 9 个字节，包括地址和数据
+         * 
+         * 
+         */
+        msgs[0].addr = global_client->addr; // 设置 i2c 设备地址
+        msgs[0].flags = 0;// 0 是 写操作
+        msgs[0].buf = kern_buf;// 要写入的数据
+        kern_buf[0] = addr; // 要写入的数据
+        msgs[0].len = len+1;// 要写入的数据长度
+
+        addr += len; // 更新地址
+
+
+
+        // i2c 传输
+        err = i2c_transfer(global_client->adapter, msgs, 2);// 
+
+        mdelay(20);
+
+    }
+    
+
+
+
+    return size;  // 返回写入的数据字节数
 }
 
 static int _release(struct inode *inode, struct file *file) {
