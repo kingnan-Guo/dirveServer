@@ -50,7 +50,9 @@ int main(int argc, char *argv[]){
     // app_gpio_system_main(argc, argv);
 
 
-    app_i2c_main(argc, argv);
+    // app_i2c_main(argc, argv);
+
+    app_i2c_at24c02_main(argc, argv);
     
 
     return 0;

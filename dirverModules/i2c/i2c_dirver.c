@@ -100,7 +100,7 @@ static ssize_t _write(struct file *file, const char __user *buffer, size_t size,
     unsigned char kern_buf[9];// 内核空间缓冲区, 用于存储要写入的数据，为什么是 9 呢？因为 i2c 一次最多可以写入 8 个字节，再加上地址，所以是 9 个字节
 	int len;
 	unsigned char addr = 0;
-    struct i2c_msg msgs[2];// i2c 消息结构体数组, 初始化 i2c_msg
+    struct i2c_msg msgs[1];// i2c 消息结构体数组, 初始化 i2c_msg
 
 
     /** copy from user */
@@ -112,7 +112,7 @@ static ssize_t _write(struct file *file, const char __user *buffer, size_t size,
             len = size;
         }
         
-        size = size - len;
+        size -= len;
 
         err = copy_from_user(kern_buf + 1, buffer, len);
         buffer += len;// 这个是  buffer 的偏移量，每次写入 8 个字节，所以每次都要加 8？？？？？
@@ -135,7 +135,7 @@ static ssize_t _write(struct file *file, const char __user *buffer, size_t size,
 
 
         // i2c 传输
-        err = i2c_transfer(global_client->adapter, msgs, 2);// 
+        err = i2c_transfer(global_client->adapter, msgs, 1);// 
 
         mdelay(20);
 
@@ -260,11 +260,12 @@ static const struct of_device_id of_match[] = {
 
 
 // 当前 是 站位  没有实际用途
-static const struct of_device_id my_i2c_driver_ids[] = {
-    { 
-        .compatible = "kingnan,i2c_dev", // 设备树匹配字符串; 厂家名称,芯片名字 : atmel,at24c02
-        .data = NULL,// 芯片相关私有数据        (kernel_ulong_t)NULL, // 私有数据
-    },
+static const struct i2c_device_id my_i2c_driver_ids[] = {
+    // { 
+    //     .compatible = "kingnan,i2c_dev", // 设备树匹配字符串; 厂家名称,芯片名字 : atmel,at24c02
+    //     .data = NULL,// 芯片相关私有数据        (kernel_ulong_t)NULL, // 私有数据
+    // },
+    { "kingnan,i2c_dev",	(kernel_ulong_t)NULL },
     { /* sentinel */ }  
 };
 

@@ -21,3 +21,6 @@
 
 
 void app_i2c_main(int argc, char *argv[]);
+
+
+void app_i2c_at24c02_main(int argc, char *argv[]);
