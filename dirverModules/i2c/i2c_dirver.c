@@ -45,7 +45,7 @@ static int _open(struct inode *inode, struct file *file) {
     return 0;
 }
 
-static ssize_t _read(struct file *file, char __user *buffer, size_t len, loff_t *offset) {
+static ssize_t _read(struct file *file, char __user *buffer, size_t size, loff_t *offset) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
     int err;
     unsigned char *kern_buf;// 内核空间缓冲区
@@ -94,6 +94,7 @@ static ssize_t _read(struct file *file, char __user *buffer, size_t len, loff_t 
 // 写入设备
 // write(fd,  &val, sizeof(val));
 static ssize_t _write(struct file *file, const char __user *buffer, size_t size, loff_t *offset) {
+    
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
     int err;
     unsigned char kern_buf[9];// 内核空间缓冲区, 用于存储要写入的数据，为什么是 9 呢？因为 i2c 一次最多可以写入 8 个字节，再加上地址，所以是 9 个字节
@@ -105,7 +106,6 @@ static ssize_t _write(struct file *file, const char __user *buffer, size_t size,
     /** copy from user */
 
     while (size > 0) {
-    {
         if(size > 8){
             len = 8;
         } else {
@@ -258,13 +258,15 @@ static const struct of_device_id of_match[] = {
 	{ /* END OF LIST */ },
 };
 
-// static const struct of_device_id my_i2c_driver_ids[] = {
-//     { 
-//         .compatible = "kingnan,i2c_dev", // 设备树匹配字符串; 厂家名称,芯片名字 : atmel,at24c02
-//         .data = NULL,// 芯片相关私有数据        (kernel_ulong_t)NULL, // 私有数据
-//     },
-//     { /* sentinel */ }  
-// };
+
+// 当前 是 站位  没有实际用途
+static const struct of_device_id my_i2c_driver_ids[] = {
+    { 
+        .compatible = "kingnan,i2c_dev", // 设备树匹配字符串; 厂家名称,芯片名字 : atmel,at24c02
+        .data = NULL,// 芯片相关私有数据        (kernel_ulong_t)NULL, // 私有数据
+    },
+    { /* sentinel */ }  
+};
 
 
 /**
@@ -279,7 +281,7 @@ static struct i2c_driver my_i2c_driver = {
     },
     .probe = my_i2c_driver_probe,
     .remove = my_i2c_driver_remove,
-    // .id_table = my_i2c_driver_ids,
+    .id_table = my_i2c_driver_ids,
 };
 
 
@@ -304,3 +306,4 @@ module_exit(my_i2c_dirver_exit);
 
 MODULE_AUTHOR("Your Name");
 MODULE_LICENSE("GPL");
+
