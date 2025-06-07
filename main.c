@@ -52,7 +52,10 @@ int main(int argc, char *argv[]){
 
     // app_i2c_main(argc, argv);
 
-    app_i2c_at24c02_main(argc, argv);
+    // app_i2c_at24c02_main(argc, argv);// i2c设备
+
+
+    app_i2c_dirver_at24c02_main(argc, argv);
     
 
     return 0;

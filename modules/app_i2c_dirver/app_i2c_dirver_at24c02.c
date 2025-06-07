@@ -2,79 +2,94 @@
 
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
-#include <smbus.h>
+// #include <smbus.h>
 #include "i2cbusses.h"
-
+#include <i2c/smbus.h>
 
 static int fd;
 char filename[20] = {0};
 
 
 int app_i2c_dirver_at24c02_init(int argc, char *argv[]) {
-    int ret = 0;
-    char buffer[100] = {0};
+	unsigned char dev_addr = 0x50;
+	unsigned char mem_addr = 0;
+	unsigned char buf[32];
 
-    // 地址
-    unsigned char dev_addr = 0x50; // AT24C02 的 I2C 地址
-    // 存储空间的地址
-    unsigned char mem_addr = 0x00; // 存储空间的起始地址
+	int file;
+	char filename[20];
+	unsigned char *str;
 
-    unsigned char *str;// 存储字符串的指针
-    struct timespec req;// 延时结构体
+	int ret;
 
-    if (argc < 2) {
-        printf("Usage: %s <i2c bus> [data]\n", argv[0]);
-        return -1;
-    }
+	struct timespec req;
+	
+	if (argc != 3 && argc != 4)
+	{
+		printf("Usage:\n");
+		printf("write eeprom: %s <i2c_bus_number> w string\n", argv[0]);
+		printf("read  eeprom: %s <i2c_bus_number> r\n", argv[0]);
+		return -1;
+	}
 
-    // fd = open(argv[1], O_RDWR | O_NONBLOCK);
-    fd = open_i2c_dev(argv[1], filename, sizeof(filename), 0);
-    
-    if (fd == -1) {
-        printf("open %s failed\n", argv[1]);
-        return -1;
-    }
+	file = open_i2c_dev(argv[1][0]-'0', filename, sizeof(filename), 0);
+	if (file < 0)
+	{
+		printf("can't open %s\n", filename);
+		return -1;
+	}
 
+	if (set_slave_addr(file, dev_addr, 1))
+	{
+		printf("can't set_slave_addr\n");
+		return -1;
+	}
 
+	if (argv[2][0] == 'w')
+	{
+		// write str: argv[3]
+		str = argv[3];
 
-    // 设置从设备地址
-   if(set_slave_addr(fd, dev_addr, 1)){
-       printf("set_slave_addr failed\n");
-        // close(fd);
-        return -1;
-   }
-
-   // 读写数据
-
-
-   if(argv[2][0] == 'w'){
-
-   }
-
-   else if(argv[2][0] == 'r'){
-       
-   }
-
-
-
-    // if (argc == 3) {
-    //     ret = write(fd, argv[2], strlen(argv[2]) + 1); // 写入字符串包括 \0
-    //     if (ret < 0) {
-    //         printf("write failed: %d\n", ret);
-    //     } else {
-    //         printf("wrote %d bytes\n", ret);
-    //     }
-    // } else {
-    //     ret = read(fd, buffer, sizeof(buffer) - 1);
-    //     if (ret < 0) {
-    //         printf("read failed: %d\n", ret);
-    //     } else {
-    //         buffer[ret] = '\0'; // 确保字符串终止
-    //         printf("read: %s\n", buffer);
-    //     }
-    // }
-
-    return 0;
+		req.tv_sec  = 0;
+		req.tv_nsec = 20000000; /* 20ms */
+		
+		while (*str)
+		{
+			// mem_addr, *str
+			// mem_addr++, str++
+			ret = i2c_smbus_write_byte_data(file, mem_addr, *str);
+			if (ret)
+			{
+				printf("i2c_smbus_write_byte_data err\n");
+				return -1;
+			}
+			// wait tWR(10ms)
+			nanosleep(&req, NULL);
+			
+			mem_addr++;
+			str++;
+		}
+		ret = i2c_smbus_write_byte_data(file, mem_addr, 0); // string end char
+		if (ret)
+		{
+			printf("i2c_smbus_write_byte_data err\n");
+			return -1;
+		}
+	}
+	else
+	{
+		// read
+		ret = i2c_smbus_read_i2c_block_data(file, mem_addr, sizeof(buf), buf);
+		if (ret < 0)
+		{
+			printf("i2c_smbus_read_i2c_block_data err\n");
+			return -1;
+		}
+		
+		buf[31] = '\0';
+		printf("get data: %s\n", buf);
+	}
+	
+	return 0;
 }
 
 
