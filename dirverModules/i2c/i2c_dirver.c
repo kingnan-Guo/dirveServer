@@ -1,7 +1,6 @@
 #include "linux/i2c.h"
 #include <linux/module.h>
 #include <linux/poll.h>
-
 #include <linux/fs.h>
 #include <linux/errno.h>
 #include <linux/miscdevice.h>
@@ -33,12 +32,9 @@
 struct i2c_client *global_client;
 
 static int major; // 设备主号
-
 static struct class *_class;
 
-
 DECLARE_WAIT_QUEUE_HEAD(my_wait_queue);
-
 
 static int _open(struct inode *inode, struct file *file) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
@@ -48,103 +44,96 @@ static int _open(struct inode *inode, struct file *file) {
 static ssize_t _read(struct file *file, char __user *buffer, size_t size, loff_t *offset) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
     int err;
-    unsigned char *kern_buf;// 内核空间缓冲区
+    unsigned char *kern_buf; // 内核空间缓冲区
+    struct i2c_msg msgs[2];  // i2c 消息结构体数组, 初始化 i2c_msg
 
-
-    struct i2c_msg msgs[2];// i2c 消息结构体数组, 初始化 i2c_msg
-
-
-    
-    /** 从 地址 0 读取 size 字节 */
-
-    kern_buf = kmalloc(size, GFP_KERNEL);// kmalloc 是 申请  ；GFP_KERNEL 是 分配内核空间内存的标志
+    /** 从 offset 读取 size 字节 */
+    kern_buf = kmalloc(size + 1, GFP_KERNEL); // 多分配1字节用于地址
+    if (!kern_buf) {
+        return -ENOMEM;
+    }
 
     /**
-     * 
      * 读取数据 
      * 读操作 
-     * 1 发一次写操作， 把 地址 0 发给 AT24C02, 表示要从 0 地址读数据
+     * 1 发一次写操作， 把地址发给 AT24C02
      * 2 发一次读操作， 得到数据
      */
+    msgs[0].addr = global_client->addr;
+    msgs[0].flags = 0; // 0 是 写操作
+    kern_buf[0] = (unsigned char)(*offset); // 从 offset 开始读取
+    msgs[0].buf = kern_buf;
+    msgs[0].len = 1;
 
-    msgs[0].addr = global_client->addr; // 设置 i2c 设备地址
-    msgs[0].flags = 0;// 0 是 写操作
-    kern_buf[0] = 0; // 要写入的数据
-    msgs[0].buf = kern_buf;// 要写入的数据
-    msgs[0].len = 1;// 要写入的数据长度
+    msgs[1].addr = global_client->addr;
+    msgs[1].flags = I2C_M_RD; // I2C_M_RD 是 1 读操作
+    msgs[1].buf = kern_buf + 1; // 数据存储在 kern_buf[1] 开始
+    msgs[1].len = size;
 
-    msgs[1].addr = global_client->addr; // 设置 i2c 设备地址
-    msgs[1].flags = I2C_M_RD;// I2C_M_RD 是 1 读操作
-    msgs[1].buf = kern_buf;// 要读取的数据
-    msgs[1].len = size;// 要读取的数据长度
-
-
-    // i2c 传输
-    err = i2c_transfer(global_client->adapter, msgs, 2);// 
-
+    err = i2c_transfer(global_client->adapter, msgs, 2);
+    if (err < 0) {
+        kfree(kern_buf);
+        return err;
+    }
 
     /** copy to user */
-    err = copy_to_user(buffer, kern_buf, size);
+    err = copy_to_user(buffer, kern_buf + 1, size);
+    if (err) {
+        kfree(kern_buf);
+        return -EFAULT;
+    }
 
-    kfree(kern_buf); // 释放内核空间缓冲区
-
-    return 0;  // 返回读取的字节数
+    *offset += size; // 更新偏移量
+    kfree(kern_buf);
+    return size; // 返回读取的字节数
 }
 
 // 写入设备
-// write(fd,  &val, sizeof(val));
 static ssize_t _write(struct file *file, const char __user *buffer, size_t size, loff_t *offset) {
-    
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
     int err;
-    unsigned char kern_buf[9];// 内核空间缓冲区, 用于存储要写入的数据，为什么是 9 呢？因为 i2c 一次最多可以写入 8 个字节，再加上地址，所以是 9 个字节
-	int len;
-	unsigned char addr = 0;
-    struct i2c_msg msgs[1];// i2c 消息结构体数组, 初始化 i2c_msg
-
+    unsigned char kern_buf[9]; // 内核空间缓冲区, 用于存储要写入的数据，为什么是 9 呢？因为 i2c 一次最多可以写入 8 个字节，再加上地址，所以是 9 个字节
+    int len;
+    size_t total_written = 0;
+    unsigned char addr = (unsigned char)(*offset); // 从 offset 开始写入
+    struct i2c_msg msg; // 单次写操作只用一个消息
 
     /** copy from user */
-
     while (size > 0) {
-        if(size > 8){
+        if (size > 8) {
             len = 8;
         } else {
             len = size;
         }
-        
-        size -= len;
-
-        err = copy_from_user(kern_buf + 1, buffer, len);
-        buffer += len;// 这个是  buffer 的偏移量，每次写入 8 个字节，所以每次都要加 8？？？？？
 
         /**
          * 写操作
-         * 
-         * 循环写入数据 ，每次写入 9 个字节，包括地址和数据
-         * 
-         * 
+         * 循环写入数据，每次写入最多 9 个字节，包括地址和数据
          */
-        msgs[0].addr = global_client->addr; // 设置 i2c 设备地址
-        msgs[0].flags = 0;// 0 是 写操作
-        msgs[0].buf = kern_buf;// 要写入的数据
-        kern_buf[0] = addr; // 要写入的数据
-        msgs[0].len = len+1;// 要写入的数据长度
+        kern_buf[0] = addr; // 设置写入地址
+        err = copy_from_user(kern_buf + 1, buffer + total_written, len);
+        if (err) {
+            return -EFAULT;
+        }
 
+        msg.addr = global_client->addr;
+        msg.flags = 0; // 0 是 写操作
+        msg.buf = kern_buf;
+        msg.len = len + 1; // 地址 + 数据
+
+        err = i2c_transfer(global_client->adapter, &msg, 1);
+        if (err < 0) {
+            return err;
+        }
+
+        size -= len;
+        total_written += len;
         addr += len; // 更新地址
-
-
-
-        // i2c 传输
-        err = i2c_transfer(global_client->adapter, msgs, 1);// 
-
-        mdelay(20);
-
+        mdelay(20); // AT24C02 写周期需要延时
     }
-    
 
-
-
-    return size;  // 返回写入的数据字节数
+    *offset += total_written; // 更新偏移量
+    return total_written; // 返回写入的字节数
 }
 
 static int _release(struct inode *inode, struct file *file) {
@@ -154,14 +143,13 @@ static int _release(struct inode *inode, struct file *file) {
 
 // _poll
 static unsigned int _poll(struct file *file, struct poll_table_struct *wait) {
-        return 0;
+    return 0;
 }
 
 // _fasync
 static int _fasync(int fd, struct file *file, int mode) {
-        return 0;
+    return 0;
 }
-
 
 static struct file_operations _fops = {
     .owner = THIS_MODULE,
@@ -169,124 +157,72 @@ static struct file_operations _fops = {
     .write = _write,
     .open = _open,
     .release = _release,
-    .poll = _poll,// poll 机制
-    .fasync = _fasync,// 异步通知
+    .poll = _poll, // poll 机制
+    .fasync = _fasync, // 异步通知
 };
 
-
-
-
-
-
-
-/*
-
-client 表示 可以找到的 i2c_client 设备
-*/
 static int my_i2c_driver_probe(struct i2c_client *client) {
     printk("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+    struct i2c_adapter *i2c_adapter = client->adapter;
 
-    struct i2c_board_info *info = client->dev.platform_data; // 获取 i2c_client 的平台数据
-    struct device_node *node = client->dev.of_node; // 获取 i2c_client 的设备树节点
-    struct i2c_adapter *i2c_adapter = client->adapter;// i2c_adapter 是 i2c总线适配器
-    // if (!i2c_check_functionality(i2c_adapter, I2C_FUNC_I2C)) {
-    //     printk(KERN_ERR "I2C functionality not supported\n");
-    //     return -ENODEV;
-    // }
+    if (!i2c_check_functionality(i2c_adapter, I2C_FUNC_I2C)) {
+        printk(KERN_ERR "I2C functionality not supported\n");
+        return -ENODEV;
+    }
 
-    /** 记录 clinet */
-
-
+    /** 记录 client */
     global_client = client;
 
-
     /** 注册字符设备 */
-
     char device_name_buf[30];
-    // 2、 注册  file_operations _fops
     major = register_chrdev(0, _NAME, &_fops);
     if (major < 0) {
         printk(KERN_ALERT "Failed to register character device.\n");
         return major;
     }
 
-
     snprintf(device_name_buf, sizeof(device_name_buf), "%s_%s", _NAME, "_class");
     _class = class_create(device_name_buf);
-    if(IS_ERR(_class)){
+    if (IS_ERR(_class)) {
         printk("%s %s line %d\n", __FILE__, __FUNCTION__, __LINE__);
-
-		unregister_chrdev(major, _NAME);
-
+        unregister_chrdev(major, _NAME);
         printk("failed to allocate class\n");
         return PTR_ERR(_class);
     }
 
-
-
-
     int minor = 0;
     snprintf(device_name_buf, sizeof(device_name_buf), "%s_%d", _NAME, minor);
-    device_create(_class, NULL, MKDEV(major, minor), NULL, device_name_buf);//创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件  
-
-
-
-
-
-    
+    device_create(_class, NULL, MKDEV(major, minor), NULL, device_name_buf); // 创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件
     return 0;
 }
 
-static void my_i2c_driver_remove(struct i2c_client *client){
+static void my_i2c_driver_remove(struct i2c_client *client) {
     printk("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-
     /** 反 注册字符设备 */
-
     device_destroy(_class, MKDEV(major, 0));
     class_destroy(_class);
     unregister_chrdev(major, _NAME);
-
 }
 
-
-
 static const struct of_device_id of_match[] = {
-	{ 
-        .compatible = "kingnan,i2c_dev",		
-        .data = NULL 
-    },
-	{ /* END OF LIST */ },
+    { .compatible = "kingnan,i2c_dev", .data = NULL },
+    { /* END OF LIST */ },
 };
 
-
-// 当前 是 站位  没有实际用途
 static const struct i2c_device_id my_i2c_driver_ids[] = {
-    // { 
-    //     .compatible = "kingnan,i2c_dev", // 设备树匹配字符串; 厂家名称,芯片名字 : atmel,at24c02
-    //     .data = NULL,// 芯片相关私有数据        (kernel_ulong_t)NULL, // 私有数据
-    // },
-    { "kingnan,i2c_dev",	(kernel_ulong_t)NULL },
-    { /* sentinel */ }  
+    { "kingnan,i2c_dev", (kernel_ulong_t)NULL },
+    { /* sentinel */ }
 };
 
-
-/**
- * 构造一个 my_i2c_driver
- * 
- */
 static struct i2c_driver my_i2c_driver = {
     .driver = {
         .name = "my_i2c_driver",
         .of_match_table = of_match_ptr(of_match),
-        // .acpi_match_table = ACPI_PTR(at24_acpi_match),
     },
     .probe = my_i2c_driver_probe,
     .remove = my_i2c_driver_remove,
     .id_table = my_i2c_driver_ids,
 };
-
-
-
 
 /* 1. 入口函数 */
 static int __init my_i2c_dirver_init(void) {
@@ -307,4 +243,3 @@ module_exit(my_i2c_dirver_exit);
 
 MODULE_AUTHOR("Your Name");
 MODULE_LICENSE("GPL");
-
