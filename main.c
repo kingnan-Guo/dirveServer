@@ -16,7 +16,10 @@
 
 // #include "app_gpio_system.h"
 
-#include "app_i2c.h"
+// #include "app_i2c.h"
+
+
+#include "app_i2c_dirver.h"
 
 
 
@@ -55,7 +58,7 @@ int main(int argc, char *argv[]){
     // app_i2c_at24c02_main(argc, argv);// i2c设备
 
 
-    app_i2c_dirver_at24c02_main(argc, argv);
+    app_i2c_dirver_at24c02_main(argc, argv);// 报错 不好用
     
 
     return 0;
