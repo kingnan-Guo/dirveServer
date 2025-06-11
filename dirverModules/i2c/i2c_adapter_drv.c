@@ -111,8 +111,8 @@ static int __init i2c_bus_virtual_init(void)
 
 	return ret;
 }
-subsys_initcall(i2c_bus_virtual_init);
-
+// subsys_initcall(i2c_bus_virtual_init);
+module_init(i2c_bus_virtual_init);
 static void __exit i2c_bus_virtual_exit(void)
 {
 	platform_driver_unregister(&i2c_bus_virtual_driver);

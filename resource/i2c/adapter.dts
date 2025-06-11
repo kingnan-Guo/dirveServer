@@ -1,0 +1,46 @@
+/{
+    i2c-bus-virtual {
+        compatible = "kingnan,i2c-bus-virtual";
+        // reg = <0x60>; 不能有这个
+    };
+}
+
+这个设备树是 和 驱动的 prob  对应。后 注册了一个 adapter 所以我刚才的疑问为什么不写在 i2c 节点下？
+在设备树中，`i2c-bus-virtual` 节点是一个虚拟 I2C 总线适配器，它被设计为模拟一个 I2C 总线，以便在虚拟环境中使用。这个适配器节点被独立出来，而不是直接放在 `i2c` 节点下，可能有以下几个原因：
+
+1. **虚拟环境**：虚拟 I2C 总线适配器通常用于模拟 I2C 总线，以便在虚拟机或仿真环境中进行测试和开发。在这种情况下，它不需要与实际的物理 I2C 总线连接，因此可以独立存在。
+
+
+
+如何 注册 虚拟的 i2c 地址是 0x60 的设备？
+当前已经有真实的 设备挂在到 0x50 上了
+在设备树中，你可以通过添加一个新的设备节点来注册一个虚拟的 I2C 设备，该设备的地址为 0x60。这个设备节点应该放在 `i2c-bus-virtual` 节点下，如下所示：
+
+
+
+这个不知道 对不对
+```dts
+i2c-bus-virtual {
+    compatible = "kingnan,i2c-bus-virtual";
+    // reg = <0x60>; 不能有这个
+
+    virtual-device@60 {
+        compatible = "virtual-device";
+        reg = <0x60>;
+        // 其他设备属性
+    };
+};
+```
+最终是这个
+
+i2c-bus-virtual {
+    compatible = "kingnan,i2c-bus-virtual";
+    status = "okay";
+
+    eeprom@50 {
+        compatible = "kingnan,24c02";
+        reg = <0x60>;
+        pagesize = <8>;
+        status = "okay";
+    };
+};

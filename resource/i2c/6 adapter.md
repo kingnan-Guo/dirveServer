@@ -5,7 +5,9 @@
 
     文件
         ./modules/app_XXX/app_XXX.c
-        ./dirverModules/dirverModules/XXX.c
+        ./dirverModules/i2c/i2c_adapter.c
+
+
 
 # 定义
 
@@ -116,3 +118,9 @@ struct i2c_algorithm {
     u32 (*functionality)(struct i2c_adapter *adap);// 提供哪些 功能
 }
 ```
+
+
+
+
+参考
+sources/linux-rpi-6.6.y/drivers/i2c/busses/i2c-gpio.c
