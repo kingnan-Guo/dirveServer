@@ -1,7 +1,7 @@
 2025/06/11 00:10
 # gpio模拟i2c
     分支
-        dirver_raspberry_i2c_gpio_vX.X.X
+        dirver_raspberry_i2c_gpio_v0.4.1.2
 
     文件
         ./modules/app_XXX/app_XXX.c
