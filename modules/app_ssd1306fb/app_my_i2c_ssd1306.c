@@ -4,11 +4,11 @@
 // #include <string.h>
 
 
-#include "app_ssd1306fb.h"
+#include "app_my_i2c_ssd1306.h"
 
 
 
-int main(int argc, char *argv[]) {
+int app_my_i2c_ssd1306_init(int argc, char *argv[]) {
     if (argc != 2) {
         fprintf(stderr, "用法: %s <文本>\n", argv[0]);
         return 1;

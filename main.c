@@ -20,7 +20,10 @@
 
 
 // #include "app_i2c_dirver.h"
-#include "app_ssd1306fb.h"
+// #include "app_ssd1306fb.h"
+
+#include "app_my_i2c_ssd1306.h"
+
 
 
 
