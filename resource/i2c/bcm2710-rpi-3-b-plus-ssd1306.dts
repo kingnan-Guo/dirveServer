@@ -12,6 +12,7 @@
 	compatible = "raspberrypi,3-model-b-plus", "brcm,bcm2837";
 	model = "Raspberry Pi 3 Model B+";
 
+
 	aliases {
 		serial0 = &uart1;
 		serial1 = &uart0;
@@ -147,6 +148,16 @@
 		brcm,function = <4>;
 		brcm,pull = <0>;
 	};
+
+	i2c_gpio_pins: i2c_gpio_pins {
+        compatible = "brcm,bcm2835-gpio";
+        brcm,pins = <17 18>; /* GPIO17 和 GPIO18 */
+        brcm,function = <0>; /* 0 表示 GPIO 功能（由 i2c-gpio 驅動控制） */
+        brcm,pull = <2>; /* 2 表示上拉電阻，I2C 通常需要上拉 */
+    };
+
+
+
 };
 
 &mmcnr {
@@ -222,23 +233,26 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&i2c1_pins>;
 	clock-frequency = <100000>;
-	
-	#address-cells = <1>;
-	#size-cells = <0>;
-	status = "okay";
 
-
-	ssd1306@3c {
-		compatible = "solomon,ssd1306fb";
-		reg = <0x3c>;
-		solomon,width = <128>;
-		solomon,height = <64>;
-		solomon,page-offset = <0>;
-		solomon,com-invdir;
-		solomon,segment-no-remap;
-		solomon,prechargep2 = <2>;
+	at24c02@50 {
+		compatible = "kingnan,i2c_dev";
+		reg = <0x50>;
+		pagesize = <8>;
 		status = "okay";
 	};
+
+	/* 添加 SSD1306 设备 */
+    ssd1306@3c {
+        compatible = "kingnan,ssd1306"; // 与驱动中的 of_match 兼容
+        reg = <0x3c>; // I2C 地址
+        status = "okay";
+        /* 可选：指定显示参数 */
+        display-width = <128>;
+        display-height = <64>;
+    };
+
+
+
 
 };
 

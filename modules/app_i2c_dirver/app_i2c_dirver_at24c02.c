@@ -52,38 +52,38 @@ int app_i2c_dirver_at24c02_init(int argc, char *argv[]) {
         req.tv_nsec = 20000000; // 纳秒
 
 
-        while(*str){
-            // 在 mem_addr 写 *str
-            // 写完一个 字节后，mem_addr 自增 1， str 自增 1
+        // while(*str){
+        //     // 在 mem_addr 写 *str
+        //     // 写完一个 字节后，mem_addr 自增 1， str 自增 1
             
-            if(i2c_smbus_write_byte_data(fd, mem_addr, *str)){// 写数据
-                printf("i2c_smbus_write_byte_data failed\n");
-                return -1;
-            }
+        //     if(i2c_smbus_write_byte_data(fd, mem_addr, *str)){// 写数据
+        //         printf("i2c_smbus_write_byte_data failed\n");
+        //         return -1;
+        //     }
 
-            // 写完后 延时 10ms
-            nanosleep(&req, NULL);
+        //     // 写完后 延时 10ms
+        //     nanosleep(&req, NULL);
 
-            mem_addr++;
-            str++;
-        }
+        //     mem_addr++;
+        //     str++;
+        // }
 
-        ret = i2c_smbus_write_byte_data(fd, mem_addr, 0);// 写数据   写入字符串结束符 0
+        // ret = i2c_smbus_write_byte_data(fd, mem_addr, 0);// 写数据   写入字符串结束符 0
 
-        if (ret)
-        {
-            printf("i2c_smbus_write_byte_data failed\n");
+        // if (ret)
+        // {
+        //     printf("i2c_smbus_write_byte_data failed\n");
 
-            return -1;
-        }
+        //     return -1;
+        // }
         
     }
     else if(argv[2][0] == 'r'){
-        ret = i2c_smbus_read_i2c_block_data(fd, mem_addr, sizeof(buffer), buffer);// 读取数据
-        if (ret < 0) {
+        // ret = i2c_smbus_read_i2c_block_data(fd, mem_addr, sizeof(buffer), buffer);// 读取数据
+        // if (ret < 0) {
             
-            return -1;
-        }
+        //     return -1;
+        // }
 
         printf("read: %s\n", buffer);
     }

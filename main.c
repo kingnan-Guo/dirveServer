@@ -19,7 +19,8 @@
 // #include "app_i2c.h"
 
 
-#include "app_i2c_dirver.h"
+// #include "app_i2c_dirver.h"
+#include "app_ssd1306fb.h"
 
 
 
@@ -58,7 +59,13 @@ int main(int argc, char *argv[]){
     // app_i2c_at24c02_main(argc, argv);// i2c设备
 
 
-    app_i2c_dirver_at24c02_main(argc, argv);// 报错 不好用
+    // app_i2c_dirver_at24c02_main(argc, argv);// 报错 不好用
+
+
+    // app_ssd1306fb_main(argc, argv); // ssd1306fb 驱动
+
+
+    app_my_i2c_ssd1306_main(argc, argv);
     
 
     return 0;

@@ -201,10 +201,18 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 # ssd1306_dirver-y := $(MODULES_DIR)/i2c/i2c_dirver_ssd1306.o
 # obj-m += ssd1306_dirver.o
 
+# ssd1306fb-y := $(MODULES_DIR)/i2c/ssd1306fb.o
+# obj-m += ssd1306fb.o
+
+my_i2c_ssd1306-y := $(MODULES_DIR)/i2c/my_i2c_ssd1306.o
+obj-m += my_i2c_ssd1306.o
+
+
+
 
 # # i2c_adapter_eeprom_drv 驱动
-i2c_adapter_eeprom_drv-y := $(MODULES_DIR)/i2c/i2c_adapter_eeprom_drv.o
-obj-m += i2c_adapter_eeprom_drv.o
+# i2c_adapter_eeprom_drv-y := $(MODULES_DIR)/i2c/i2c_adapter_eeprom_drv.o
+# obj-m += i2c_adapter_eeprom_drv.o
 
 
 
