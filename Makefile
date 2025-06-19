@@ -201,11 +201,12 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 # ssd1306_dirver-y := $(MODULES_DIR)/i2c/i2c_dirver_ssd1306.o
 # obj-m += ssd1306_dirver.o
 
-# ssd1306fb-y := $(MODULES_DIR)/i2c/ssd1306fb.o
-# obj-m += ssd1306fb.o
+ssd1306fb-y := $(MODULES_DIR)/i2c/ssd1306fb.o
+obj-m += ssd1306fb.o
 
-my_i2c_ssd1306-y := $(MODULES_DIR)/i2c/my_i2c_ssd1306.o
-obj-m += my_i2c_ssd1306.o
+# # # i2c ssd1306 OLED 字符设备 驱动
+# my_i2c_ssd1306-y := $(MODULES_DIR)/i2c/my_i2c_ssd1306.o
+# obj-m += my_i2c_ssd1306.o
 
 
 
