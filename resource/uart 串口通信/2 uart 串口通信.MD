@@ -116,3 +116,15 @@ cfgetispeed     get input baud rate 获得输入波特率
 就是把 rpi 3B+  的 RX TX 接到一起
 
 
+
+
+root@raspberrypi:/dev# ls /dev/serial*
+/dev/serial0
+root@raspberrypi:/dev# ls -l /dev/serial0
+lrwxrwxrwx 1 root root 5 Jun 19 00:17 /dev/serial0 -> ttyS0
+root@raspberrypi:/dev# 
+
+
+./main /dev/ttyS0 abc
+
+

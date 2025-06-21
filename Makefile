@@ -205,8 +205,8 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 # obj-m += ssd1306fb.o
 
 # # # i2c ssd1306 OLED 字符设备 驱动
-my_i2c_ssd1306-y := $(MODULES_DIR)/i2c/my_i2c_ssd1306.o
-obj-m += my_i2c_ssd1306.o
+# my_i2c_ssd1306-y := $(MODULES_DIR)/i2c/my_i2c_ssd1306.o
+# obj-m += my_i2c_ssd1306.o
 
 
 
@@ -215,6 +215,11 @@ obj-m += my_i2c_ssd1306.o
 # i2c_adapter_eeprom_drv-y := $(MODULES_DIR)/i2c/i2c_adapter_eeprom_drv.o
 # obj-m += i2c_adapter_eeprom_drv.o
 
+
+
+# # UART 子系统 ---------------------
+dev-main-y := $(MODULES_DIR)/uart/devMain.o
+obj-m += dev-main.o
 
 
 all:

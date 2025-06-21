@@ -16,7 +16,7 @@
 #include <linux/input.h>
 #include <time.h>
 #include <sys/ioctl.h>
-
+#include <termios.h>
 
 
 

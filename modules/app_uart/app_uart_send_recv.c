@@ -8,6 +8,7 @@
 
 
 
+
 int open_port(char *dev){
     int fd;
 
@@ -44,6 +45,103 @@ int open_port(char *dev){
  * 
  */
 int set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop){
+    struct termios newtio, oldtio;// 串口属性结构体
+
+    // 获取当前串口属性, 并保存到 oldtio 中
+    if(tcgetattr(fd, &oldtio) != 0) {
+        perror("fcntl SetupSerial");
+        return -1;
+    }
+
+    // 将串口属性结构体清零
+    bzero(&newtio, sizeof(newtio));
+    newtio.c_cflag |= CLOCAL | CREAD; // 设置本地连接和接收使能
+    newtio.c_cflag &= ~CSIZE; // 清除数据位设置
+    newtio.c_cflag &= ~(ICANON | ECHO | ECHOE | ISIG); // 设置输入模式为原始模式
+    newtio.c_oflag &= ~OPOST; // 设置输出模式为原始模式
+
+    // 设置数据位
+    switch ( nBits ) 
+    {
+        case 7:
+            newtio.c_cflag |= CS7; // 设置为7位数据位
+            break;
+        case 8:
+            newtio.c_cflag |= CS8; // 设置为8位数据位
+            break;
+        default:
+            break;
+    }
+
+
+
+
+
+
+    
+    switch( nEvent )
+	{
+	case 'O':
+		newtio.c_cflag |= PARENB;
+		newtio.c_cflag |= PARODD;
+		newtio.c_iflag |= (INPCK | ISTRIP);
+	break;
+	case 'E': 
+		newtio.c_iflag |= (INPCK | ISTRIP);
+		newtio.c_cflag |= PARENB;
+		newtio.c_cflag &= ~PARODD;
+	break;
+	case 'N': 
+		newtio.c_cflag &= ~PARENB;
+	break;
+	}
+
+	switch( nSpeed )
+	{
+	case 2400:
+		cfsetispeed(&newtio, B2400);
+		cfsetospeed(&newtio, B2400);
+	break;
+	case 4800:
+		cfsetispeed(&newtio, B4800);
+		cfsetospeed(&newtio, B4800);
+	break;
+	case 9600:
+		cfsetispeed(&newtio, B9600);
+		cfsetospeed(&newtio, B9600);
+	break;
+	case 115200:
+		cfsetispeed(&newtio, B115200);
+		cfsetospeed(&newtio, B115200);
+	break;
+	default:
+		cfsetispeed(&newtio, B9600);
+		cfsetospeed(&newtio, B9600);
+	break;
+	}
+	
+	if( nStop == 1 )
+		newtio.c_cflag &= ~CSTOPB;
+	else if ( nStop == 2 )
+		newtio.c_cflag |= CSTOPB;
+	
+	newtio.c_cc[VMIN]  = 1;  /* 读数据时的最小字节数: 没读到这些数据我就不返回! */
+	newtio.c_cc[VTIME] = 0; /* 等待第1个数据的时间: 
+	                         * 比如VMIN设为10表示至少读到10个数据才返回,
+	                         * 但是没有数据总不能一直等吧? 可以设置VTIME(单位是10秒)
+	                         * 假设VTIME=1，表示: 
+	                         *    10秒内一个数据都没有的话就返回
+	                         *    如果10秒内至少读到了1个字节，那就继续等待，完全读到VMIN个数据再返回
+	                         */
+
+	tcflush(fd,TCIFLUSH);
+	
+	if((tcsetattr(fd,TCSANOW,&newtio))!=0)
+	{
+		perror("com set error");
+		return -1;
+	}
+
 
 
     return 0;

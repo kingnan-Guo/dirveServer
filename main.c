@@ -20,10 +20,12 @@
 
 
 // #include "app_i2c_dirver.h"
-#include "app_ssd1306fb.h"
+// #include "app_ssd1306fb.h"
 
 // #include "app_my_i2c_ssd1306.h"
 
+
+#include "app_uart.h"
 
 
 
@@ -68,7 +70,10 @@ int main(int argc, char *argv[]){
     // app_ssd1306fb_main(argc, argv); // ssd1306fb 驱动
 
 
-    app_my_i2c_ssd1306_main(argc, argv);
+    // app_my_i2c_ssd1306_main(argc, argv);
+
+
+    app_aurt_main(argc, argv); // 串口驱动
     
 
     return 0;
