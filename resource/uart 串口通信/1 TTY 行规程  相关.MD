@@ -97,3 +97,66 @@ App 要显示的数据 也会 先存入 virtual terminal 1 里面，存入的 �
 如果输入完 ls 这时 要传输 回车 键
 这时 在 行规程 收到 回车键 ， 表示要执行命令 了 ，那么会把 行规程 里的 buffer 中的 ls， ls 上传给APP 
 APP 就  shell 会查看当前 目录下有哪些文件， 会把 结果发送给 行规程，行规程 会把  结果发送给 uart 然后发送给 pc ，最终 显示在 屏幕上
+
+
+
+
+
+
+
+# 补充TTY 知识
+
+/dev/tty0 对应前台展示的终端
+
+
+
+
+串口没有虚拟终端的概念，所以不能使用open("/dev/tty0", O_RDWR)来打开串口设备文件，而是使用open("/dev/ttyS0", O_RDWR)来打开串口设备文件。
+ttyS0 是真实的终端
+ttyN  是 虚拟终端，是抽象出来的一个概念，可以同时有多个，比如可以同时有 tty0 tty1 tty2 tty3
+while [1]; do echo -n "hello" > /dev/tty0; sleep 1; done
+while [1]; do echo -n "hello tty" > /dev/tty; sleep 1; 
+
+
+echo -n "hello tty" > /dev/tty; sleep 1;   这个可以发送
+
+
+
+console 这个是  computer 计算机的 控制台， 有更大权限操作这个 computer
+computer 上还连接 多个 teletype ， teletype 上面有 tty0 tty1 tty2 tty3  这些虚拟终端， 电脑上可以同时有多个虚拟终端，比如可以同时有 tty0 tty1 tty2 tty3
+
+
+Terminal 远端的意思， 比如 vscode 的 终端， 串口终端， ssh 终端， 都是 terminal； 
+console 是控制台 可以理解为权限更大，能查看更多信息
+可以在 console 上看到内核的 打印信息
+    console 是一个  Terminal， 也是一个 console
+    Terminal 并不都是  console， 可以从多个 Terminal 中 选出一个 console
+
+
+
+    
+
+/dev/console 是一个设备节点，只能代表一个设备 是一个字符设备文件，它对应于计算机的控制台。控制台是计算机的输入输出设备，它通常用于系统管理员进行系统管理和调试。在Linux系统中，/dev/console设备文件通常指向当前系统的控制台终端，即当前正在使用的终端。
+
+可以从内核的 cmdline 来至制定，
+console=ttyS0 console=tty0
+
+console=ttyS0 时  ，/dev/console设备文件将指向串口设备ttyS0，即串口终端。这意味着，当系统启动时，串口终端将成为控制台终端，所有的系统输出都将通过串口终端显示出来。
+console=tty0 时，/dev/console设备文件将指向虚拟终端tty0，即当前正在使用的虚拟终端。这意味着，当系统启动时，虚拟终端将成为控制台终端，所有的系统输出都将通过虚拟终端显示出来。
+console=tty  时 ，前台程序 的 终端 ；/dev/console设备文件将指向当前正在使用的终端。这意味着，当系统启动时，当前正在使用的终端将成为控制台终端，所有的系统输出都将通过当前正在使用的终端显示出来。
+
+
+如何查看当前正在使用的终端
+
+```bash
+root@raspberrypi:/dev# cat /proc/cmdline 
+coherent_pool=1M 8250.nr_uarts=1 snd_bcm2835.enable_headphones=0 cgroup_disable=memory snd_bcm2835.enable_headphones=1 snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_hdmi=0  vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000  console=ttyS0,115200 console=tty1 root=PARTUUID=c0417f62-02 rootfstype=ext4 fsck.repair=yes rootwait cfg80211.ieee80211_regdom=GB
+root@raspberrypi:/dev# 
+// console=ttyS0,115200 console=tty1 表示当前正在使用 tty1
+
+echo -n "hello tty" > /dev/tty1; sleep 1;
+echo -n "hello console" > /dev/console; sleep 1;
+
+
+ps -ef | grep console
+```

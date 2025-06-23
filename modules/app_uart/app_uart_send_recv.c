@@ -78,21 +78,21 @@ int set_opt(int fd, int nSpeed, int nBits, char nEvent, int nStop){
 
 
 
-    
+
     switch( nEvent )
 	{
-	case 'O':
+	case 'O':// 奇校验
 		newtio.c_cflag |= PARENB;
 		newtio.c_cflag |= PARODD;
 		newtio.c_iflag |= (INPCK | ISTRIP);
 	break;
-	case 'E': 
+	case 'E': // 偶校验
 		newtio.c_iflag |= (INPCK | ISTRIP);
 		newtio.c_cflag |= PARENB;
 		newtio.c_cflag &= ~PARODD;
 	break;
 	case 'N': 
-		newtio.c_cflag &= ~PARENB;
+		newtio.c_cflag &= ~PARENB;// 无奇偶校验
 	break;
 	}
 

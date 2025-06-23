@@ -125,6 +125,4 @@ lrwxrwxrwx 1 root root 5 Jun 19 00:17 /dev/serial0 -> ttyS0
 root@raspberrypi:/dev# 
 
 
-./main /dev/ttyS0 abc
-
-
+./main /dev/ttyS0 

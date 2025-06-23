@@ -17,7 +17,7 @@
 #include <time.h>
 #include <sys/ioctl.h>
 #include <termios.h>
-
+#include <ctype.h>
 
 
 
