@@ -64,3 +64,47 @@ cd /sys/class
 
 # 扩展
 
+
+spi 控制器里面包含  
+
+spi_master
+
+每一个链接的 spi 设备 spi_device 里面有 .master
+
+
+```dts
+
+
+&spi0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi0_pins &spi0_cs_pins>;
+	cs-gpios = <&gpio 8 1>, <&gpio 7 1>;
+
+	spidev0: spidev@0{
+		compatible = "spidev";/** compatible 必须为 spidev */
+		reg = <0>;	/* CE0 */
+		#address-cells = <1>;
+		#size-cells = <0>;
+		spi-max-frequency = <125000000>;/** 最大频率 */
+	};
+
+	spidev1: spidev@1{
+		compatible = "spidev";
+		reg = <1>;	/* CE1 */
+		#address-cells = <1>;
+		#size-cells = <0>;
+		spi-max-frequency = <125000000>;
+	};
+};
+
+
+```
+
+sources/linux-rpi-6.6.y/drivers/spi/spidev.ko 
+
+对于普通的 spi dev 使用自带的 spidev 就可以，但是 没有 中断
+
+同时读写的时候要使用 ioctrl
+
+
+![rpi3B+ 引脚](<rpi3B+ 引脚.png>)
