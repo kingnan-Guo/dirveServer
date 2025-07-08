@@ -12,5 +12,10 @@
 #include <signal.h>
 #include <sys/mman.h>
 
+#include <sys/ioctl.h>
+#include <linux/spi/spidev.h>
 
-void app_spi_main(int argc, char *argv[]);
+
+
+
+void app_spi_TLC5615_main(int argc, char *argv[]);

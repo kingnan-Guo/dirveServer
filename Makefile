@@ -218,6 +218,12 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 
 
 # # UART 子系统 ---------------------
+# dev-main-y := $(MODULES_DIR)/uart/devMain.o
+# obj-m += dev-main.o
+
+
+
+# # SPI 子系统 ---------------------
 dev-main-y := $(MODULES_DIR)/uart/devMain.o
 obj-m += dev-main.o
 

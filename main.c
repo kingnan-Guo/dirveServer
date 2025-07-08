@@ -25,10 +25,10 @@
 // #include "app_my_i2c_ssd1306.h"
 
 
-#include "app_uart.h"
+// #include "app_uart.h"
 
 
-
+#include "app_spi_TLC5615.h"
 int main(int argc, char *argv[]){
 
     // app_interrupt_sleep_wake_up_circle_main(argc, argv);
@@ -73,7 +73,10 @@ int main(int argc, char *argv[]){
     // app_my_i2c_ssd1306_main(argc, argv);
 
 
-    app_aurt_main(argc, argv); // 串口驱动
+    // app_aurt_main(argc, argv); // 串口驱动
+
+
+    app_spi_TLC5615_main(argc, argv);
     
 
     return 0;
