@@ -47,7 +47,10 @@ cat /proc/devices
 cd /sys/class 
 
 
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs -j$(nproc) 
 
+
+dtc -I fs /sys/firmware/devicetree/base | less # 查看设备树
 # 扩展
 
 [text](bcm2710-rpi-3-b-plus_dac.dts)
@@ -60,6 +63,7 @@ cd /sys/class
 	pinctrl-names = "default";
 	pinctrl-0 = <&spi0_pins &spi0_cs_pins>;
 	cs-gpios = <&gpio 8 1>, <&gpio 7 1>;/** 这里 gpio 8 是  片选引脚，也就是 cs0 要连接到 spi 设备的  */
+    status = "okay";
 
 	adc0: adc@0{
 		compatible = "spidev";
@@ -84,8 +88,8 @@ cd /sys/class
 		spi-max-frequency = <125000000>;
 	};
 	*/
-};
-
+}
+所以设备树其实不用改，只是使用spidev0 这个名字就好了, 默认 spi 未打开所以要 添加   status = "okay";
 
 
 

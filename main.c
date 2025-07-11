@@ -28,7 +28,10 @@
 // #include "app_uart.h"
 
 
-#include "app_spi_TLC5615.h"
+// #include "app_spi_TLC5615.h"
+
+#include "app_spi_oled.h"
+
 int main(int argc, char *argv[]){
 
     // app_interrupt_sleep_wake_up_circle_main(argc, argv);
@@ -76,8 +79,10 @@ int main(int argc, char *argv[]){
     // app_aurt_main(argc, argv); // 串口驱动
 
 
-    app_spi_TLC5615_main(argc, argv);
-    
+    // app_spi_TLC5615_main(argc, argv);
+
+
+    app_spi_oled_main(argc, argv); // SPI OLED 驱动
 
     return 0;
 

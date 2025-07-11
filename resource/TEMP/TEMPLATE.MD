@@ -43,6 +43,9 @@ cat /proc/devices
 cd /sys/class 
 
 
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs -j$(nproc) 
 
+
+dtc -I fs /sys/firmware/devicetree/base | less
 # 扩展
 
