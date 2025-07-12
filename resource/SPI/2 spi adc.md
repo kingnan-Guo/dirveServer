@@ -1,14 +1,16 @@
-2025/03/29 00:10
+2025/07/13 00:10
 # 2 spi adc
     分支
-        dirver_raspberry_spi_vX.X.X
+        dirver_raspberry_spi_TLC5615_v0.4.2.1
 
     文件
-        ./modules/app_spi/app_spi.c
-
+        ./modules/app_spi/app_spi_TLC5615.c
+		
         驱动
         sources/linux-rpi-6.6.y/drivers/spi/spidev.c
 
+
+[设备树](bcm2710-rpi-3-b-plus_dac.dts)
 # 定义
 
 

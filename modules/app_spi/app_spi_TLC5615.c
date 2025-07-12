@@ -69,8 +69,9 @@ int app_spi_TLC5615_init(int argc, char *argv[]){
 
     printf("tx_buf: 0x%02x 0x%02x\n", tx_buf[0], tx_buf[1]);
     val = (rx_buf[0]<<8) | rx_buf[1];// 将高 8 位左移 8 位, 然后 与低 8 位进行或运算，得到完整的 16 位数据。
+    printf("rx_buf: 0x%02x 0x%02x\n", rx_buf[0], rx_buf[1]);
 
-    printf("val  =  %d", val);
+    printf("val  =  %d \n", val);
 
 
     close(fd);
