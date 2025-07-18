@@ -9,7 +9,7 @@
 static int fd; // SPI 文件描述符
 static int dc_pin_num; // DC 引脚号
 
-static const unsigned char font8x8_basic[][8] = {
+ unsigned char font8x8_basic[][8] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // 32: space
     {0x18, 0x18, 0x18, 0x18, 0x18, 0x00, 0x18, 0x00}, // 33: !
     {0x6C, 0x6C, 0x6C, 0x00, 0x00, 0x00, 0x00, 0x00}, // 34: "
@@ -129,7 +129,22 @@ void dc_pin_init(int number){
     system(cmd);
 
 }
+// 释放 DC 引脚
+void oled_dc_pin_uninit(void) {
+    char path[128];
+    int fd;
 
+    snprintf(path, sizeof(path), "%d", dc_pin_num);
+    fd = open("/sys/class/gpio/unexport", O_WRONLY);
+    if (fd < 0) {
+        fprintf(stderr, "Failed to open /sys/class/gpio/unexport: %m\n");
+        return;
+    }
+    if (write(fd, path, strlen(path)) < 0) {
+        fprintf(stderr, "Failed to unexport GPIO %d: %m\n", dc_pin_num);
+    }
+    close(fd);
+}
 
 
 void oled_set_dc_pin(int val){
@@ -233,7 +248,7 @@ int oled_init(){
 
 
 
-void oled_write_datas(const unsigned char *buf, int len){
+void oled_write_datas( unsigned char *buf, int len){
     oled_set_dc_pin(OLED_DATA); // 设置为数据模式
     if(buf == NULL || len <= 0){
         return; // 如果缓冲区为空或长度为 0，直接返回
@@ -267,13 +282,15 @@ void OLED_DIsp_Set_Pos(int x, int y){
 
 void OLED_DIsp_Char(int x, int y, unsigned char c){
     int i = 0;
-    const unsigned char *p = font8x8_basic[c - 32]; // 
+     unsigned char *p = font8x8_basic[c - 32]; // 
     
     // const unsigned char *p = oled_asc2_8x16[c - 32]; // 获取字符对应的字模
     // 设置光标位置
     OLED_DIsp_Set_Pos(x, y); // 设置光标位置
     // 设置写入数据
-    oled_write_datas(&p[0], 8); // 写入字符的字模数据
+    // oled_write_datas(&p[0], 8); // 写入字符的字模数据
+
+    oled_write_datas(p, 8); // 写入 8 字节字体数据
     // 设置光标位置
 
 
@@ -289,12 +306,22 @@ void OLED_DIsp_String(int x, int y, char *str){
         // 更新 x 和 y 坐标
         // 每个字符占 8 个像素，y 坐标每行增加 2 个像素
         x += 8; // 每个字符占 8 个像素
-        if(x > 127){
+        // if(x > 127){
+        //     x = 0;
+        //     y += 1; // 换行 
+        // }
+        // if(y > 7){
+        //     y = 0; // 超过屏幕高度，重置为 0
+        // }
+        // j++;
+
+
+        if (x > 127) { // 超出屏幕宽度换行
             x = 0;
-            y += 2; // 换行 
-        }
-        if(y > 7){
-            y = 0; // 超过屏幕高度，重置为 0
+            y += 1; // 8x8 字体占 1 页面
+            if (y > 7) { // 超出屏幕高度，重置
+                y = 0;
+            }
         }
         j++;
     }
@@ -316,8 +343,8 @@ void OLED_DIsp_Test(void){
 int app_spi_oled_init(int argc, char *argv[]){
 
     if(argc != 3){
-        printf(stderr, "Usage: %s  /dev/spidevB.D   <DC_pin_number> \n", argv[0]);
-        return;
+        // printf(stderr, "Usage: %s  /dev/spidevB.D   <DC_pin_number> \n", argv[0]);
+        return -1;
     }
 
     fd = open(argv[1], O_RDWR);
@@ -325,6 +352,21 @@ int app_spi_oled_init(int argc, char *argv[]){
         perror("open error");
         return -1;
     }
+
+
+    // 配置 SPI
+    int mode = SPI_MODE_0;
+    int bits = 8;
+    int speed = 1000000; // 1MHz
+    if (ioctl(fd, SPI_IOC_WR_MODE, &mode) < 0 ||
+        ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bits) < 0 ||
+        ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
+        fprintf(stderr, "Failed to configure SPI: %m\n");
+        close(fd);
+        return -1;
+    }
+
+
 
     // 获取 DC 的引脚号
     int dc_pin = strtoul(argv[2], NULL, 0);
@@ -339,6 +381,9 @@ int app_spi_oled_init(int argc, char *argv[]){
 
     // 显示测试内容
     OLED_DIsp_Test();
+
+    // 保持显示一段时间
+    sleep(5);
 
     // SPI 初始化代码可以在这里添加
     close(fd);

@@ -10,6 +10,8 @@
 # 定义
 
 
+ DC 引脚号 使用的是  GPIO 12
+
 # 流程
 
 
@@ -82,6 +84,36 @@ ssd1306 128*64
 
 
 
+
+
+
+
+
+
+
+# 导出 12 引脚, 因为 当前 oled 的 dc 连接 12 号引脚
+
+root@raspberrypi:/# cd /sys/class/gpio/
+root@raspberrypi:/sys/class/gpio# ls
+export  gpiochip512  gpiochip566  unexport
+gpiochip512 引脚编号
+rpi 3B+  只有一组 gpio
+
+所以我猜测 pin 27 的引脚编号是 512 + 12 = 524
+
+echo 524 > /sys/class/gpio/export
+
+设置输入
+echo in > /sys/class/gpio/gpio524/direction
+cat /sys/calss/gpio524/value     获取 pin 12 的值
+
+设置 输出
+echo 524 > /sys/class/gpio/export
+echo out > /sys/class/gpio/gpio524/direction
+echo 1 > /sys/class/gpio/gpio524/value
+echo 0 > /sys/class/gpio/gpio524/value
+
+echo 524 > /sys/class/gpio/unexport
 
 
 
