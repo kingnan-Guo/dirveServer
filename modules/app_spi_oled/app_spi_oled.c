@@ -170,19 +170,19 @@ void oled_write_cmd_data(unsigned char uc_data, unsigned char uc_cmd){
 }
 
 
-void dc_pin_init(int number){
-static int dc_pin_num; // DC 引脚号
-    dc_pin_num = number;
-    // 初始化 DC 引脚
-    char cmd[100];
-    // echo 509 > /sys/class/gpio/export 是 将 509 号引脚导出为 GPIO； 
-    sprintf(cmd, "echo %d > /sys/class/gpio/export", number);
-    system(cmd);// 导出 GPIO 引脚
+// void dc_pin_init(int number){
+// static int dc_pin_num; // DC 引脚号
+//     dc_pin_num = number;
+//     // 初始化 DC 引脚
+//     char cmd[100];
+//     // echo 509 > /sys/class/gpio/export 是 将 509 号引脚导出为 GPIO； 
+//     sprintf(cmd, "echo %d > /sys/class/gpio/export", number);
+//     system(cmd);// 导出 GPIO 引脚
 
-    // 设置引脚方向
-    sprintf(cmd, "echo out > /sys/class/gpio/gpio%d/direction", number);
-    system(cmd);
-}
+//     // 设置引脚方向
+//     sprintf(cmd, "echo out > /sys/class/gpio/gpio%d/direction", number);
+//     system(cmd);
+// }
 
 
 // 初始化 oled
@@ -233,13 +233,80 @@ int oled_init(){
 
 
 
+void oled_write_datas(const unsigned char *buf, int len){
+    oled_set_dc_pin(OLED_DATA); // 设置为数据模式
+    if(buf == NULL || len <= 0){
+        return; // 如果缓冲区为空或长度为 0，直接返回
+    }
+    spi_write_datas(buf, len); // 通过 SPI 写入数据
+}
+void OLED_DIsp_Clear(void)  
+{
+    unsigned char x, y;
+    char buf[128]; // 128 字节缓冲区
+    memset(buf, 0, sizeof(buf)); // 清空缓冲区
+
+    for ( y = 0; y < 8; y++)
+    {
+        OLED_DIsp_Set_Pos(0, y); // 设置光标位置; 获取 每一行
+
+        oled_write_datas(buf, 128); // 写入数据
+    }
+}
+// 设置光标位置
+void OLED_DIsp_Set_Pos(int x, int y){
+    // 
+    oled_write_cmd_data(0xb0 + y, OLED_CMD); // 设置页地址第几页
+    oled_write_cmd_data((x&0x0f), OLED_CMD); // 设置列地址低位;  0x00 到 0x0f 用于低 4 位。
+    oled_write_cmd_data((x&0xf0)>>4 | 0x10, OLED_CMD); // 设置列地址高位  ; 0x10 到 0x1f 用于高 4 位。
+
+
+
+
+}
+
+void OLED_DIsp_Char(int x, int y, unsigned char c){
+    int i = 0;
+    const unsigned char *p = font8x8_basic[c - 32]; // 
+    
+    // const unsigned char *p = oled_asc2_8x16[c - 32]; // 获取字符对应的字模
+    // 设置光标位置
+    OLED_DIsp_Set_Pos(x, y); // 设置光标位置
+    // 设置写入数据
+    oled_write_datas(&p[0], 8); // 写入字符的字模数据
+    // 设置光标位置
+
+
+}
+
+
+void OLED_DIsp_String(int x, int y, char *str){
+    unsigned char j = 0;
+    while (str[j])
+    {
+        // 获取字符对应的字模
+        OLED_DIsp_Char(x, y, str[j]);// x y 是坐标，str[j] 是字符
+        // 更新 x 和 y 坐标
+        // 每个字符占 8 个像素，y 坐标每行增加 2 个像素
+        x += 8; // 每个字符占 8 个像素
+        if(x > 127){
+            x = 0;
+            y += 2; // 换行 
+        }
+        if(y > 7){
+            y = 0; // 超过屏幕高度，重置为 0
+        }
+        j++;
+    }
+    
+}
+
 
 void OLED_DIsp_Test(void){
     int i;
-
-
-
-
+    OLED_DIsp_String(0, 0, "kingnan");
+	OLED_DIsp_String(0, 2, "Guo");
+	OLED_DIsp_String(0, 4, "heart.com");
 
 }
 
@@ -267,6 +334,8 @@ int app_spi_oled_init(int argc, char *argv[]){
 
     // 初始化 SPI oled
     oled_init();
+
+    OLED_DIsp_Clear();
 
     // 显示测试内容
     OLED_DIsp_Test();
