@@ -117,3 +117,4 @@ echo 524 > /sys/class/gpio/unexport
 
 
 
+./main /dev/spidev0.1 524
