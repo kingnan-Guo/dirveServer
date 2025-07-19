@@ -5,7 +5,9 @@
 
     文件
         ./modules/app_XXX/app_XXX.c
-        ./dirverModules/dirverModules/XXX.c
+        ./dirverModules/spi_dev_dac/spi_dev_dac.c
+
+
 
 # 定义
 
