@@ -42,7 +42,7 @@ dmesg | tail
 cat /proc/devices  
 cd /sys/class 
 
-
+sources/linux-rpi-6.6.y/arch/arm/boot/dts/broadcom/bcm2710-rpi-3-b-plus.dts
 make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs -j$(nproc) 
 
 

@@ -27,7 +27,7 @@ int app_spi_TLC5615_init(int argc, char *argv[]){
 
     val = strtoul(argv[2], NULL, 0);// 将字符串转换为无符号长整数（unsigned long int）。
 
-    val << 2; // 左移 2 位; bint0, bit1  = 0b00
+    val << 2; // 左移 2 位; bint0, bit1  = 0b00; val <<= 2; 
     val &=0xFFC; //保留中间的 10 位; 0xFFC = 0b111111111100
 
 

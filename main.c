@@ -30,7 +30,9 @@
 
 // #include "app_spi_TLC5615.h"
 
-#include "app_spi_oled.h"
+// #include "app_spi_oled.h"
+
+#include "app_spi_dev_dac.h"
 
 int main(int argc, char *argv[]){
 
@@ -82,7 +84,10 @@ int main(int argc, char *argv[]){
     // app_spi_TLC5615_main(argc, argv);
 
 
-    app_spi_oled_main(argc, argv); // SPI OLED 驱动
+    // app_spi_oled_main(argc, argv); // SPI OLED 驱动
+
+
+    app_spi_dev_dac_main(argc, argv); // SPI DAC 驱动
 
     return 0;
 

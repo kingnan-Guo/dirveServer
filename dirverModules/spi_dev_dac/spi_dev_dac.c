@@ -62,7 +62,7 @@ spidev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
     // 1 把 val 修改为正确的格式
 
-    val << 2; // 左移 2 位; bint0, bit1  = 0b00; 让 最底的两位 位 0
+    val <<= 2; // 左移 2 位; bint0, bit1  = 0b00; 让 最底的两位 位 0
     val &=0xFFC; //保留中间的 10 位; 0xFFC = 0b111111111100
 
 
@@ -77,7 +77,7 @@ spidev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
     // 2.2 初始化message  把 xfer 加入 message 尾部
     spi_message_init(&msg);
-    spi_messgae_add_tail(&xfer[0], &msg);
+    spi_message_add_tail(&xfer[0], &msg);
 
 
     // 2.3 调用 spi_sync 执行传输
@@ -86,7 +86,7 @@ spidev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
     // 3 修改读到的数据格式
 
     // copy_to_user
-    err = copy_to_user((const void __user *)arg, &val, sizeof(int));
+    err = copy_to_user((void __user *)arg, &val, sizeof(int));
 	return retval;
 }
 
@@ -95,7 +95,7 @@ spidev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 static int spidev_release(struct inode *inode, struct file *filp)
 {
-	struct spidev_data	*spidev;
+	// struct spidev_data	*spidev;
 	return 0;
 }
 
@@ -151,17 +151,16 @@ static int spidev_probe(struct spi_device *spi)
 
     /* 2 注册字符设备 */
     major  = register_chrdev(0, "spi_dev_dac", &spidev_fops);
-    spidev_class = class_create(THIS_MODULE, "spi_dev_dac");
+    spidev_class = class_create( "spi_dev_dac");
     device_create(spidev_class, NULL, MKDEV(major, 0), NULL, "spi_dev_dac");
     
     /* 3 */
-
-	return status;
+	return 0;
 }
 
 static void spidev_remove(struct spi_device *spi)
 {
-	struct spidev_data	*spidev = spi_get_drvdata(spi);
+	// struct spidev_data	*spidev = spi_get_drvdata(spi);
 
 	/* 1 注销字符设备 */
     device_destroy(spidev_class, MKDEV(major, 0));

@@ -1,10 +1,11 @@
 2025/03/29 00:10
-# 名称
+# spi_dev_dac
     分支
         dirver_raspberry_XXXXX_vX.X.X
 
     文件
-        ./modules/app_XXX/app_XXX.c
+        ./modules/app_spi_dev_dac/app_spi_dev_dac.c
+        ./modules/app_spi_dev_dac/app_spi_dev_dac.h
         ./dirverModules/spi_dev_dac/spi_dev_dac.c
 
 
@@ -22,10 +23,9 @@
 
 
 # Makefile
-# # XXXX ---------------------
-XXXX-y := $(MODULES_DIR)/XXXX/XXXX.o
-obj-m := XXXX.o
-
+# app_spi_dev_dac 驱动
+spi_dev_dac-y := $(MODULES_DIR)/spi_dev_dac/spi_dev_dac.o
+obj-m += spi_dev_dac.o
 
 # 执行命令
 
@@ -58,3 +58,13 @@ dtc -I fs /sys/firmware/devicetree/base | less
 sources/linux-rpi-6.6.y/drivers/spi/spidev.c
 
 
+
+修改设备树
+
+
+
+sources/linux-rpi-6.6.y/arch/arm/boot/dts/broadcom/bcm2710-rpi-3-b-plus.dts
+
+
+
+./main /dev/spi_dev_dac 2000

@@ -223,9 +223,15 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 
 
 
-# # SPI 子系统 ---------------------
-dev-main-y := $(MODULES_DIR)/uart/devMain.o
-obj-m += dev-main.o
+# # # SPI 子系统 ---------------------
+# dev-main-y := $(MODULES_DIR)/uart/devMain.o
+# obj-m += dev-main.o
+
+
+# app_spi_dev_dac 驱动
+spi_dev_dac-y := $(MODULES_DIR)/spi_dev_dac/spi_dev_dac.o
+obj-m += spi_dev_dac.o
+
 
 
 all:
