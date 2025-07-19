@@ -32,6 +32,41 @@ static struct  spi_device *oled_spi;
 static int major;
 static struct gpio_desc *dc_gpio;
 
+
+// 初始化 oled
+int oled_init(){
+	oled_write_cmd_data(0xae,OLED_CMD);//关闭显示
+
+	oled_write_cmd_data(0x00,OLED_CMD);//设置 lower column address
+	oled_write_cmd_data(0x10,OLED_CMD);//设置 higher column address
+	oled_write_cmd_data(0x40,OLED_CMD);//设置 display start line
+	oled_write_cmd_data(0xB0,OLED_CMD);//设置page address
+	oled_write_cmd_data(0x81,OLED_CMD);// contract control
+	oled_write_cmd_data(0x66,OLED_CMD);//128
+	oled_write_cmd_data(0xa1,OLED_CMD);//设置 segment remap
+	oled_write_cmd_data(0xa6,OLED_CMD);//normal /reverse
+	oled_write_cmd_data(0xa8,OLED_CMD);//multiple ratio
+	oled_write_cmd_data(0x3f,OLED_CMD);//duty = 1/64
+	oled_write_cmd_data(0xc8,OLED_CMD);//com scan direction
+	oled_write_cmd_data(0xd3,OLED_CMD);//set displat offset
+	oled_write_cmd_data(0x00,OLED_CMD);//
+	oled_write_cmd_data(0xd5,OLED_CMD);//set osc division
+	oled_write_cmd_data(0x80,OLED_CMD);//
+	oled_write_cmd_data(0xd9,OLED_CMD);//ser pre-charge period
+	oled_write_cmd_data(0x1f,OLED_CMD);//
+	oled_write_cmd_data(0xda,OLED_CMD);//set com pins
+	oled_write_cmd_data(0x12,OLED_CMD);//
+	oled_write_cmd_data(0xdb,OLED_CMD);//set vcomh
+	oled_write_cmd_data(0x30,OLED_CMD);//
+	oled_write_cmd_data(0x8d,OLED_CMD);//set charge pump disable 
+	oled_write_cmd_data(0x14,OLED_CMD);//
+	oled_write_cmd_data(0xaf,OLED_CMD);//set dispkay on
+
+	return 0;
+}
+
+
+
 static ssize_t
 spidev_write(struct file *filp, const char __user *buf,
 		size_t count, loff_t *f_pos)
