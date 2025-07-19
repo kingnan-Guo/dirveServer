@@ -24,6 +24,9 @@
 #define OLED_CMD 	0
 #define OLED_DATA 	1
 
+#define OLED_IOC_INIT 			123
+#define OLED_IOC_SET_POS 		124
+
 
 static struct  spi_device *oled_spi;
 static int major;

@@ -5,6 +5,8 @@
 #define OLED_CMD 	0
 #define OLED_DATA 	1
 
+#define OLED_IOC_INIT 			123
+#define OLED_IOC_SET_POS 		124
 
 static int fd; // SPI 文件描述符
 static int dc_pin_num; // DC 引脚号
@@ -110,152 +112,21 @@ static int dc_pin_num; // DC 引脚号
 
 
 
-// 初始化 DC 引脚
-void dc_pin_init(int number){
-
-    /*
-    echo dc_pin_num > /sys/class/gpio/export 是 将 509 号引脚导出为 GPIO；但是 在rpi 中并不一定是 509
-    echo out > /sys/class/gpio/gpio<dc_pin_num>/direction 是 设置引脚方向为输出
-
-    */
-	char cmd[100];
-
-    dc_pin_num = number;
-    sprintf(cmd, "echo %d > /sys/class/gpio/export", number);
-    system(cmd);// 导出 GPIO 引脚
-
-    // 设置引脚方向
-    sprintf(cmd, "echo out > /sys/class/gpio/gpio%d/direction", number);
-    system(cmd);
-
-}
-// 释放 DC 引脚
-void oled_dc_pin_uninit(void) {
-    char path[128];
-    int fd;
-
-    snprintf(path, sizeof(path), "%d", dc_pin_num);
-    fd = open("/sys/class/gpio/unexport", O_WRONLY);
-    if (fd < 0) {
-        fprintf(stderr, "Failed to open /sys/class/gpio/unexport: %m\n");
-        return;
-    }
-    if (write(fd, path, strlen(path)) < 0) {
-        fprintf(stderr, "Failed to unexport GPIO %d: %m\n", dc_pin_num);
-    }
-    close(fd);
-}
 
 
 
 
-void oled_set_dc_pin(int val){
-    // 设置 DC 引脚
-    /**
-    echo 1 > /sys/class/gpio/gpio<dc_pin_num>/value
-    echo 0 > /sys/class/gpio/gpio<dc_pin_num>/value
-    */
 
-    char cmd[100];
-    sprintf(cmd, "echo %d > /sys/class/gpio/gpio%d/value", val, dc_pin_num);
-    system(cmd); // 执行命令设置 DC 引脚的值
-    // 这里的 val 应该是 0 或 1，表示命令模式
-    // 或数据模式。0 表示命令模式，1 表示数据模式。
-    // 通过 echo 命令将值写入到 GPIO 引脚的 value 文件
-    // 这样就可以控制 OLED 显示器的命令和数据传输
-    // 通过系统调用执行 shell 命令来设置 DC 引脚的值
-    // 这将控制 OLED 显示器的命令和数据传输模式
-}
-
-void spi_write_datas(unsigned char *buf, int len){
-    write(fd, buf, len); // 通过 SPI 写入数据
-}
-
-
-void oled_write_cmd_data(unsigned char uc_data, unsigned char uc_cmd){
-    
-    // 设置 DC 引脚
-    if(uc_cmd == OLED_CMD){
-        oled_set_dc_pin(0);// 设置为命令模式
-    }
-    else if(uc_cmd == OLED_DATA){
-        oled_set_dc_pin(1);// 设置为数据模式
-    }
-    // 写入数据
-    spi_write_datas(&uc_data, 1);// 通过 SPI 写入数据
-
-}
-
-
-// void dc_pin_init(int number){
-// static int dc_pin_num; // DC 引脚号
-//     dc_pin_num = number;
-//     // 初始化 DC 引脚
-//     char cmd[100];
-//     // echo 509 > /sys/class/gpio/export 是 将 509 号引脚导出为 GPIO； 
-//     sprintf(cmd, "echo %d > /sys/class/gpio/export", number);
-//     system(cmd);// 导出 GPIO 引脚
-
-//     // 设置引脚方向
-//     sprintf(cmd, "echo out > /sys/class/gpio/gpio%d/direction", number);
-//     system(cmd);
+// void spi_write_datas(unsigned char *buf, int len){
+//     write(fd, buf, len); // 通过 SPI 写入数据
 // }
 
 
-// 初始化 oled
-int oled_init(){
-	oled_write_cmd_data(0xae,OLED_CMD);//关闭显示
-
-	oled_write_cmd_data(0x00,OLED_CMD);//设置 lower column address
-	oled_write_cmd_data(0x10,OLED_CMD);//设置 higher column address
-
-	oled_write_cmd_data(0x40,OLED_CMD);//设置 display start line
-
-	oled_write_cmd_data(0xB0,OLED_CMD);//设置page address
-
-	oled_write_cmd_data(0x81,OLED_CMD);// contract control
-	oled_write_cmd_data(0x66,OLED_CMD);//128
-
-	oled_write_cmd_data(0xa1,OLED_CMD);//设置 segment remap
-
-	oled_write_cmd_data(0xa6,OLED_CMD);//normal /reverse
-
-	oled_write_cmd_data(0xa8,OLED_CMD);//multiple ratio
-	oled_write_cmd_data(0x3f,OLED_CMD);//duty = 1/64
-
-	oled_write_cmd_data(0xc8,OLED_CMD);//com scan direction
-
-	oled_write_cmd_data(0xd3,OLED_CMD);//set displat offset
-	oled_write_cmd_data(0x00,OLED_CMD);//
-
-	oled_write_cmd_data(0xd5,OLED_CMD);//set osc division
-	oled_write_cmd_data(0x80,OLED_CMD);//
-
-	oled_write_cmd_data(0xd9,OLED_CMD);//ser pre-charge period
-	oled_write_cmd_data(0x1f,OLED_CMD);//
-
-	oled_write_cmd_data(0xda,OLED_CMD);//set com pins
-	oled_write_cmd_data(0x12,OLED_CMD);//
-
-	oled_write_cmd_data(0xdb,OLED_CMD);//set vcomh
-	oled_write_cmd_data(0x30,OLED_CMD);//
-
-	oled_write_cmd_data(0x8d,OLED_CMD);//set charge pump disable 
-	oled_write_cmd_data(0x14,OLED_CMD);//
-
-	oled_write_cmd_data(0xaf,OLED_CMD);//set dispkay on
-
-	return 0;
-}
 
 
 
 void oled_write_datas( unsigned char *buf, int len){
-    oled_set_dc_pin(OLED_DATA); // 设置为数据模式
-    if(buf == NULL || len <= 0){
-        return; // 如果缓冲区为空或长度为 0，直接返回
-    }
-    spi_write_datas(buf, len); // 通过 SPI 写入数据
+    write(fd, buf, len);
 }
 void OLED_DIsp_Clear(void)  
 {
@@ -272,13 +143,7 @@ void OLED_DIsp_Clear(void)
 }
 // 设置光标位置
 void OLED_DIsp_Set_Pos(int x, int y){
-    // 
-    oled_write_cmd_data(0xb0 + y, OLED_CMD); // 设置页地址第几页
-    oled_write_cmd_data((x&0x0f), OLED_CMD); // 设置列地址低位;  0x00 到 0x0f 用于低 4 位。
-    oled_write_cmd_data((x&0xf0)>>4 | 0x10, OLED_CMD); // 设置列地址高位  ; 0x10 到 0x1f 用于高 4 位。
-
-
-
+    ioctl(fd, OLED_IOC_SET_POS, x | (y << 8)); // 设置光标位置
 
 }
 
@@ -308,15 +173,6 @@ void OLED_DIsp_String(int x, int y, char *str){
         // 更新 x 和 y 坐标
         // 每个字符占 8 个像素，y 坐标每行增加 2 个像素
         x += 8; // 每个字符占 8 个像素
-        // if(x > 127){
-        //     x = 0;
-        //     y += 1; // 换行 
-        // }
-        // if(y > 7){
-        //     y = 0; // 超过屏幕高度，重置为 0
-        // }
-        // j++;
-
 
         if (x > 127) { // 超出屏幕宽度换行
             x = 0;
@@ -345,7 +201,7 @@ void OLED_DIsp_Test(void){
  /** main /dev/spidevB.D <DC_Pin_number> */
 int app_spi_oled_dev_init(int argc, char *argv[]){
 
-    if(argc != 3){
+    if(argc != 2){
         // printf(stderr, "Usage: %s  /dev/spidevB.D   <DC_pin_number> \n", argv[0]);
         return -1;
     }
@@ -357,41 +213,13 @@ int app_spi_oled_dev_init(int argc, char *argv[]){
     }
 
 
-    // // 配置 SPI
-    // int mode = SPI_MODE_0;
-    // int bits = 8;
-    // int speed = 1000000; // 1MHz
-    // if (ioctl(fd, SPI_IOC_WR_MODE, &mode) < 0 ||
-    //     ioctl(fd, SPI_IOC_WR_BITS_PER_WORD, &bits) < 0 ||
-    //     ioctl(fd, SPI_IOC_WR_MAX_SPEED_HZ, &speed) < 0) {
-    //     fprintf(stderr, "Failed to configure SPI: %m\n");
-    //     close(fd);
-    //     return -1;
-    // }
-
-
-
-    // 获取 DC 的引脚号
-    int dc_pin = strtoul(argv[2], NULL, 0);
-
-    // 初始化 DC 引脚
-    dc_pin_init(dc_pin);
-
-    // 初始化 SPI oled
-    oled_init();
+    ioctl(fd, OLED_IOC_INIT, 0); // 初始化 OLED
 
     OLED_DIsp_Clear();
-
     // 显示测试内容
     OLED_DIsp_Test();
-
-    // 保持显示一段时间
-    sleep(5);
-    oled_dc_pin_uninit(); // 释放 DC 引脚
-
     // SPI 初始化代码可以在这里添加
     close(fd);
-
     return 0;
 }
 
