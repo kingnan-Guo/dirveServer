@@ -49,3 +49,10 @@ make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs -j$(nproc)
 dtc -I fs /sys/firmware/devicetree/base | less
 # 扩展
 
+
+
+
+
+sources/linux-rpi-6.6.y/drivers/spi/spidev.c
+
+
