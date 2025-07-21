@@ -150,7 +150,8 @@
 
 	oled_dc_pins: oled_dc_pins{
 		brcm,pins = <12>;
-		brcm,function = <1>;/* input */
+		brcm,function = <0>;/* input */
+		brcm,pull = <0>; /* no pull */
 	};
 
 };

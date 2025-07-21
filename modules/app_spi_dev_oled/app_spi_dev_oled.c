@@ -194,7 +194,7 @@ void OLED_DIsp_Test_dev(void){
 	OLED_DIsp_String_dev(0, 1, "Guo");
 	OLED_DIsp_String_dev(0, 2, "heart.com");
 	OLED_DIsp_String_dev(0, 3, "1992-11-4");
-    OLED_DIsp_String_dev(0, 4, "ABCDEFG");
+    OLED_DIsp_String_dev(0, 4, "a1b2c3d4");
 }
 
 

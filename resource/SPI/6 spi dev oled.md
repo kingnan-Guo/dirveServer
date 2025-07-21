@@ -52,3 +52,6 @@ dtc -I fs /sys/firmware/devicetree/base | less
 
 
 
+注意最重要的一点， 之前一直无法展示 的主要原因可能是 因为 电压不足了，要把 dac 的连接断开 后再次进行 
+
+./main /dev/spi_dev_oled 

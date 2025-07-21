@@ -54,7 +54,7 @@ void spi_write_datas(unsigned char *buf, int len){
 
 // 写数据
 void oled_write_cmd_data(unsigned char uc_data, unsigned char uc_cmd){
-    if(uc_cmd == OLED_CMD){
+    if(uc_cmd == 0){
         oled_set_dc_pin(0); // 设置为命令模式
     }
     else {
@@ -106,12 +106,13 @@ static ssize_t
 spidev_write(struct file *filp, const char __user *buf,
 		size_t count, loff_t *f_pos)
 {
+    printk("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     char* kern_buf;
     kern_buf = kmalloc(count, GFP_KERNEL);// 分配内存
     if (kern_buf == NULL) {
         return -ENOMEM; // 内存分配失败
     }
-    int err = copy_from_user(kern_buf, buf, count); // 从用户空间复制数据到内核空间
+     copy_from_user(kern_buf, buf, count); // 从用户空间复制数据到内核空间
 
     // 设置 写入数据
     oled_set_dc_pin(1);// 拉高 DC 引脚，表示写入数据
@@ -133,6 +134,7 @@ void OLED_DIsp_Set_Pos(int x, int y){
 static long
 spidev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
+    printk("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     int x, y;
     //  根据 cmd 操作 硬件
     switch (cmd)
@@ -225,12 +227,14 @@ static void spidev_remove(struct spi_device *spi)
 {
 	// struct spidev_data	*spidev = spi_get_drvdata(spi);
 
+    /* 2 释放 spi dev */
+    gpiod_put(dc_gpio); // 释放 dc 引脚
+
 	/* 1 注销字符设备 */
     device_destroy(spidev_class, MKDEV(major, 0));
     class_destroy(spidev_class);
 	unregister_chrdev(major, "spi_dev_oled");
-    /* 2 释放 spi dev */
-    gpiod_put(dc_gpio); // 释放 dc 引脚
+
     printk("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 }
@@ -238,7 +242,7 @@ static void spidev_remove(struct spi_device *spi)
 static struct spi_driver spidev_spi_driver = {
 	.driver = {
 		.name =		"spidev,spi_dev_oled",
-		.of_match_table = spidev_dt_ids,
+		.of_match_table = of_match_ptr(spidev_dt_ids),
 	},
 	.probe =	spidev_probe,
 	.remove =	spidev_remove,
