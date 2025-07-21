@@ -144,6 +144,7 @@ void OLED_DIsp_Clear_dev(void)
 // 设置光标位置
 void OLED_DIsp_Set_Pos_dev(int x, int y){
     //  x | (y << 8) 将 y 左移 8 位，然后与 x 进行按位或运算，得到光标位置
+    // x | (y << 8) 这个的 目的是 将 x 和 y 合并成一个 16 位的值； x 是低 8 位，y 是高 8 位； (y << 8) | x  
     ioctl(fd, OLED_IOC_SET_POS, x | (y << 8)); // 设置光标位置
 
 }
