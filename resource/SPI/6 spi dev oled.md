@@ -8,7 +8,7 @@
         ./dirverModules/dirverModules/XXX.c
 
 # 定义
-
+ dc 依然使用 GPIO 12
 
 # 流程
 
@@ -48,4 +48,6 @@ make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs -j$(nproc)
 
 dtc -I fs /sys/firmware/devicetree/base | less
 # 扩展
+
+
 

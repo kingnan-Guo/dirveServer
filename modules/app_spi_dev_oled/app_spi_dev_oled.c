@@ -143,6 +143,7 @@ void OLED_DIsp_Clear(void)
 }
 // 设置光标位置
 void OLED_DIsp_Set_Pos(int x, int y){
+    //  x | (y << 8) 将 y 左移 8 位，然后与 x 进行按位或运算，得到光标位置
     ioctl(fd, OLED_IOC_SET_POS, x | (y << 8)); // 设置光标位置
 
 }
