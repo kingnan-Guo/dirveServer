@@ -228,9 +228,14 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 # obj-m += dev-main.o
 
 
-# app_spi_dev_dac 驱动
-spi_dev_dac-y := $(MODULES_DIR)/spi_dev_dac/spi_dev_dac.o
-obj-m += spi_dev_dac.o
+# # app_spi_dev_dac 驱动 -------------------
+# spi_dev_dac-y := $(MODULES_DIR)/spi_dev_dac/spi_dev_dac.o
+# obj-m += spi_dev_dac.o
+
+
+# # spi_dev_oled 驱动 -------------------
+spi_dev_oled-y := $(MODULES_DIR)/spi_dev_oled/spi_dev_oled.o
+obj-m += spi_dev_oled.o
 
 
 

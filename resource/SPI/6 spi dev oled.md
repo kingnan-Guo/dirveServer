@@ -1,11 +1,12 @@
 2025/07/20 00:10
 # spi dev oled
     分支
-        dirver_raspberry_XXXXX_vX.X.X
+        dirver_raspberry_spi_dev_oled_v0.4.2.4
 
     文件
-        ./modules/app_XXX/app_XXX.c
-        ./dirverModules/dirverModules/XXX.c
+        ./modules/app_spi_dev_oled/app_spi_dev_oled.c
+        ./dirverModules/spi_dev_oled/spi_dev_oled.c
+        [text](bcm2710-rpi-3-b-plus_spi_dev_oled.dts)
 
 # 定义
  dc 依然使用 GPIO 12
@@ -20,9 +21,9 @@
 
 
 # Makefile
-# # XXXX ---------------------
-XXXX-y := $(MODULES_DIR)/XXXX/XXXX.o
-obj-m := XXXX.o
+# # spi_dev_oled 驱动 -------------------
+spi_dev_oled-y := $(MODULES_DIR)/spi_dev_oled/spi_dev_oled.o
+obj-m += spi_dev_oled.o
 
 
 # 执行命令

@@ -20,7 +20,7 @@
 
 void dc_pin_init(int number); //初始化DC引脚
 int oled_init(void); //初始化oled
-void OLED_DIsp_Test(void); //测试显示内容
+void OLED_DIsp_Test_dev(void); //测试显示内容
 
 
 // int oled_dc_pin_init(int number);
@@ -28,11 +28,11 @@ void oled_dc_pin_uninit(void);
 void oled_set_dc_pin(int val);
 void spi_write_datas( unsigned char *buf, int len); // 修改为 const
 void oled_write_cmd_data(unsigned char uc_data, unsigned char uc_cmd);
-void oled_write_datas( unsigned char *buf, int len);
-void OLED_DIsp_Clear(void);
-void OLED_DIsp_Set_Pos(int x, int y); // 添加声明
-void OLED_DIsp_Char(int x, int y, unsigned char c);
-void OLED_DIsp_String(int x, int y, char *str);
+void oled_write_datas_dev( unsigned char *buf, int len);
+void OLED_DIsp_Clear_dev(void);
+void OLED_DIsp_Set_Pos_dev(int x, int y); // 添加声明
+void OLED_DIsp_Char_dev(int x, int y, unsigned char c);
+void OLED_DIsp_String_dev(int x, int y, char *str);
 
 
 void app_spi_dev_oled_main(int argc, char *argv[]);

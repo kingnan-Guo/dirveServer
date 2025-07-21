@@ -33,8 +33,40 @@ static int major;
 static struct gpio_desc *dc_gpio;
 
 
+
+void dc_pin_init(void) {
+    //初始化 dc 引脚
+    // 设置 dc 为 输出
+    gpiod_direction_output(dc_gpio, 1); // 默认拉高. 设置 为 输出
+
+}
+
+void oled_set_dc_pin(int val){
+    // 设置 DC 引脚
+    gpiod_set_value(dc_gpio, val); // 设置 DC 引脚的值 0 或 1
+
+}
+void spi_write_datas(unsigned char *buf, int len){
+    spi_write(oled_spi, buf, len); // 通过 SPI 写入数据
+}
+
+
+
+// 写数据
+void oled_write_cmd_data(unsigned char uc_data, unsigned char uc_cmd){
+    if(uc_cmd == OLED_CMD){
+        oled_set_dc_pin(0); // 设置为命令模式
+    }
+    else {
+        oled_set_dc_pin(1); // 设置 写入数据
+    }
+
+    spi_write_datas(&uc_data, 1); // 写入数据
+    
+}
+
 // 初始化 oled
-int oled_init(){
+static int oled_init(void){
 	oled_write_cmd_data(0xae,OLED_CMD);//关闭显示
 
 	oled_write_cmd_data(0x00,OLED_CMD);//设置 lower column address
@@ -66,18 +98,7 @@ int oled_init(){
 }
 
 
-void dc_pin_init(void) {
-    //初始化 dc 引脚
-    // 设置 dc 为 输出
-    gpiod_direction_output(dc_gpio, 1); // 默认拉高. 设置 为 输出
 
-}
-
-void oled_set_dc_pin(int val){
-    // 设置 DC 引脚
-    gpiod_set_value(dc_gpio, val); // 设置 DC 引脚的值 0 或 1
-
-}
 
 
 
@@ -85,7 +106,17 @@ static ssize_t
 spidev_write(struct file *filp, const char __user *buf,
 		size_t count, loff_t *f_pos)
 {
+    char* kern_buf;
+    kern_buf = kmalloc(count, GFP_KERNEL);// 分配内存
+    if (kern_buf == NULL) {
+        return -ENOMEM; // 内存分配失败
+    }
+    int err = copy_from_user(kern_buf, buf, count); // 从用户空间复制数据到内核空间
 
+    // 设置 写入数据
+    oled_set_dc_pin(1);// 拉高 DC 引脚，表示写入数据
+    spi_write_datas(kern_buf, count); // 通过 SPI 写入数据
+    kfree(kern_buf);
 	return count;
 }
 
@@ -111,8 +142,9 @@ spidev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
             oled_init();// 初始化 OLED
             break;
         case OLED_IOC_SET_POS: // 设置位置
-            x = ;
-            y = ;
+            x = arg & 0xff; // 获取 x 坐标
+            y = (arg >> 8) & 0xff; // 获取 y 坐标
+            OLED_DIsp_Set_Pos(x, y); // 设置位置
 
             break;
         default:
@@ -198,7 +230,8 @@ static void spidev_remove(struct spi_device *spi)
     class_destroy(spidev_class);
 	unregister_chrdev(major, "spi_dev_oled");
     /* 2 释放 spi dev */
-
+    gpiod_put(dc_gpio); // 释放 dc 引脚
+    printk("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
 }
 

@@ -1,4 +1,4 @@
-#include "app_spi_oled.h"
+#include "app_spi_dev_oled.h"
 
 
 //为0 表示命令，为1表示数据
@@ -11,7 +11,7 @@
 static int fd; // SPI 文件描述符
 static int dc_pin_num; // DC 引脚号
 
- unsigned char font8x8_basic[][8] = {
+ unsigned char font8x8_basic_dev[][8] = {
     {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // 32: space
     {0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00}, // 33: !
     {0x00, 0x00, 0x00, 0x1B, 0x1B, 0x00, 0x00, 0x00}, // 34: "
@@ -125,10 +125,10 @@ static int dc_pin_num; // DC 引脚号
 
 
 
-void oled_write_datas( unsigned char *buf, int len){
+void oled_write_datas_dev( unsigned char *buf, int len){
     write(fd, buf, len);
 }
-void OLED_DIsp_Clear(void)  
+void OLED_DIsp_Clear_dev(void)  
 {
     unsigned char x, y;
     char buf[128]; // 128 字节缓冲区
@@ -136,41 +136,40 @@ void OLED_DIsp_Clear(void)
 
     for ( y = 0; y < 8; y++)
     {
-        OLED_DIsp_Set_Pos(0, y); // 设置光标位置; 获取 每一行
+        OLED_DIsp_Set_Pos_dev(0, y); // 设置光标位置; 获取 每一行
 
-        oled_write_datas(buf, 128); // 写入数据
+        oled_write_datas_dev(buf, 128); // 写入数据
     }
 }
 // 设置光标位置
-void OLED_DIsp_Set_Pos(int x, int y){
+void OLED_DIsp_Set_Pos_dev(int x, int y){
     //  x | (y << 8) 将 y 左移 8 位，然后与 x 进行按位或运算，得到光标位置
     ioctl(fd, OLED_IOC_SET_POS, x | (y << 8)); // 设置光标位置
 
 }
 
-void OLED_DIsp_Char(int x, int y, unsigned char c){
+void OLED_DIsp_Char_dev(int x, int y, unsigned char c){
     int i = 0;
-     unsigned char *p = font8x8_basic[c - 32]; // 
+    unsigned char *p = font8x8_basic_dev[c - 32]; // 
     
     // const unsigned char *p = oled_asc2_8x16[c - 32]; // 获取字符对应的字模
     // 设置光标位置
-    OLED_DIsp_Set_Pos(x, y); // 设置光标位置
+    OLED_DIsp_Set_Pos_dev(x, y); // 设置光标位置
     // 设置写入数据
-    // oled_write_datas(&p[0], 8); // 写入字符的字模数据
+    // oled_write_datas_dev(&p[0], 8); // 写入字符的字模数据
 
-    oled_write_datas(p, 8); // 写入 8 字节字体数据
+    oled_write_datas_dev(p, 8); // 写入 8 字节字体数据
     // 设置光标位置
-
 
 }
 
 
-void OLED_DIsp_String(int x, int y, char *str){
+void OLED_DIsp_String_dev(int x, int y, char *str){
     unsigned char j = 0;
     while (str[j])
     {
         // 获取字符对应的字模
-        OLED_DIsp_Char(x, y, str[j]);// x y 是坐标，str[j] 是字符
+        OLED_DIsp_Char_dev(x, y, str[j]);// x y 是坐标，str[j] 是字符
         // 更新 x 和 y 坐标
         // 每个字符占 8 个像素，y 坐标每行增加 2 个像素
         x += 8; // 每个字符占 8 个像素
@@ -188,13 +187,13 @@ void OLED_DIsp_String(int x, int y, char *str){
 }
 
 
-void OLED_DIsp_Test(void){
+void OLED_DIsp_Test_dev(void){
     int i;
-    OLED_DIsp_String(0, 0, "kingnan");
-	OLED_DIsp_String(0, 1, "Guo");
-	OLED_DIsp_String(0, 2, "heart.com");
-	OLED_DIsp_String(0, 3, "1992-11-4");
-    OLED_DIsp_String(0, 4, "ABCDEFG");
+    OLED_DIsp_String_dev(0, 0, "kingnan");
+	OLED_DIsp_String_dev(0, 1, "Guo");
+	OLED_DIsp_String_dev(0, 2, "heart.com");
+	OLED_DIsp_String_dev(0, 3, "1992-11-4");
+    OLED_DIsp_String_dev(0, 4, "ABCDEFG");
 }
 
 
@@ -216,9 +215,9 @@ int app_spi_oled_dev_init(int argc, char *argv[]){
 
     ioctl(fd, OLED_IOC_INIT, 0); // 初始化 OLED
 
-    OLED_DIsp_Clear();
+    OLED_DIsp_Clear_dev();
     // 显示测试内容
-    OLED_DIsp_Test();
+    OLED_DIsp_Test_dev();
     // SPI 初始化代码可以在这里添加
     close(fd);
     return 0;
