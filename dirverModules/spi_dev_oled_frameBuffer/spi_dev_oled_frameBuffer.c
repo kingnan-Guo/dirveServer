@@ -40,9 +40,152 @@ static struct fb_info *myfb_info; // framebuffer 的信息
 static unsigned int pseudo_palette[16];// 伪调色板
 
 static struct task_struct *oled_thread;// OLED 线程
-static unsigned char *oled_buf; //[1024];
+static unsigned char *oled_buf; //[1024]; 这个是 OLED 的缓冲区； 1024 是。128 * 8 = 1024 字节； 128 列， 8 行
 
 
+
+
+// 不知道 在做什么 --------------------------------
+
+// 静态内联函数，将通道转换为字段
+static inline unsigned int chan_to_field(unsigned int chan,
+					 struct fb_bitfield *bf)
+{
+	// 将通道值与0xffff进行按位与操作，保留低16位
+	chan &= 0xffff;
+	// 将通道值右移16-bf->length位，得到高bf->length位
+	chan >>= 16 - bf->length;
+	// 将通道值左移bf->offset位，得到最终结果
+	return chan << bf->offset;
+}
+
+
+// 设置颜色寄存器
+static int mylcd_setcolreg(unsigned regno,
+			       unsigned red, unsigned green, unsigned blue,
+			       unsigned transp, struct fb_info *info)
+{
+	unsigned int val;// 定义一个变量 val 用来存储颜色值
+
+	/* dprintk("setcol: regno=%d, rgb=%d,%d,%d\n", regno, red, green, blue); */
+
+	//  根据 regno 的值，判断是否在 0-15 之间，如果不在，则返回 1，表示错误
+	switch (info->fix.visual) {
+		case FB_VISUAL_TRUECOLOR:
+			/* true-colour, use pseudo-palette */
+
+			if (regno < 16) {
+				u32 *pal = info->pseudo_palette;
+
+				// 将红、绿、蓝三个通道的值转换为对应的字段值
+				val  = chan_to_field(red,   &info->var.red);
+				val |= chan_to_field(green, &info->var.green);
+				val |= chan_to_field(blue,  &info->var.blue);
+
+				// 将转换后的值存储到伪调色板中
+				pal[regno] = val;
+			}
+			break;
+
+		default:
+			return 1;	/* unknown type */
+	}
+
+	return 0;
+}
+
+
+
+
+static struct fb_ops myfb_ops = {
+	.owner		= THIS_MODULE,
+	.fb_setcolreg	= mylcd_setcolreg,// 设置颜色寄存器
+	.fb_fillrect	= cfb_fillrect,// 填充矩形
+	.fb_copyarea	= cfb_copyarea,// 复制区域
+	.fb_imageblit	= cfb_imageblit,// 图像绘制
+};
+
+
+// 创建一个线程 用来 不断将 framebuffer 的数据  解析成 oled 要的数据， 其实就是将 
+//  这个线程 一秒 钟 读取一次 framebuffer 的数据
+//  oled_buf 里面有 1024个字节，每个字节有8位，每一位对应一个像素， 所以 像素会不断扫描这 1024 个字节，也就是扫描 1024* 8 个像素
+static int oled_thread_func(void *param)
+{
+
+	unsigned char *p[8];
+	unsigned char data[8];
+	int i;
+	int j;
+	int line;
+	int bit;
+	unsigned char byte;
+	unsigned char *fb  = myfb_info->screen_base;
+	int k;	
+
+	while (!kthread_should_stop()) // 判断是否需要停止线程
+	{
+
+		/* 1. 获取 framebuffer 的数据 */
+		// 2. 将 framebuffer 的数据 转换格式
+		k = 0;
+		for (i = 0; i < 8; i++)
+		{
+			for (line = 0; line < 8; line++)
+				p[line] = &fb[i*128 + line * 16];
+			
+			for (j = 0; j < 16; j++)
+			{
+				for (line = 0; line < 8; line++)
+				{
+					data[line] = *p[line];
+					p[line] += 1;
+				}
+
+				for (bit = 0; bit < 8; bit++)
+				{
+					byte =  (((data[0]>>bit) & 1) << 0) |
+							(((data[1]>>bit) & 1) << 1) |
+							(((data[2]>>bit) & 1) << 2) |
+							(((data[3]>>bit) & 1) << 3) |
+							(((data[4]>>bit) & 1) << 4) |
+							(((data[5]>>bit) & 1) << 5) |
+							(((data[6]>>bit) & 1) << 6) |
+							(((data[7]>>bit) & 1) << 7);
+
+					oled_buf[k++] = byte;
+				}
+				
+			}
+		}
+		
+
+		/* 3. 通过SPI发送给OLED */
+		// 通过 spi 发送到 oled 上
+		for (i = 0; i < 8; i++)
+		{
+			OLED_DIsp_Set_Pos(0, i);
+			oled_set_dc_pin(1);
+			spi_write_datas(&oled_buf[i*128], 128);
+		}
+		
+
+
+
+
+
+
+		/* 4. 休眠一会 ； HZ 休眠 1 秒 */
+		schedule_timeout_interruptible(HZ);// HZ 休眠 1 秒
+	}
+	// 返回0
+	return 0;
+}
+
+
+
+
+
+// ----------------------------------------
 
 void dc_pin_init(void) {
     //初始化 dc 引脚
@@ -212,23 +355,6 @@ MODULE_DEVICE_TABLE(of, spidev_dt_ids);
 
 
 
-static int mylcd_setcolreg(unsigned regno,
-			       unsigned red, unsigned green, unsigned blue,
-			       unsigned transp, struct fb_info *info)
-{
-	return 0;
-}
-
-
-
-
-static struct fb_ops myfb_ops = {
-	.owner		= THIS_MODULE,
-	.fb_setcolreg	= mylcd_setcolreg,
-	.fb_fillrect	= cfb_fillrect,// 填充矩形
-	.fb_copyarea	= cfb_copyarea,// 复制区域
-	.fb_imageblit	= cfb_imageblit,// 图像绘制
-};
 
 
 /*-------------------------------------------------------------------------*/
@@ -251,7 +377,7 @@ static int spidev_probe(struct spi_device *spi)
 
 
 	/* A  分配 fb_info */
-
+	dma_addr_t phy_addr;// 分配内存时需要的物理地址
 
 	myfb_info = framebuffer_alloc(0, NULL);
 
@@ -300,21 +426,20 @@ static int spidev_probe(struct spi_device *spi)
 
 	/* fb的虚拟地址 */
 	dma_set_coherent_mask(&spi->dev, DMA_BIT_MASK(32));// 是 32 位的地址空间； dma_set_coherent_mask是 设置 dma 的地址空间
-	myfb_info->screen_base = dma_alloc_wc(&pdev->dev, myfb_info->fix.smem_len, &phy_addr,
-					 GFP_KERNEL);
+	myfb_info->screen_base = dma_alloc_wc(&spi->dev, myfb_info->fix.smem_len, &phy_addr,  GFP_KERNEL);// 分配内存
 	myfb_info->fix.smem_start = phy_addr;  /* fb的物理地址 */
 	
-	myfb_info->fix.type = FB_TYPE_PACKED_PIXELS;
+	myfb_info->fix.type = FB_TYPE_PACKED_PIXELS;// 设置 fb 的类型
 	myfb_info->fix.visual = FB_VISUAL_MONO10;// 这里是 单色的 OLED 所以是 FB_VISUAL_MONO10 ； 0 和 1
 
-	myfb_info->fix.line_length = myfb_info->var.xres * myfb_info->var.bits_per_pixel / 8;
+	myfb_info->fix.line_length = myfb_info->var.xres * myfb_info->var.bits_per_pixel / 8;// 计算每行的字节数
 	// if (myfb_info->var.bits_per_pixel == 24)
 	// 	myfb_info->fix.line_length = myfb_info->var.xres * 4;
 	
 
 	/* c. fbops */
-	myfb_info->fbops = &myfb_ops;
-	myfb_info->pseudo_palette = pseudo_palette;
+	myfb_info->fbops = &myfb_ops;// 设置 fbops 目的 是 设置 操作函数
+	myfb_info->pseudo_palette = pseudo_palette;// 伪调色板
 
 
 	/* D 注册fb_info */
@@ -326,15 +451,23 @@ static int spidev_probe(struct spi_device *spi)
 
 	oled_buf = kmalloc(1024, GFP_KERNEL); // 分配 1024 字节的缓冲区
 
-	
+	//   初始化 OLED
+	dc_pin_init(); // 初始化 DC 引脚
+	oled_init(); // 初始化 OLED
 
 
+	oled_thread = kthread_run(oled_thread_func, NULL, "oled_thread");//  创建内核线程
 
 	return 0;
 }
 
 static void spidev_remove(struct spi_device *spi)
 {
+
+	kthread_stop(oled_thread); // 停止内核线程
+	kfree(oled_buf); // 释放缓冲区
+
+
 	// struct spidev_data	*spidev = spi_get_drvdata(spi);
 
     /* 2 释放 spi dev */
