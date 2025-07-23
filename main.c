@@ -35,7 +35,9 @@
 // #include "app_spi_dev_dac.h"
 
 
-#include "app_spi_dev_oled.h"
+// #include "app_spi_dev_oled.h"
+
+#include "app_spi_dev_oled_frameBuffer.h"
 
 int main(int argc, char *argv[]){
 
@@ -93,7 +95,10 @@ int main(int argc, char *argv[]){
     // app_spi_dev_dac_main(argc, argv); // SPI DAC 驱动
 
 
-    app_spi_dev_oled_main(argc, argv); // SPI OLED 驱动
+    // app_spi_dev_oled_main(argc, argv); // SPI OLED 驱动
+
+
+    app_spi_dev_oled_frameBuffer_main(argc, argv);
 
     return 0;
 

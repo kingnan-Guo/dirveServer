@@ -106,81 +106,6 @@ static struct fb_ops myfb_ops = {
 };
 
 
-// 创建一个线程 用来 不断将 framebuffer 的数据  解析成 oled 要的数据， 其实就是将 
-//  这个线程 一秒 钟 读取一次 framebuffer 的数据
-//  oled_buf 里面有 1024个字节，每个字节有8位，每一位对应一个像素， 所以 像素会不断扫描这 1024 个字节，也就是扫描 1024* 8 个像素
-static int oled_thread_func(void *param)
-{
-
-	unsigned char *p[8];
-	unsigned char data[8];
-	int i;
-	int j;
-	int line;
-	int bit;
-	unsigned char byte;
-	unsigned char *fb  = myfb_info->screen_base;
-	int k;	
-
-	while (!kthread_should_stop()) // 判断是否需要停止线程
-	{
-
-		/* 1. 获取 framebuffer 的数据 */
-		// 2. 将 framebuffer 的数据 转换格式
-		k = 0;
-		for (i = 0; i < 8; i++)
-		{
-			for (line = 0; line < 8; line++)
-				p[line] = &fb[i*128 + line * 16];
-			
-			for (j = 0; j < 16; j++)
-			{
-				for (line = 0; line < 8; line++)
-				{
-					data[line] = *p[line];
-					p[line] += 1;
-				}
-
-				for (bit = 0; bit < 8; bit++)
-				{
-					byte =  (((data[0]>>bit) & 1) << 0) |
-							(((data[1]>>bit) & 1) << 1) |
-							(((data[2]>>bit) & 1) << 2) |
-							(((data[3]>>bit) & 1) << 3) |
-							(((data[4]>>bit) & 1) << 4) |
-							(((data[5]>>bit) & 1) << 5) |
-							(((data[6]>>bit) & 1) << 6) |
-							(((data[7]>>bit) & 1) << 7);
-
-					oled_buf[k++] = byte;
-				}
-				
-			}
-		}
-		
-
-		/* 3. 通过SPI发送给OLED */
-		// 通过 spi 发送到 oled 上
-		for (i = 0; i < 8; i++)
-		{
-			OLED_DIsp_Set_Pos(0, i);
-			oled_set_dc_pin(1);
-			spi_write_datas(&oled_buf[i*128], 128);
-		}
-		
-
-
-
-
-
-
-		/* 4. 休眠一会 ； HZ 休眠 1 秒 */
-		schedule_timeout_interruptible(HZ);// HZ 休眠 1 秒
-	}
-	// 返回0
-	return 0;
-}
-
 
 
 
@@ -356,6 +281,86 @@ MODULE_DEVICE_TABLE(of, spidev_dt_ids);
 
 
 
+/* -----------------------------------------------------------------------*/
+
+
+// 创建一个线程 用来 不断将 framebuffer 的数据  解析成 oled 要的数据， 其实就是将 
+//  这个线程 一秒 钟 读取一次 framebuffer 的数据
+//  oled_buf 里面有 1024个字节，每个字节有8位，每一位对应一个像素， 所以 像素会不断扫描这 1024 个字节，也就是扫描 1024* 8 个像素
+static int oled_thread_func(void *param)
+{
+
+	unsigned char *p[8];
+	unsigned char data[8];
+	int i;
+	int j;
+	int line;
+	int bit;
+	unsigned char byte;
+	unsigned char *fb  = myfb_info->screen_base;
+	int k;	
+
+	while (!kthread_should_stop()) // 判断是否需要停止线程
+	{
+
+		/* 1. 获取 framebuffer 的数据 */
+		// 2. 将 framebuffer 的数据 转换格式
+		k = 0;
+		for (i = 0; i < 8; i++)
+		{
+			for (line = 0; line < 8; line++)
+				p[line] = &fb[i*128 + line * 16];
+			
+			for (j = 0; j < 16; j++)
+			{
+				for (line = 0; line < 8; line++)
+				{
+					data[line] = *p[line];
+					p[line] += 1;
+				}
+
+				for (bit = 0; bit < 8; bit++)
+				{
+					byte =  (((data[0]>>bit) & 1) << 0) |
+							(((data[1]>>bit) & 1) << 1) |
+							(((data[2]>>bit) & 1) << 2) |
+							(((data[3]>>bit) & 1) << 3) |
+							(((data[4]>>bit) & 1) << 4) |
+							(((data[5]>>bit) & 1) << 5) |
+							(((data[6]>>bit) & 1) << 6) |
+							(((data[7]>>bit) & 1) << 7);
+
+					oled_buf[k++] = byte;
+				}
+				
+			}
+		}
+		
+
+		/* 3. 通过SPI发送给OLED */
+		// 通过 spi 发送到 oled 上
+		for (i = 0; i < 8; i++)
+		{
+			OLED_DIsp_Set_Pos(0, i);
+			oled_set_dc_pin(1);
+			spi_write_datas(&oled_buf[i*128], 128);
+		}
+		
+
+
+
+
+
+
+		/* 4. 休眠一会 ； HZ 休眠 1 秒 */
+		schedule_timeout_interruptible(HZ);// HZ 休眠 1 秒
+	}
+	// 返回0
+	return 0;
+}
+
+
+
 
 /*-------------------------------------------------------------------------*/
 
@@ -383,8 +388,8 @@ static int spidev_probe(struct spi_device *spi)
 
 	// B 设置 fb_info
 	// B 1 LCD 分辨率 颜色  格式
-	myfb_info->var.xres_virtual = myfb_info->var.xres = timing->hactive.typ;
-	myfb_info->var.yres_virtual = myfb_info->var.yres = timing->vactive.typ;
+	myfb_info->var.xres_virtual = myfb_info->var.xres = 128;
+	myfb_info->var.yres_virtual = myfb_info->var.yres = 64;
 	
 	// 假设是 1 位颜色深度
 	int bits_per_pixel = 1; // 假设是 1 位颜色深度，当前是 oled 所以是 1 位只有 黑白
