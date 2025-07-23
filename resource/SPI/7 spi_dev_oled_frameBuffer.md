@@ -1,14 +1,15 @@
-2025/03/29 00:10
-# 名称
+2025/07/23 00:10
+#  spi_dev_oled_frameBuffer
     分支
-        dirver_raspberry_XXXXX_vX.X.X
+        dirver_raspberry_spi_dev_oled_frameBuffer_v0.4.2.5
 
     文件
-        ./modules/app_XXX/app_XXX.c
+        ./modules/app_spi_dev_oled_frameBuffer/app_spi_dev_oled_frameBuffer.c
         ./dirverModules/spi_dev_oled_frameBuffer/spi_dev_oled_frameBuffer.c
 
-# 定义
 
+# 定义
+无法使用 app 操作 app_spi_dev_oled_frameBuffer.ko
 
 # 流程
 
