@@ -15,11 +15,11 @@
 #include <sys/ioctl.h>
 #include <linux/spi/spidev.h>
 
-
+#include <linux/fb.h>
 
 
 void dc_pin_init(int number); //初始化DC引脚
-int oled_init(void); //初始化oled
+// int oled_init(void); //初始化oled
 void OLED_DIsp_Test_dev_frameBuffer(void); //测试显示内容
 
 
@@ -34,5 +34,7 @@ void OLED_DIsp_Set_Pos_dev_frameBuffer(int x, int y); // 添加声明
 void OLED_DIsp_Char_dev_frameBuffer(int x, int y, unsigned char c);
 void OLED_DIsp_String_dev_frameBuffer(int x, int y, char *str);
 
+
+int oled_init_dev_frameBuffer(const char *fbdev);
 
 void app_spi_dev_oled_frameBuffer_main(int argc, char *argv[]);

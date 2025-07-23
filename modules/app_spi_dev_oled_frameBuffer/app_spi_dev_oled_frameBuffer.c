@@ -229,3 +229,10 @@ void app_spi_dev_oled_frameBuffer_main(int argc, char *argv[]){
 
     app_spi_dev_oled_frameBuffer_init(argc, argv);
 };
+
+
+
+
+
+
+
