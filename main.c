@@ -37,7 +37,11 @@
 
 // #include "app_spi_dev_oled.h"
 
-#include "app_spi_dev_oled_frameBuffer.h"
+// #include "app_spi_dev_oled_frameBuffer.h". // 用不了
+
+
+#include "app_virtual_spi_master.h"
+
 
 int main(int argc, char *argv[]){
 
@@ -98,7 +102,10 @@ int main(int argc, char *argv[]){
     // app_spi_dev_oled_main(argc, argv); // SPI OLED 驱动
 
 
-    app_spi_dev_oled_frameBuffer_main(argc, argv);
+    // app_spi_dev_oled_frameBuffer_main(argc, argv);
+
+
+    app_virtual_spi_master_main(argc, argv); // 虚拟 SPI 主设备驱动
 
     return 0;
 

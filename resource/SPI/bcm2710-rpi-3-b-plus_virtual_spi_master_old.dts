@@ -17,16 +17,16 @@
 	virtual_spi_master {
 		compatible = "virtual_spi_master";
 		pinctrl-names = "default";
-		pinctrl-0 = <&spi0_pins &spi0_cs_pins>;
-		cs-gpios = <&gpio 8 1>, <&gpio 7 1>;
+		pinctrl-0 = <&virtual_spi0_pins &virtual_spi0_cs_pins>;
+		cs-gpios = <&gpio 26 1>;
 		status = "okay";
 		#address-cells = <1>;
 		#size-cells = <0>;
 
 
-		virtual_spi_dev: virtual_spi_dev@1{
+		virtual_spi_dev: virtual_spi_dev@0{
 			compatible = "spidev";
-			reg = <1>;	/* CE1 */
+			reg = <0>;	/* CE1 */
 			spi-max-frequency = <10000000>;
 		};
 	};
@@ -115,6 +115,15 @@
 
 	spi0_cs_pins: spi0_cs_pins {
 		brcm,pins = <8 7>;
+		brcm,function = <1>; /* output */
+	};
+
+	virtual_spi0_pins: virtual_pins{
+		brcm,pins = <19 20 21>;
+		brcm,function = <4>; /* alt0 */
+	};
+	virtual_spi0_cs_pins: virtual_cs_pins{
+		brcm,pins = <16 13>;
 		brcm,function = <1>; /* output */
 	};
 
@@ -227,7 +236,7 @@
 	status = "okay";
 
 	spidev0: spidev@0{
-		compatible = "spi_dev_dac";
+		compatible = "spidev";
 		reg = <0>;	/* CE0 */
 		#address-cells = <1>;
 		#size-cells = <0>;
@@ -235,12 +244,11 @@
 	};
 
 	spidev1: spidev@1{
-		compatible = "spi_dev_oled";
+		compatible = "spidev";
 		reg = <1>;	/* CE1 */
-		spi-max-frequency = <10000000>;
-		dc-gpio = <&gpio 12 GPIO_ACTIVE_HIGH>;
-		pinctrl-names = "default";
-		pinctrl-0 = <&oled_dc_pins>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+		spi-max-frequency = <125000000>;
 	};
 };
 

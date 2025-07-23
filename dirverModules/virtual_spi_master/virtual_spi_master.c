@@ -18,7 +18,26 @@ static struct work_struct gloabl_virtual_ws;// 全局工作队列
 //  工作
 static void spi_virtual_work(struct work_struct *work)
 {
+    printk("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
+    struct spi_message *mesg;
+    // 循环处理 SPI 消息队列
+    while (!list_empty(&gloabl_virtual_master->queue)) // 判断队列是否为空
+    {
+        mesg = list_entry(gloabl_virtual_master->queue.next, struct spi_message, queue); // 获取队列中的第一个消息
 
+        list_del_init(&mesg->queue);// 从队列中删除该消息
+		/* 假装硬件传输已经完成 */
+        //  这里 会触发硬件传输
+
+        mesg->status = 0;
+        if(mesg->complete) {
+            // 如果有完成回调函数，则调用它
+            // 传输完成后会把 status 设置为 0
+            mesg->complete(mesg->context);// 这个是 
+        }
+
+    }
+    
 }
 
 
@@ -40,9 +59,15 @@ static int spi_virtual_transfer(struct spi_device *spi, struct spi_message *mesg
     // 方法2 
     // 使用工作队列 启动 spi 传输，等待完成
 
+    mesg->actual_length = 0; // 实际长度为 0
+    mesg->status = -EINPROGRESS; // 状态为进行中
     //  把消息放入对列
+    list_add_tail(&mesg->queue, &spi->master->queue); // 把消息放入对列 尾部
+
 
     // 启动对列
+
+    schedule_work(&gloabl_virtual_ws); // 启动工作队列
 
 
 
@@ -51,8 +76,8 @@ static int spi_virtual_transfer(struct spi_device *spi, struct spi_message *mesg
 }
 
 /*-------------------------------------------------------------------------*/
-
 static int virtual_spi_master_probe(struct platform_device *pdev)
+
 {
     printk("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
 
@@ -66,18 +91,19 @@ static int virtual_spi_master_probe(struct platform_device *pdev)
         return -ENOMEM; // 内存分配失败
     }
 
-    master->transfer = spi_virtual_transfer; // 设置传输函数
-    // master->dev.of_node = pdev->dev.of_node; // 设置设备树节点
-    mster->dev.of_node = pdev->dev.of_node; // 设置设备树节点
-
+    gloabl_virtual_master->transfer = spi_virtual_transfer; // 设置传输函数
     //  初始化 工作队列
     INIT_WORK(&gloabl_virtual_ws, spi_virtual_work);
+    // master->dev.of_node = pdev->dev.of_node; // 设置设备树节点
+    gloabl_virtual_master->dev.of_node = pdev->dev.of_node; // 设置设备树节点
+
+
 
     // 注册 spi master
-    ret = spi_register_master(master);
+    ret = spi_register_master(gloabl_virtual_master);
     if(ret < 0){
 		printk(KERN_ERR "spi_register_master error.\n");
-		spi_master_put(master);
+		spi_master_put(gloabl_virtual_master);
 		return ret;
     }
 
@@ -87,12 +113,13 @@ static int virtual_spi_master_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static void virtual_spi_master_remove(struct platform_device *pdev)
+static int virtual_spi_master_remove(struct platform_device *pdev)
 {
     spi_unregister_master(gloabl_virtual_master); // 注销 SPI 主设备
     printk("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
-
+    	return 0;
 }
+
 
 static const struct of_device_id virtual_spi_master_dt_ids[] = {
 	{ .compatible = "virtual_spi_master", },
@@ -101,7 +128,7 @@ static const struct of_device_id virtual_spi_master_dt_ids[] = {
 
 
 
-static struct spi_driver virtual_spi_master_spi_driver = {
+static struct platform_driver virtual_spi_master_spi_driver = {
 	.driver = {
 		.name =		"virtual_spi_master",
 		.of_match_table = virtual_spi_master_dt_ids,
@@ -113,15 +140,13 @@ static struct spi_driver virtual_spi_master_spi_driver = {
 
 /*-------------------------------------------------------------------------*/
 
-static int __init virtual_spi_master_init(void)
+static int  virtual_spi_master_init(void)
 {
-	int status;
-    status = platform_driver_register(&virtual_spi_master_spi_driver);
-	return status;
+    return platform_driver_register(&virtual_spi_master_spi_driver);
 }
 
 
-static void __exit virtual_spi_master_exit(void)
+static void  virtual_spi_master_exit(void)
 {
 	printk("%s %s %d\n", __FILE__, __FUNCTION__, __LINE__);
     platform_driver_unregister(&virtual_spi_master_spi_driver);
