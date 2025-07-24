@@ -77,9 +77,11 @@ spi_master{
 
 
 # Makefile
-# # XXXX ---------------------
-XXXX-y := $(MODULES_DIR)/XXXX/XXXX.o
-obj-m := XXXX.o
+
+# # virtual_spi_master 虚拟 SPI 主设备驱动 -------------------
+virtual_spi_master-y := $(MODULES_DIR)/virtual_spi_master/virtual_spi_master.o
+obj-m += virtual_spi_master.o
+
 
 
 # 执行命令

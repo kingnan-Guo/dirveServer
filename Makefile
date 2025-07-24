@@ -242,8 +242,13 @@ ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 # obj-m += spi_dev_oled_frameBuffer.o
 
 # # virtual_spi_master 虚拟 SPI 主设备驱动 -------------------
-virtual_spi_master-y := $(MODULES_DIR)/virtual_spi_master/virtual_spi_master.o
-obj-m += virtual_spi_master.o
+# virtual_spi_master-y := $(MODULES_DIR)/virtual_spi_master/virtual_spi_master.o
+# obj-m += virtual_spi_master.o
+
+# # virtual_spi_master_new 虚拟 SPI 主设备驱动 -------------------
+virtual_spi_master_new-y := $(MODULES_DIR)/virtual_spi_master_new/virtual_spi_master_new.o
+obj-m += virtual_spi_master_new.o
+
 
 
 
