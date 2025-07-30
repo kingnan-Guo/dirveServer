@@ -1,0 +1,244 @@
+2025/07/25 00:10
+# usb_dev
+    分支
+        dirver_raspberry_usb_dev_vX.X.X
+
+    文件
+        ./modules/app_XXX/app_XXX.c
+        ./dirverModules/dirverModules/XXX.c
+
+# 定义
+
+
+# 流程
+
+
+# 执行顺序
+
+
+# 内部机制
+
+
+# Makefile
+# # XXXX ---------------------
+XXXX-y := $(MODULES_DIR)/XXXX/XXXX.o
+obj-m := XXXX.o
+
+
+# 执行命令
+
+
+insmod
+rmmod
+
+chmod +x main
+
+ps -ef | grep main
+kill -9 PID
+
+ls /proc/device-tree/
+ls /sys/devices/platform/
+dmesg | tail
+cat /proc/devices  
+cd /sys/class 
+
+sources/linux-rpi-6.6.y/arch/arm/boot/dts/broadcom/bcm2710-rpi-3-b-plus.dts
+make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs -j$(nproc) 
+
+
+dtc -I fs /sys/firmware/devicetree/base | less
+# 扩展
+
+
+
+
+ 
+
+
+
+
+
+低速
+ 低速情况下不用 检测端点状态， 因为支持低速就 不支持高速， 所以端点状态是固定的
+ D- 连接 VCC 所以 在插到电脑上的时候， 电脑会检测到设备， D- 是高电平 所以是 低速 
+
+
+    J 信号
+        D+  低电平
+        D-  高电平
+
+
+    K 信号
+        D+  高电平
+        D-  高电平
+
+    低速设备 D- 上拉
+    IDLE 状态 是 J 状态
+
+
+
+    1 低速设备平时
+        D- 是 高电平
+        D+ 是 低电平
+
+        也就是 低速的 IDLE 状态是 K 状态
+
+    2 SOP ： 要发起传输的时候，SOP： D- 是 低电平，D+ 是 高电平， 这个转换到 K 状态的 的过程是SOP ，也就是 K
+    3  SYNC （同步字段）： 格式为 3对K/J ， 2个 K
+        K J K J K J K K
+
+全速
+
+
+    J 信号
+        D+  高电平
+        D-  低电平
+
+
+    K 信号
+        D+  低电平
+        D-  高电平
+
+    全速设备 D- 下拉
+    IDLE 状态 是 J 状态
+    SEO 
+
+
+
+高速
+
+    J 信号
+        D+  高电平
+        D-  低电平
+
+
+    K 信号
+        D+  低电平
+        D-  高电平
+
+    D+ 与 D- 的电平差别不大 约 400mv
+
+    IDLE 状态： D+ 和 D- 均保持 低电平（接近0V）
+    SE0 状态： D+ 和 D- 均保持  低电平（接近0V）
+
+    chirp 信号：
+        高速模式握手过程中，设备和主机使用 chirp j 和 chirp k 信号
+        首先 低电平复位设备
+        chirp K ： 设备发送 D-高 、D+ 低 ，持续一段时间表明支持高速模式
+        chirp J/K ： 主机相应交替 的 J 和 K 信号，确认切换到高度模式
+
+
+    用途
+
+        J/K 状态用于数据传输和 同步
+        chirp J/K 用于速度协商 和 模式切换
+
+
+
+    工作在 高速模式的时候 ，会把 上拉电阻断开；
+    当一个设备工作在高速模式的时候 ，两边的 D+ D- 电压差很小，所以可以检测到设备是否工作在高速模式， 而且 两边的 D+ D-  都会接一个 45欧姆的 下拉电阻;两边 45 欧姆的电阻 是用来消除 反射信号的，
+    
+
+    # 如何检测 高速设备 拔出
+    1 发送 出去的 信号 会被 反射回来，如果没有接下拉电阻那么 反射信号 与当前信号叠加 幅度会很大，所以可以检测到 反射信号， 反射信号 大于 1.5V 的时候，可以认为设备已经拔出
+
+
+
+    连接的步骤 
+    1 设备上电
+    2 开始 处于 IDLE
+    3 主机发送 SE0， 设备复位
+    4 主机发送 chirp K ，设备检测到 chirp K 信号，开始 chirp J/K 信号，切换到 高速模式
+    5 主机发送
+
+
+
+# 完整的数据包
+1 SOP （Start of Packet，数据包开始）： HUb 驱动 D+、D- 这两条线 从 IDLE 状态变为 K 状态。SOP 中的 K 状态 就是 SYNC 信号的 第一位 数据 ； 变化的瞬间是 SOP 
+2 SYNC （同步字段）： 格式为 3对K/J ， 2个 K ; 在USB 中 ，两根线线传播 一部分 SYNC 同步信号， 接收到同步信号 可计算出 周期 T，用于计算传输速率; 在传输过程中 使用两条信号的电平差 计算数据
+3 packet content：
+    a PID（Packet Identifier，数据包标识符）
+    b 地址
+    c 帧号
+    d 数据
+    e CRC（Cyclic Redundancy Check，循环冗余校验）
+6 EOP （End of Packet，数据包结束）： 由数据的发送方发出 EOP ，数据发送方驱动 D+ 、D-这两条线路， 先设为 SEO 状态并维持 2 位事件，在设置为 J 状态并 维持 1 位 事件，最后D+ D- 变为高阻状态，这是由 线路上的 上下拉电阻是的 总线进入 IDEL 状态
+
+
+Differential（差分信号）
+
+
+
+# 数据传输
+ 数据 0 信号在 J 和 K 之间翻转
+ 数据 1 保持在 当前状态，就是 J K  信号不变
+
+
+# 设备检测 
+    主机通过 检测 D+ 或 D- 的上拉电阻 J 状态 判断设备是低速还是 全速
+    高速设备 通过 chirp J/K 信号 切换到 高速模式
+
+
+
+
+    J/K状态用于表示数据包的开始、结束（EOP）以及其他控制信号。
+    EOP（单端零，SE0）由D+/D-均低表示，持续一定时间
+
+
+
+
+# SE0的定义
+SE0状态：D+和D-同时为低电平（0V），即没有差分信号。
+
+
+# NRZI 编码（反向不归零 ）
+NRZI编码是一种用于数字通信的编码方式，其中数据位1被编码为0，数据位0被编码为1。这种编码方式可以有效地减少信号中的噪声，并提高信号的传输速率。
+NRZI 的编码方位。为， 对于数据 0， 波形翻转 也就是从 K 到 J 或者 J 到 K； 对于数据 1 ，波形 不变， 也即是 K 到 K， 或者 J 到 J
+发生变化就是 0， 不变就是 1 
+
+但是在这个过程中 如果 传输 100 个 1。那么正常来说 波形要保持不变，也就是 D+ D- 之间 电压差 不变，但是 由于 信号反射， 波形会发生变化， 也会因为 晶振 不准的时候 收到 99 个1 ，所以 NRZI 编码方式 在传输 100 个 1 的时候， 每 6 个 1  会插入一个 0 ， 也就是 1 1 1 1 1 1 0 1 1 1 1 1 1 0
+设备收到 6 个1 的 时候 会 舍弃掉 后面的 0
+
+
+
+
+
+
+批量传输
+
+
+发送数据
+Token packet（令牌 包 ）
+    sop  sync pid(out/in) addr endp（端点） crc eop
+
+Data packet（数据 包）
+    sop sync pid(Data0/Data1)  data             crc eop
+
+
+
+Handshake packet（握手 包）     ACK 设备回应
+    sop sync pid(ACK/NACK/STALL) crc eop
+
+
+
+
+host 想要读取 device 数据
+    1 host 发送 Token packet 请求 device 发送数据
+        sop sync pid(in) addr endp crc eop
+    2 device 收到 Token packet 请求， 发送 Data packet 数据
+        sop sync pid(Data0/Data1)  data             crc eop
+    3 host 收到 Data packet 数据， 发送 Handshake packet 确认收到数据
+        sop sync pid(ACK) crc eop
+
+读取很多数据那么久多次 读取
+
+
+# 中断传输
+设备是没有能力通知设备的
+每隔一段时间就去访问设备
+使用的是 中断事务，我感觉使用的是 定时中断
+
+
+
+# 实时 的发送数据 
+还是批量传输，但是没有 握手机制
