@@ -247,3 +247,39 @@ Data0 Data1 会交替
 
 
 pid 是有 优先级的 ， 优先级高的 pid 会被优先处理，数字越小优先级就越高，物理原理是二进制  0 低电平 会 拉低电平，谁的数字越小  高位 0 越多，所以 数字越小 优先级越高
+
+
+
+
+# 控制传输由 多个事务 组成 
+1 发起建立事务
+2 发起数据传输事务
+3 状态 事务
+
+所有的 usb传输都是 由host发起
+pid = setup 的时候 通知 device 开始一个 控制传输； 没有方向
+
+控制传输 也有三个过程
+1 token：  通知设备 开始传输了      sop sync pid(setup) addr endp crc eop
+2 Data ：    数据事务                    sop sync pid(Data0/Data1)  data             crc eop
+ 
+3 Handshake ：     握手包               sop sync pid(ACK) crc eop
+
+
+4 Data stage 数据过程。是一个批量传输，由 一个或者多个批量事务组成
+   a 如果要在 读数据的时候读取 设备描述符 信息， host 发送 token packet 请求 device 发送数据
+   b 每一个 事务 中包含  token data Handshake  
+        1 sop sync pid(out) addr endp crc eop  ｜ sop sync pid(Data0)  data  crc eop ｜ sop sync pid(ACK) crc eop ｜sop sync pid(out) addr endp crc eop ｜  sop sync pid(Data1)  data  crc eop ｜    sop sync pid(ACK) crc eop
+        
+        
+   c 事务结束后， host 发送 token packet 请求 device 发送数据， 重复 事务过程，直到 host 读取完数据
+   
+
+5 status stage 最后状态过程。 只有一个批量事务 
+ 
+    a 过程
+        1 主机发送读入数据 token ： sop sync pid(in) addr endp crc eop 
+        2 设备发送数据给主机 data： sop sync pid(Data1)       crc eop ；  返回一个 空的 data， len=0 长度为0 的数据包表示 已经完成； 
+        3 回应 sop sync pid(ACK) crc eop ； 如果没有发送给 主机 数据包 二十发送给主机 pid = nak 的 回应包，那么表示 失败了
+
+    b 状态过程要与数据过程相反， 数据过程是 out 那么状态 过程就是 in，  因为。状态过程是反应 整个数据过程是否 成功；  在 host->device out 的过程 中，最终 状态 是要 device 告诉host。是否 发送 成功，但是 在 状态过程的阶段 首先是由 host 发送token in 给 device， deive 回应 数据 和 ack
