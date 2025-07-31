@@ -47,6 +47,10 @@ make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs -j$(nproc)
 
 
 dtc -I fs /sys/firmware/devicetree/base | less
+
+
+
+lsusb -v 
 # 扩展
 
 
@@ -283,3 +287,85 @@ pid = setup 的时候 通知 device 开始一个 控制传输； 没有方向
         3 回应 sop sync pid(ACK) crc eop ； 如果没有发送给 主机 数据包 二十发送给主机 pid = nak 的 回应包，那么表示 失败了
 
     b 状态过程要与数据过程相反， 数据过程是 out 那么状态 过程就是 in，  因为。状态过程是反应 整个数据过程是否 成功；  在 host->device out 的过程 中，最终 状态 是要 device 告诉host。是否 发送 成功，但是 在 状态过程的阶段 首先是由 host 发送token in 给 device， deive 回应 数据 和 ack
+
+
+# 描述符
+一个 usb设备可以 多种配置， 4G上网卡可能是 u盘 也可以 配置成上网卡，但是 同一时间只有一种 配置
+
+
+一个配置下 有多个接口 interface、接库等同于功能 function、
+ 一个接口可能有 多个设置；
+ 一个接口 有一个或者多个端点 endpoint 组成，端点0 属于整个设备的，端点 0 是双向的，接口还可以有气态端点，这些端点是单向的，要么是批量（Bulk）端点，要么是中断（interrupt） 端点， 同步（isochronous）端点； 端点事数据传输的 源 或者是 目的地
+
+
+ EG：
+    usb 耳机
+    两个功能（两个接口 interface 逻辑上的 功能 ， 多个接口可以同时工作）
+    1 声音
+
+    2 按键
+
+配置
+1 对于声音 可以 播放 可以录音，也就是 主机传给 设备 或者 设备传给主机
+所以在耳机上有几个端点，端点是数据传输的单位， 要跟哪一个设备 传输数据 要引入端点 
+每一个设备有个 端点 0，这个是双向的可以读写， 端点0 是用来配置设备的，所以会往端点0 写入配置文件，配置成其他状态； 其他的端点不是 双向的，只能读或者只能写，所以端点0 是用来配置设备，其他的端点用来传输数据
+
+
+# 描述符结构
+设备描述符:{
+    设备信息 id，
+    端点0 可以传输多大的数据
+
+    配置描述符:{
+        有多少个接口，
+        供电方式，
+        最大电流
+        接口描述符:{
+
+            端点描述符：{
+                端点号，端点方向，
+                类型：批量、中断、同步
+            },
+            端点描述符
+        }
+    },
+    配置描述符:{
+        接口描述符:{
+            端点描述符
+        }
+    }
+}
+
+
+
+描述符里有标准化的数据
+bLength：描述符长度，以字节为单位。
+bDescriptorType：描述符类型，用于标识描述符的类型。
+bDescriptorSubtype：描述符子类型，用于标识描述符的子类型。
+bMaxPacketSize0：端点0的最大包大小，以字节为单位。
+bInterval：端点0的传输间隔，以帧为单位。
+bNumEndpoints：端点数量，不包括端点0。
+bInterfaceNumber：接口编号。
+bAlternateSetting：备用设置编号。
+bNumConfigurations：配置数量。
+bConfigurationValue：配置值。
+bInterfaceClass：接口类。
+bInterfaceSubClass：接口子类。
+bInterfaceProtocol：接口协议。
+bEndpointAddress：端点地址。
+bEndpointSize：端点最大包大小，以字节为单位。
+bInterval：端点传输间隔，以帧为单位。
+bRefresh：端点刷新，用于高速端点。
+bSynchAddress：端点同步地址，用于高速端点。
+
+
+
+
+
+# 枚举过程
+ 发送数据的时候
+ data 中的每一位 对应一个 功能
+比如说要获取描述符 那么 data
+
+00 05 01 00 00 00 00 00
+
