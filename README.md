@@ -114,6 +114,13 @@ setting.json 配置
 
 
 
+
+# 安装 libusb 
+apt-get update
+apt-get install libudev-dev build-essential
+apt install usbutils
+
+
 # ==================== 编译启动 驱动模块 ===================================
 
 # 首先未来要 手写 Makefile ； cmake 无法再 驱动中使用

@@ -48,8 +48,10 @@ make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs -j$(nproc)
 
 dtc -I fs /sys/firmware/devicetree/base | less
 
-apt-get install libudev-dev build-essential
 
+# 安装 libusb 
+apt-get update
+apt-get install libudev-dev build-essential
 apt install usbutils
 
 
