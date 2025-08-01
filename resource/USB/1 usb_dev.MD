@@ -366,6 +366,13 @@ bSynchAddress：端点同步地址，用于高速端点。
  发送数据的时候
  data 中的每一位 对应一个 功能
 比如说要获取描述符 那么 data
+sop sync pid(setup) addr endp crc eop
+sop sync pid(Data0)      data                    crc eop
+
+                    00 05 01 00 00 00 00 00
+sop sync pid(ACK) crc eop
+
+data 中的每一位 对应一个 功能
 
 00 05 01 00 00 00 00 00
 
