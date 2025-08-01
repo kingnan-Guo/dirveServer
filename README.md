@@ -120,6 +120,18 @@ apt-get update
 apt-get install libudev-dev build-essential
 apt install usbutils
 
+# 查看是否安装成功
+dpkg -l libudev-dev build-essential usbutils
+# 检查头文件
+ls /usr/include/libudev.h
+
+# 检查库文件
+ls /usr/lib/aarch64-linux-gnu*/libudev.so
+
+
+
+# 安装 libusb：专用于 USB 设备通信 的用户态库，提供设备操作 API
+apt-get install libusb-1.0-0-dev
 
 # ==================== 编译启动 驱动模块 ===================================
 

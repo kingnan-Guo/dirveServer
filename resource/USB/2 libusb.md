@@ -54,6 +54,14 @@ apt-get update
 apt-get install libudev-dev build-essential
 apt install usbutils
 
+# 查看是否安装成功
+dpkg -l libudev-dev build-essential usbutils
+
+libudev-dev 提供 Linux 设备管理接口（如设备热插拔监控），不包含 USB 通信功能
+
+
+# libusb：专用于 USB 设备通信 的用户态库，提供设备操作 API
+apt-get install libusb-1.0-0-dev
 
 
 # 扩展
