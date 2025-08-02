@@ -29,6 +29,8 @@ MODULE_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.c)
 # 收集 app 的汇编文件 .S
 ASM_SOURCES := $(wildcard $(APP_MODULES_DIR)/*/*.S)
 
+# 添加 libusb 链接选项
+USER_LDFLAGS := -lusb-1.0
 
 
 # ---------------------
@@ -260,7 +262,7 @@ all:
 
 	# 交叉编译 应用层 程序
 	# $(CROSS_COMPILE)gcc -o main main.c
-	$(CROSS_COMPILE)gcc $(USER_CFLAGS) -o main $(SOURCES) $(MODULE_SOURCES) $(ASM_SOURCES)
+	$(CROSS_COMPILE)gcc $(USER_CFLAGS) -o main $(SOURCES) $(MODULE_SOURCES) $(ASM_SOURCES) $(USER_LDFLAGS)
 	# 反汇编
 	$(CROSS_COMPILE)objdump -d main > main.dis
 
