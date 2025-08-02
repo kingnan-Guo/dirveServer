@@ -188,6 +188,6 @@ int app_usb_mouse_init(int argc, char *argv[]){
     return 0;
 }
 
-void app_usb_mouse_main(int argc, char *argv[]){
+void app_usb_mouse_sync_main(int argc, char *argv[]){
     app_usb_mouse_init(argc, argv);
 }
