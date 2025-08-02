@@ -44,7 +44,7 @@
 
 
 
-#include "app_usb_mouse.h"
+#include "app_usb_mouse_sync.h"
 
 
 int main(int argc, char *argv[]){
@@ -113,7 +113,7 @@ int main(int argc, char *argv[]){
 
 
 
-    app_usb_mouse_main(argc, argv); // USB 获取鼠标数据 驱动
+    app_usb_mouse_sync_main(argc, argv); // USB 获取鼠标数据 驱动
 
     return 0;
 

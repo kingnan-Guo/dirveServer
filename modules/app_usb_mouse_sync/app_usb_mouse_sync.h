@@ -25,4 +25,4 @@
 
 
 
-void app_usb_mouse_main(int argc, char *argv[]);
+void app_usb_mouse_sync_main(int argc, char *argv[]);

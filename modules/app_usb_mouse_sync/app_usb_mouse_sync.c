@@ -1,4 +1,4 @@
-#include "app_usb_mouse.h"
+#include "app_usb_mouse_sync.h"
 #include <libusb-1.0/libusb.h>
 // 使用 libusb 同步读取 usb 数据
 int app_usb_mouse_init(int argc, char *argv[]){
