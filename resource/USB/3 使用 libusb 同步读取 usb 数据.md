@@ -1,7 +1,7 @@
 2025/08/02 00:10
 # 使用 libusb 同步读取 usb 数据
     分支
-        dirver_raspberry_XXXXX_vX.X.X
+        dirver_raspberry_app_usb_mouse_v0.5.1
 
     文件
         ./modules/app_usb/app_usb_mouse.c
