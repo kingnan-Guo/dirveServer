@@ -66,3 +66,6 @@ apt-get install libusb-1.0-0-dev
 
 # 扩展
 
+
+
+![alt text](<使用 libusb 读取usb 数据 .png>)

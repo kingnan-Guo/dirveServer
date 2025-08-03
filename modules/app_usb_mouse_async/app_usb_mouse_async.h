@@ -22,7 +22,7 @@
 #include <termios.h>
 #include <ctype.h>
 
-
+#include <libusb-1.0/libusb.h>
 
 
 void app_usb_mouse_async_main(int argc, char *argv[]);

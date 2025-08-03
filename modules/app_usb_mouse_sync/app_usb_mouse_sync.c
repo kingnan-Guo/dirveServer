@@ -50,7 +50,7 @@ int app_usb_mouse_init(int argc, char *argv[]){
         for (int interfcace_index = 0; interfcace_index < interfcace_count; interfcace_index++)
         {
             //  altsetting 是一个数组，表示这个接口有多个设置
-            struct libusb_interface_descriptor *interface_desc = &config_desc->interface[interfcace_index].altsetting[0];// 获取接口描述符
+            const struct libusb_interface_descriptor *interface_desc = &config_desc->interface[interfcace_index].altsetting[0];// 获取接口描述符
             // interface_num = interface_desc->bInterfaceNumber;// 获取接口号
 
             //   对于鼠标来说 binInterfaceClass = 3   binInterfaceProtocol（协议） = 2
