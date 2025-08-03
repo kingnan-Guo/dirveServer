@@ -5,7 +5,7 @@
 
     文件
         ./modules/app_usb_mouse_async/app_usb_mouse_async.c
-        ./dirverModules/dirverModules/XXX.c
+
 
 # 定义
 
@@ -49,7 +49,13 @@ make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- dtbs -j$(nproc)
 dtc -I fs /sys/firmware/devicetree/base | less
 # 扩展
 
+1 获取 所有的设备保存到链表
+2  为 每一个 鼠标设备   ， alloc mouse,  去填充他的 transfer 结构体; 提交 transfer
+
+3 libusb_submit_transfer 提交transfer， 在 中断函数 mouse_irq 中通过返回值 获取到数据的状态 ，打印数据
+
+4 libusb_handle_events_timeout 的 作用是 处理事件， 设置超时 时间，但是我感觉这个 libusb_handle_events_timeout 跟上面的 transfer 没有关系， 他是处理 事件队列的， 事件队列中存放的是 transfer
 
 
-对于 每一个 鼠标都要 填充 transfer 结构体
 
+![alt text](<使用 libusb 读取usb 数据 .png>)
