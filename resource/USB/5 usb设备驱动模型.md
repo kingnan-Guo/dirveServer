@@ -130,3 +130,9 @@ usb->transfer_flags |= URB_NO_TRANSFER_DMA;// 高速 usb 已经有物理地址�
 2 urb 的回调函数 里，向 input系统上报数据
 
 
+
+
+sources/linux-rpi-6.6.y/drivers/usb/core/usb.h
+sources/linux-rpi-6.6.y/drivers/usb/core/usb.c
+
+sources/linux-rpi-6.6.y/include/linux/usb.h
