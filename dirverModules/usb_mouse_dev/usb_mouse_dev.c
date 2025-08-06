@@ -19,7 +19,7 @@ struct usb_mouse_as_key_desc{
     void* data_buffer; // 数据缓冲区
     dma_addr_t data_dma; // 数据缓冲区的 dma 地址
     struct urb* urb; // usb 请求块
-}
+};
 
 static void usb_mouse_as_key_irq(struct urb *urb)
 {
@@ -67,7 +67,7 @@ static void usb_mouse_as_key_irq(struct urb *urb)
     // input_report_key 将 鼠标事件 发送给 input subsystem
     // input_report_key(dev, BTN_LEFT,   data[0] & 0x01);// 左键
 
-    input_report_key(dev, KEY_L, data[1].& 0x01);// 左键
+    input_report_key(dev, KEY_L, data[1] & 0x01);// 左键
     input_report_key(dev, KEY_R, data[1] & 0x02);// 右键
     input_report_key(dev, KEY_M, data[1] & 0x04);// 中键
 
@@ -107,7 +107,7 @@ static int usb_mouse_as_key_open(struct input_dev *dev){
         desc->dev,// usb 设备
         desc->pipe,// 传输管道
         desc->data_buffer,// 数据缓冲区
-        decc->maxp,// 最大包大小
+        desc->maxp,// 最大包大小
         usb_mouse_as_key_irq,// URB 回调函数
         dev,// 回调函数的 参数 ; 为什么到了 usb_mouse_as_key_irq 函数里面， dev 储存在 urb 的上下文
         desc->bInterval// 传输间隔
@@ -135,7 +135,7 @@ static void usb_mouse_as_key_close(struct input_dev *dev)
     // 取消  / 释放 urb
     usb_kill_urb(desc->urb);
 
-    usb_free_urb(desc->urb)
+    usb_free_urb(desc->urb);
 }
 
 /**
@@ -147,7 +147,7 @@ static int usb_mouse_as_key_probe(struct usb_interface *intf, const struct usb_d
 
     struct input_dev *input_dev;
     struct usb_mouse_as_key_desc *desc;
-    struct usb_device *dev = usb_interface_to_usbdev(intf);// 获取 usb 设备
+    struct usb_device *dev = interface_to_usbdev(intf);// 获取 usb 设备
     struct usb_host_interface *interface;// 获取 usb 接口
     struct usb_endpoint_descriptor *endpoint;// 获取 usb 端点 描述符
     int pipe;// 传输管道
@@ -162,7 +162,7 @@ static int usb_mouse_as_key_probe(struct usb_interface *intf, const struct usb_d
     // 2.4 open 函数 里面  提交URB 提交 URB
     // 2.5 URB 回调函数， 解析数据，上报 输入事件 input_event， 就是解析 左键右键 哪个被按下或松开
 
-    input_dev = devm_input_allocate_device(&inf->dev);// 分配 input_dev 设备
+    input_dev = devm_input_allocate_device(&intf->dev);// 分配 input_dev 设备
     desc = kmalloc(sizeof(struct usb_mouse_as_key_desc), GFP_KERNEL);// 分配 usb_mouse_as_key_desc 结构体 ; GFP_KERNEL 表示 分配内存的时候， 如果内存紧张， 可以睡眠等待
 
     interface = intf->cur_altsetting; // 获取 当前接口的 备用设置
@@ -186,7 +186,7 @@ static int usb_mouse_as_key_probe(struct usb_interface *intf, const struct usb_d
     pipe = usb_rcvintpipe(dev, endpoint->bEndpointAddress);
 
     // 获取 最大包大小
-    maxp = usb_maxpacket(dev, pipe, usb_pipeout(pipe));
+    maxp = usb_maxpacket(dev, pipe);
 
     
     desc->intf = intf; // 记录 usb 接口
@@ -270,14 +270,14 @@ static struct usb_device_id usb_mouse_as_key_id_table[] ={
         .driver_info = (kernel_ulong_t)"it is a mouse",// driver_info 是 传入一些自定义信息，当 上面的 判断通过的时候 可以  再 probe 的时候 拿到这些信息去使用 
     },
     {}
-}
+};
 
 static struct usb_driver usb_mouse_as_key_driver = {
     .name = "usb_mouse_as_key",
     .probe = usb_mouse_as_key_probe,
     .disconnect = usb_mouse_as_key_disconnect,
     .id_table = usb_mouse_as_key_id_table,
-}
+};
 
 static int __init usb_mouse_as_key__init(void)
 {
@@ -292,7 +292,7 @@ static void __exit usb_mouse_as_key__init_exit(void)
     usb_deregister(&usb_mouse_as_key_driver);
 }
 
-moudle_init(usb_mouse_as_key__init);
+module_init(usb_mouse_as_key__init);
 module_exit(usb_mouse_as_key__init_exit);
 
 MODULE_LICENSE("GPL");
