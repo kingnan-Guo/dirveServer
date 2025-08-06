@@ -146,3 +146,184 @@ sources/linux-rpi-6.6.y/include/linux/usb.h
 
 依赖
 sources/linux-rpi-6.6.y/include/linux/usb.h
+
+
+
+
+
+ls /dev/input/event*
+hexdump /dev/input/event
+
+
+
+
+
+
+
+
+
+
+
+# ======
+
+root@raspberrypi:/dev# cd /sys/bus/usb/
+root@raspberrypi:/sys/bus/usb# ls
+devices  drivers  drivers_autoprobe  drivers_probe  uevent
+root@raspberrypi:/sys/bus/usb# cd devices/
+
+#  没有插入 鼠标
+root@raspberrypi:/sys/bus/usb/devices# ls              
+1-0:1.0  1-1  1-1.1  1-1:1.0  1-1.1.1  1-1.1:1.0  1-1.1.1:1.0  usb1
+
+# 插入 鼠标
+root@raspberrypi:/sys/bus/usb/devices# ls                
+1-0:1.0  1-1  1-1.1  1-1:1.0  1-1.1.1  1-1.1:1.0  1-1.1.1:1.0  1-1.1.2  1-1.1.2:1.0  usb1
+
+# 查看 1-1.1.2 
+root@raspberrypi:/sys/bus/usb/devices# cd 1-1.1.2
+1-1.1.2/     1-1.1.2:1.0/ 
+root@raspberrypi:/sys/bus/usb/devices# cd 1-1.1.2/
+
+root@raspberrypi:/sys/bus/usb/devices/1-1.1.2# ls
+1-1.1.2:1.0        bcdDevice            bDeviceProtocol  bMaxPacketSize0     bNumInterfaces  descriptors  devpath  ep_00      ltm_capable   port     quirks     rx_lanes   tx_lanes  version
+authorized         bConfigurationValue  bDeviceSubClass  bMaxPower           busnum          dev          devspec  idProduct  manufacturer  power    removable  speed      uevent
+avoid_reset_quirk  bDeviceClass         bmAttributes     bNumConfigurations  configuration   devnum       driver   idVendor   maxchild      product  remove     subsystem  urbnum
+root@raspberrypi:/sys/bus/usb/devices/1-1.1.2# ls -l
+total 0
+drwxr-xr-x 5 root root     0 Aug  6 18:02 1-1.1.2:1.0
+-rw-r--r-- 1 root root  4096 Aug  6 18:02 authorized
+-rw-r--r-- 1 root root  4096 Aug  6 18:02 avoid_reset_quirk
+-r--r--r-- 1 root root  4096 Aug  6 18:02 bcdDevice
+-rw-r--r-- 1 root root  4096 Aug  6 18:02 bConfigurationValue
+-r--r--r-- 1 root root  4096 Aug  6 18:02 bDeviceClass
+-r--r--r-- 1 root root  4096 Aug  6 18:02 bDeviceProtocol
+-r--r--r-- 1 root root  4096 Aug  6 18:02 bDeviceSubClass
+-r--r--r-- 1 root root  4096 Aug  6 18:02 bmAttributes
+-r--r--r-- 1 root root  4096 Aug  6 18:02 bMaxPacketSize0
+-r--r--r-- 1 root root  4096 Aug  6 18:02 bMaxPower
+-r--r--r-- 1 root root  4096 Aug  6 18:02 bNumConfigurations
+-r--r--r-- 1 root root  4096 Aug  6 18:02 bNumInterfaces
+-r--r--r-- 1 root root  4096 Aug  6 18:02 busnum
+-r--r--r-- 1 root root  4096 Aug  6 18:02 configuration
+-r--r--r-- 1 root root 65553 Aug  6 18:02 descriptors
+-r--r--r-- 1 root root  4096 Aug  6 18:02 dev
+-r--r--r-- 1 root root  4096 Aug  6 18:02 devnum
+-r--r--r-- 1 root root  4096 Aug  6 18:02 devpath
+-r--r--r-- 1 root root  4096 Aug  6 18:02 devspec
+lrwxrwxrwx 1 root root     0 Aug  6 18:02 driver -> ../../../../../../../../bus/usb/drivers/usb   # 这里 展示 鼠标被 接管了
+drwxr-xr-x 3 root root     0 Aug  6 18:02 ep_00
+-r--r--r-- 1 root root  4096 Aug  6 18:02 idProduct
+-r--r--r-- 1 root root  4096 Aug  6 18:02 idVendor
+-r--r--r-- 1 root root  4096 Aug  6 18:02 ltm_capable
+-r--r--r-- 1 root root  4096 Aug  6 18:02 manufacturer
+-r--r--r-- 1 root root  4096 Aug  6 18:02 maxchild
+lrwxrwxrwx 1 root root     0 Aug  6 18:02 port -> ../1-1.1:1.0/1-1.1-port2
+drwxr-xr-x 2 root root     0 Aug  6 18:02 power
+-r--r--r-- 1 root root  4096 Aug  6 18:02 product
+-r--r--r-- 1 root root  4096 Aug  6 18:02 quirks
+-r--r--r-- 1 root root  4096 Aug  6 18:02 removable
+--w------- 1 root root  4096 Aug  6 18:02 remove
+-r--r--r-- 1 root root  4096 Aug  6 18:02 rx_lanes
+-r--r--r-- 1 root root  4096 Aug  6 18:02 speed
+lrwxrwxrwx 1 root root     0 Aug  6 18:02 subsystem -> ../../../../../../../../bus/usb
+-r--r--r-- 1 root root  4096 Aug  6 18:02 tx_lanes
+-rw-r--r-- 1 root root  4096 Aug  6 18:02 uevent
+-r--r--r-- 1 root root  4096 Aug  6 18:02 urbnum
+-r--r--r-- 1 root root  4096 Aug  6 18:02 version
+
+
+
+
+root@raspberrypi:/sys/bus/usb/devices# ls
+1-0:1.0  1-1  1-1.1  1-1:1.0  1-1.1.1  1-1.1:1.0  1-1.1.1:1.0  1-1.1.2  1-1.1.2:1.0  usb1
+
+# 查看  1-1.1.2:1.0 
+root@raspberrypi:/sys/bus/usb/devices# cd  1-1.1.2:1.0 
+root@raspberrypi:/sys/bus/usb/devices/1-1.1.2:1.0# ls
+0003:17EF:608D.0006  bAlternateSetting  bInterfaceNumber    bInterfaceSubClass  driver  modalias  subsystem             uevent
+authorized           bInterfaceClass    bInterfaceProtocol  bNumEndpoints       ep_81   power     supports_autosuspend
+root@raspberrypi:/sys/bus/usb/devices/1-1.1.2:1.0# ls  -l
+total 0
+drwxr-xr-x 5 root root    0 Aug  6 18:02 0003:17EF:608D.0006
+-rw-r--r-- 1 root root 4096 Aug  6 18:03 authorized
+-r--r--r-- 1 root root 4096 Aug  6 18:03 bAlternateSetting
+-r--r--r-- 1 root root 4096 Aug  6 18:02 bInterfaceClass
+-r--r--r-- 1 root root 4096 Aug  6 18:02 bInterfaceNumber
+-r--r--r-- 1 root root 4096 Aug  6 18:02 bInterfaceProtocol
+-r--r--r-- 1 root root 4096 Aug  6 18:02 bInterfaceSubClass
+-r--r--r-- 1 root root 4096 Aug  6 18:02 bNumEndpoints
+lrwxrwxrwx 1 root root    0 Aug  6 18:02 driver -> ../../../../../../../../../bus/usb/drivers/usbhid
+drwxr-xr-x 3 root root    0 Aug  6 18:03 ep_81
+-r--r--r-- 1 root root 4096 Aug  6 18:03 modalias
+drwxr-xr-x 2 root root    0 Aug  6 18:03 power
+lrwxrwxrwx 1 root root    0 Aug  6 18:02 subsystem -> ../../../../../../../../../bus/usb
+-r--r--r-- 1 root root 4096 Aug  6 18:03 supports_autosuspend
+-rw-r--r-- 1 root root 4096 Aug  6 18:02 uevent
+root@raspberrypi:/sys/bus/usb/devices/1-1.1.2:1.0# 
+
+# 最终结论 是 需要卸载掉 自带的 usb 驱动
+
+
+
+root@raspberrypi:/sys/bus/usb/devices/1-1.1.2:1.0# ls /sys/bus/usb/drivers/
+brcmfmac  hub  lan78xx  r8152  r8152-cfgselector  smsc95xx  uas  usb  usbfs  usbhid  usb_mouse_as_key  usb-storage
+
+
+
+
+
+
+
+root@raspberrypi:/home/kingnan/TEMP/usb/鼠标驱动# insmod usb_mouse_dev.ko 
+root@raspberrypi:/home/kingnan/TEMP/usb/鼠标驱动# dmesg | tail
+
+
+[ 1295.913399] /opt/github/dirveServer/dirverModules/usb_mouse_dev/usb_mouse_dev.c usb_mouse_as_key__init 284
+[ 1295.913700] usbcore: registered new interface driver usb_mouse_as_key
+
+
+
+
+root@raspberrypi:/sys/bus/usb/devices# ls
+1-0:1.0  1-1  1-1.1  1-1:1.0  1-1.1.1  1-1.1:1.0  1-1.1.1:1.0  1-1.1.2  1-1.1.2:1.0  usb1
+root@raspberrypi:/sys/bus/usb/devices# 
+ls /sys/bus/usb/devices
+
+
+
+
+watch -n 1 "dmesg"
+
+dmesg | less -F
+
+
+
+
+
+
+
+# 解绑 内核驱动
+
+ls -l /sys/bus/usb/devices/1-1.1.2:1.0/driver
+
+
+# 解绑 内核驱动
+echo -n "1-1.1.2:1.0" > /sys/bus/usb/devices/1-1.1.2:1.0/driver/unbind
+echo -n "1-1.1.2:1.0" | sudo tee /sys/bus/usb/drivers/usbhid/unbind
+
+
+
+# 绑定 内核驱动
+echo -n "usb_mouse_as_key" > /sys/bus/usb/devices/1-1.1.2:1.0/driver/bind
+
+# 绑定 usb_mouse_dev
+echo -n "1-1.1.2:1.0" | sudo tee /sys/bus/usb/drivers/usb_mouse_as_key/bind
+
+
+
+
+root@raspberrypi:/sys/bus/usb/devices/1-1.1.2# ls -l /sys/bus/usb/devices/1-1.1.2:1.0/driver
+lrwxrwxrwx 1 root root 0 Aug  6 18:44 /sys/bus/usb/devices/1-1.1.2:1.0/driver -> ../../../../../../../../../bus/usb/drivers/usb_mouse_as_key
+
+
+

@@ -26,7 +26,7 @@ static void usb_mouse_as_key_irq(struct urb *urb)
     struct input_dev *dev = urb->context;// 在 usb_fill_int_urb 中 ， 传入了 input_dev dev ， 所以在上下文 中找到 dev
     // 从 dev 中 获取 usb_mouse_as_key_desc 结构体
     struct usb_mouse_as_key_desc* desc = input_get_drvdata(dev);// 从 input_dev 结构体中 获取 usb_mouse_as_key_desc 结构体
-
+    printk(KERN_INFO "%s %s %d: URB completed, status=%d\n", __FILE__, __FUNCTION__, __LINE__, urb->status);
     // 获取 数据
     // 从 data_buffer 中 获取 数据
     signed char* data = desc->data_buffer;// 从 data_buffer 中 获取 数据
@@ -35,6 +35,14 @@ static void usb_mouse_as_key_irq(struct urb *urb)
     switch (urb->status)// urb->status 是 usb 传输的状态; 
     {
         case 0:// 当前状态 为0 ， 表示传输成功
+            // printk(KERN_INFO "%s %s %d: Data: %02x %02x %02x %02x\n", 
+            //             __FILE__, __FUNCTION__, __LINE__, 
+            //             data[0], data[1], data[2], data[3]);
+            printk(KERN_INFO "%s %s %d: Data: %02x %02x %02x %02x\n", 
+                        __FILE__, __FUNCTION__, __LINE__, 
+                        (unsigned char)data[0], (unsigned char)data[1], 
+                        (unsigned char)data[2], (unsigned char)data[3]);
+
             break;
         case -ECONNRESET:// 当前状态 为 -ECONNRESET ， 表示传输被取消
         case -ENOENT:// 当前状态 为 -ENOENT ， 表示传输被取消
@@ -64,20 +72,29 @@ static void usb_mouse_as_key_irq(struct urb *urb)
 	// input_sync(dev);
 
 
-    // input_report_key 将 鼠标事件 发送给 input subsystem
-    // input_report_key(dev, BTN_LEFT,   data[0] & 0x01);// 左键
+    // input_report_key 将 鼠标事件 发送给 input subsystem -=========
+
+    // input_report_key(dev, KEY_L, data[0] & 0x01); // 左键
+    // input_report_key(dev, KEY_R, data[0] & 0x02); // 右键
+    // input_report_key(dev, KEY_M, data[0] & 0x04); // 中键
+    // input_sync(dev);// 同步 input subsystem
+    // printk(KERN_INFO "data0 == %s %s %d: Key_L=%d, Key_R=%d, Key_M=%d\n",  __FILE__, __FUNCTION__, __LINE__, data[0] & 0x01, data[0] & 0x02, data[0] & 0x04);   
+    
+    
+
 
     input_report_key(dev, KEY_L, data[1] & 0x01);// 左键
     input_report_key(dev, KEY_R, data[1] & 0x02);// 右键
     input_report_key(dev, KEY_M, data[1] & 0x04);// 中键
-
-
     input_sync(dev);// 同步 input subsystem
+    // printk(KERN_INFO "data1 == %s %s %d: Key_L=%d, Key_R=%d, Key_M=%d\n",  __FILE__, __FUNCTION__, __LINE__, data[1] & 0x01, data[1] & 0x02, data[1] & 0x04);   
 
 
 resubmit:
-    usb_submit_urb(desc->urb, GFP_KERNEL);
-
+    // usb_submit_urb(desc->urb, GFP_KERNEL);
+    if (usb_submit_urb(desc->urb, GFP_ATOMIC)) {
+        printk(KERN_ERR "%s %s %d: Failed to resubmit URB\n", __FILE__, __FUNCTION__, __LINE__);
+    }
 
 }
 
@@ -205,16 +222,16 @@ static int usb_mouse_as_key_probe(struct usb_interface *intf, const struct usb_d
 
     //  鼠标按键
     // __set_bit(BTN_MOUSE, input_dev->keybit);// 设置 input 能产生 鼠标事件
-    __set_bit(BTN_LEFT, input_dev->keybit);// 按键事件 ：设置 input 能产生
-    __set_bit(BTN_RIGHT, input_dev->keybit);// 按键事件 ：设置 input 能产生 鼠标右键事件
-    __set_bit(BTN_MIDDLE, input_dev->keybit);// 按键事件： 设置 input 能产生 鼠标中键事件
+    // __set_bit(BTN_LEFT, input_dev->keybit);// 按键事件 ：设置 input 能产生
+    // __set_bit(BTN_RIGHT, input_dev->keybit);// 按键事件 ：设置 input 能产生 鼠标右键事件
+    // __set_bit(BTN_MIDDLE, input_dev->keybit);// 按键事件： 设置 input 能产生 鼠标中键事件
 
-    // 设置鼠标滚轮
-    __set_bit(EV_REL, input_dev->evbit); // 支持 相对坐 标事件
+    // // 设置鼠标滚轮
+    // __set_bit(EV_REL, input_dev->evbit); // 支持 相对坐 标事件
 
-    __set_bit(REL_X, input_dev->relbit);//相对位移下：  设置 input 能产生 鼠标 X 轴 事件
-    __set_bit(REL_Y, input_dev->relbit);//相对位移下：  设置 input 能产生 鼠标 Y 轴 事件
-    __set_bit(REL_WHEEL, input_dev->relbit);//相对位移下：  设置 input 能产生 鼠标 滚轮 事件
+    // __set_bit(REL_X, input_dev->relbit);//相对位移下：  设置 input 能产生 鼠标 X 轴 事件
+    // __set_bit(REL_Y, input_dev->relbit);//相对位移下：  设置 input 能产生 鼠标 Y 轴 事件
+    // __set_bit(REL_WHEEL, input_dev->relbit);//相对位移下：  设置 input 能产生 鼠标 滚轮 事件
 
 
 
@@ -255,19 +272,36 @@ static void usb_mouse_as_key_disconnect(struct usb_interface *intf)
 }
 
 
-static struct usb_device_id usb_mouse_as_key_id_table[] ={
-    // 
+// static struct usb_device_id usb_mouse_as_key_id_table[] ={
+//     // 
+//     {
+//         // USB_INTERFACE_INFO 是 里面比较 bInterfaceClass 、bInterfaceSubClass、bInterfaceProtocol 这三个是否为 传入的 
+//         // bInterfaceClass = USB_INTERFACE_CLASS_HID, // HID
+//         // bInterfaceSubClass = USB_INTERFACE_SUBCLASS_BOOT, // Boot Protocol
+//         // bInterfaceProtocol = USB_INTERFACE_PROTOCOL_MOUSE // Mouse
+//         USB_INTERFACE_INFO(
+//             USB_INTERFACE_CLASS_HID,// HID
+//             USB_INTERFACE_SUBCLASS_BOOT, // Boot Protocol
+//             USB_INTERFACE_PROTOCOL_MOUSE // Mouse
+//         ),
+//         .driver_info = (kernel_ulong_t)"it is a mouse",// driver_info 是 传入一些自定义信息，当 上面的 判断通过的时候 可以  再 probe 的时候 拿到这些信息去使用 
+//     },
+//     {}
+// };
+
+
+static struct usb_device_id usb_mouse_as_key_id_table[] = {
     {
-        // USB_INTERFACE_INFO 是 里面比较 bInterfaceClass 、bInterfaceSubClass、bInterfaceProtocol 这三个是否为 传入的 
-        // bInterfaceClass = USB_INTERFACE_CLASS_HID, // HID
-        // bInterfaceSubClass = USB_INTERFACE_SUBCLASS_BOOT, // Boot Protocol
-        // bInterfaceProtocol = USB_INTERFACE_PROTOCOL_MOUSE // Mouse
+        USB_DEVICE(0x17EF, 0x608D),
+        .driver_info = (kernel_ulong_t)"specific mouse",
+    },
+    {
         USB_INTERFACE_INFO(
-            USB_INTERFACE_CLASS_HID,// HID
+            USB_INTERFACE_CLASS_HID, // HID
             USB_INTERFACE_SUBCLASS_BOOT, // Boot Protocol
             USB_INTERFACE_PROTOCOL_MOUSE // Mouse
         ),
-        .driver_info = (kernel_ulong_t)"it is a mouse",// driver_info 是 传入一些自定义信息，当 上面的 判断通过的时候 可以  再 probe 的时候 拿到这些信息去使用 
+        .driver_info = (kernel_ulong_t)"generic mouse",
     },
     {}
 };
