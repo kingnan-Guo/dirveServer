@@ -248,9 +248,13 @@ USER_LDFLAGS := -lusb-1.0
 # obj-m += virtual_spi_master.o
 
 # # virtual_spi_master_new 虚拟 SPI 主设备驱动 -------------------
-virtual_spi_master_new-y := $(MODULES_DIR)/virtual_spi_master_new/virtual_spi_master_new.o
-obj-m += virtual_spi_master_new.o
+# virtual_spi_master_new-y := $(MODULES_DIR)/virtual_spi_master_new/virtual_spi_master_new.o
+# obj-m += virtual_spi_master_new.o
 
+
+# # usb_mouse_dev 驱动 -------------------
+usb_mouse_dev-y := $(MODULES_DIR)/usb_mouse_dev/usb_mouse_dev.o
+obj-m += usb_mouse_dev.o
 
 
 

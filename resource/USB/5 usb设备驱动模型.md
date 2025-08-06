@@ -6,10 +6,15 @@
 
     文件
         ./modules/app_XXX/app_XXX.c
-        ./dirverModules/dirverModules/XXX.c
+        ./dirverModules/usb_mouse_dev/usb_mouse_dev.c
+
+
+# 这个是 鼠标设备驱动 作为 参考
+[text](usbmouse.c)
+
 
 # 定义
-
+usb_mouse_dev
  根据总线设备驱动模型来做
 
 
@@ -135,4 +140,9 @@ usb->transfer_flags |= URB_NO_TRANSFER_DMA;// 高速 usb 已经有物理地址�
 sources/linux-rpi-6.6.y/drivers/usb/core/usb.h
 sources/linux-rpi-6.6.y/drivers/usb/core/usb.c
 
+sources/linux-rpi-6.6.y/include/linux/usb.h
+
+
+
+依赖
 sources/linux-rpi-6.6.y/include/linux/usb.h
