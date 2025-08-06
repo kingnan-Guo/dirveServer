@@ -69,9 +69,9 @@ struct usb_driver {
 
 
 # Makefile
-# # XXXX ---------------------
-XXXX-y := $(MODULES_DIR)/XXXX/XXXX.o
-obj-m := XXXX.o
+# # usb_mouse_dev 驱动 -------------------
+usb_mouse_dev-y := $(MODULES_DIR)/usb_mouse_dev/usb_mouse_dev.o
+obj-m += usb_mouse_dev.o
 
 
 # 执行命令
