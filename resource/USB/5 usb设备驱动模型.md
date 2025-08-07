@@ -2,7 +2,7 @@
 2025/08/04 00:10
 #  usb设备驱动模型
     分支
-        dirver_raspberry_XXXXX_vX.X.X
+        dirver_raspberry_usb_mouse_dev_v0.5.3
 
     文件
         ./modules/app_XXX/app_XXX.c
