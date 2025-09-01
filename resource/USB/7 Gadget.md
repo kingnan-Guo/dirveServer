@@ -321,17 +321,9 @@ root@raspberrypi:/home/kingnan/TEMP/usb/gadget#
 
 
 
+可能的情况是 
 
 
-
-
-
-
-
-
-
-
-会议 gadget
-
+如果 Raspberry Pi 3B+ 未通过 OTG 线缆正确连接到主机，Gadget 设备可能未完全激活，导致 /dev/gadget/ 未创建。
 
 
