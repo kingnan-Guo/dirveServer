@@ -51,5 +51,7 @@ dtc -I fs /sys/firmware/devicetree/base | less
 
 
 
+foc
 
-
+1 硬件
+2 
