@@ -94,3 +94,91 @@ dtc -I fs /sys/firmware/devicetree/base | less
 
 
 
+# 参考
+sources/linux-rpi-6.6.y/drivers/pwm/pwm-rockchip.c
+
+sources/linux-rpi-6.6.y/drivers/pwm/core.c 核心层
+
+sources/linux-rpi-6.6.y/include/linux/pwm.h
+sources/linux-rpi-6.6.y/drivers/staging/greybus/pwm.c
+
+# pwm 控制器流程  
+	
+1 主要目的 构造  struct pwm_chip chip;  结构体
+2    将 pwm_chip 使用   sources/linux-rpi-6.6.y/drivers/pwm/core.c 的 pwmchip_add 添加到 list_add(&chip->list, &pwm_chips);  添加搭配 队列 中
+
+3 
+
+
+
+
+# API
+sources/linux-rpi-6.6.y/include/linux/pwm.h 的 
+
+1 配置 pwm
+static inline int pwm_config(struct pwm_device *pwm, int duty_ns, int period_ns)
+
+2 pwm_set_period 设置周期
+3 pwm_set_duty_cycle 设置占空比
+4 pwm_set_polarity 设置极性
+
+5 pwm_enable 使能 pwm
+
+
+获取 pwm 设备
+struct pwm_device *devm_pwm_get(struct device *dev, const char *con_id);
+
+当前设备和 驱动 匹配成功之后， 会调用 probe 函数， 从 platforme_device 获得 device *dev
+
+
+
+调用关系 
+不管是什么 都会调用 pwm_ops 的 apply
+
+pwm_config
+    pwm_apply_state
+        pwm->chip->ops->apply()
+    
+    pwm_set_period
+        pwm_apply_state
+            pwm->chip->ops->apply()
+
+    pwm_set_duty_cycle
+        pwm_apply_state
+            pwm->chip->ops->apply()
+
+    pwm_set_polarity
+        pwm_apply_state
+            pwm->chip->ops->apply()
+
+    pwm_enable
+        pwm_apply_state
+            pwm->chip->ops->apply()
+
+    sources/linux-rpi-6.6.y/drivers/pwm/core.c
+    核心 是 pwm_apply_state (最新可能是 __pwm_apply)  函数 如果有 apply 函数 就调用 apply 函数， 没有可能会先创建 apply 
+
+
+
+
+# pwm_ops
+pwm_ops
+    pwm_request
+    pwm_free
+    pwm_config
+    pwm_apply_state
+    pwm_get_state
+    pwm_set_polarity
+    pwm_enable
+    pwm_disable
+    pwm_get
+    pwm_put
+    pwm_set_duty_cycle
+    pwm_set_polarity
+    pwm_enable
+
+
+
+
+
+
