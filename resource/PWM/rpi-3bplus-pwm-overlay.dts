@@ -1,0 +1,37 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2837", "brcm,bcm2836", "brcm,bcm2835";
+
+    fragment@0 {
+        target = <&gpio>;
+        __overlay__ {
+            pwm0_pins: pwm0_pins {
+                brcm,pins = <18>;          /* GPIO18 对应 PWM0 */
+                brcm,function = <2>;       /* ALT5 = PWM0_OUT */
+                brcm,pull = <0>;
+            };
+        };
+    };
+
+    fragment@1 {
+        target = <&pwm>;
+        __overlay__ {
+            pinctrl-names = "default";
+            pinctrl-0 = <&pwm0_pins>;
+            status = "okay";
+        };
+    };
+
+    fragment@2 {
+        target-path = "/";
+        __overlay__ {
+            my_pwm0: my_pwm@0 {
+                compatible = "my_pwm,my_drv";
+                pwms = <&pwm 0 20000000 0>;   /* controller, channel, period(ns), polarity(0=normal) */
+                status = "okay";
+            };
+        };
+    };
+};
