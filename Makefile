@@ -253,8 +253,14 @@ USER_LDFLAGS := -lusb-1.0
 
 
 # # usb_mouse_dev 驱动 -------------------
-usb_mouse_dev-y := $(MODULES_DIR)/usb_mouse_dev/usb_mouse_dev.o
-obj-m += usb_mouse_dev.o
+# usb_mouse_dev-y := $(MODULES_DIR)/usb_mouse_dev/usb_mouse_dev.o
+# obj-m += usb_mouse_dev.o
+
+
+
+# # pwm 驱动 -------------------
+my_pwm-y := $(MODULES_DIR)/my_pwm/my_pwm.o
+obj-m += my_pwm.o
 
 
 

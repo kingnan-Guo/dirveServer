@@ -102,6 +102,9 @@ sources/linux-rpi-6.6.y/drivers/pwm/core.c 核心层
 sources/linux-rpi-6.6.y/include/linux/pwm.h
 sources/linux-rpi-6.6.y/drivers/staging/greybus/pwm.c
 
+设备树
+sources/linux-rpi-6.6.y/arch/arm/boot/dts/rockchip/rk3xxx.dtsi
+
 # pwm 控制器流程  
 	
 1 主要目的 构造  struct pwm_chip chip;  结构体
@@ -182,3 +185,15 @@ pwm_ops
 
 
 
+
+
+![alt text](image.png)
+
+
+
+
+
+# 卸载本身的 pwm
+lsmod | grep pwm
+ls /sys/bus/platform/devices/3f20c000.pwm/driver
+sudo rmmod pwm_bcm2835
