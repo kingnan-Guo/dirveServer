@@ -19,7 +19,8 @@
 #include <linux/of.h>
 #include <linux/platform_device.h>
 #include <linux/pwm.h>
-
+#include <linux/cdev.h>
+#include <linux/uaccess.h>
 
 #define _NAME "my_pwm"
 #define MAX_PWM_DEVICES 2
@@ -38,7 +39,11 @@ struct my_pwm_device {
     struct device *dev;
     struct cdev cdev;// 字符设备
     dev_t dev_no;// 设备号
+    struct class *class;
+    struct device *device;
 };
+
+static dev_t _dev_no;
 static struct my_pwm_device *pwm_devices[MAX_PWM_DEVICES];
 
 
@@ -107,7 +112,7 @@ static struct file_operations _fops = {
 
 
 
-
+static atomic_t next_index = ATOMIC_INIT(0);  // For assigning minor
 /// @brief 
 /// @param pdev 
 /// @return 
@@ -234,10 +239,25 @@ static int my_pwm_probe(struct platform_device *pdev){
 
 
 
+
+
+    //  开始注册 字符设备
+     err = alloc_chrdev_region(&_dev_no, 0, 1, _NAME);// 分配设备号, 存放在 my_input_dev->dev_no 中 
+    
+    major = MAJOR(_dev_no);// 提取 主设备号
+    dev_info(&pdev->dev, "Allocated major number: %d\n", major);
+     // 
+    index = atomic_inc_return(&next_index) - 1;// 获取次设备号
+    dev_info(&pdev->dev, "Assigned minor number: %d\n", index);
+     my_pwm_dev->dev_no = MKDEV(major, index);
+     dev_info(&pdev->dev, "Device number: %d\n", my_pwm_dev->dev_no);
     
 
-
-
+     cdev_init(&my_pwm_dev->cdev, &_fops);// 初始化 cdev 结构体
+    err = cdev_add(&my_pwm_dev->cdev, my_pwm_dev->dev_no, 1);// 添加 cdev 到内核
+    char device_class_name_buf[30];
+    snprintf(device_class_name_buf, sizeof(device_class_name_buf), "%s_%d", "my_pwm_diver_class", index);
+    my_pwm_dev->class = class_create(device_class_name_buf);
 
     // // 2、 注册  file_operations _fops
     // major = register_chrdev(0, _NAME, &_fops);
@@ -258,11 +278,13 @@ static int my_pwm_probe(struct platform_device *pdev){
 
 
 
-    // char device_name_buf[30];
-    // int minor = 0;
-    // snprintf(device_name_buf, sizeof(device_name_buf), "%s_%d", _NAME, minor);
-    // device_create(_class, NULL, MKDEV(major, minor), NULL, device_name_buf);//创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件  
-    // // device_create(_class, NULL, MKDEV(major, 0), NULL, "100ask_led%d", 0);
+
+    char device_name_buf[30];
+    int minor = index;
+    snprintf(device_name_buf, sizeof(device_name_buf), "%s_%d", _NAME, minor);
+    // my_pwm_dev->device  = device_create(my_pwm_dev->class, NULL, MKDEV(major, minor), NULL, device_name_buf);//创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件  
+     my_pwm_dev->device  = device_create(my_pwm_dev->class, NULL,  my_pwm_dev->dev_no, NULL, device_name_buf);//创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件  
+    // device_create(_class, NULL, MKDEV(major, 0), NULL, "100ask_led%d", 0);
 
     // // 获取 pwm 设备
     // my_pwm_device = devm_pwm_get(&pdev->dev, "my_pwm");
@@ -274,9 +296,12 @@ static int my_pwm_probe(struct platform_device *pdev){
 /// @param pdev 
 /// @return 
 static int my_pwm_remove(struct platform_device *pdev){
-    device_destroy(_class, MKDEV(major, 0)); // 销毁设备
-    class_destroy(_class);// 销毁 class
-    unregister_chrdev(major, _NAME);// 卸载驱动 注销字符设备
+    // device_destroy(_class, MKDEV(major, 0)); // 销毁设备
+    // class_destroy(_class);// 销毁 class
+    // unregister_chrdev(major, _NAME);// 卸载驱动 注销字符设备
+    struct my_pwm_device *my_pwm_dev = platform_get_drvdata(pdev);
+    device_destroy(my_pwm_dev->class, my_pwm_dev->dev_no);
+    cdev_del(&my_pwm_dev->cdev);
 
     return 0;
 }
