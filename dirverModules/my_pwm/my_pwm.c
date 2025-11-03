@@ -24,6 +24,7 @@
 
 #define _NAME "my_pwm"
 #define MAX_PWM_DEVICES 2
+#define MINORMASK 1   // 2 个 PWM 通道
 // #define _NUM 2
 
 static int major; // 设备主号
@@ -222,13 +223,16 @@ static int my_pwm_probe(struct platform_device *pdev){
         return PTR_ERR(my_pwm_dev->pwm);
     }
 
+    // 关键修复：强制禁用 PWM 以重置状态，确保第二次加载时生效
+    pwm_disable(my_pwm_dev->pwm);
+
     pwm_get_state(my_pwm_dev->pwm, &pstate);
     dev_info(&pdev->dev, "PWM Device: %s, Channel: %u, Period: %llu ns\n", np->full_name, my_pwm_dev->pwm->hwpwm, pstate.period);
     dev_info(&pdev->dev, "Polarity: %s, Enabled: %s\n", pstate.polarity == PWM_POLARITY_NORMAL ? "Normal" : "Inversed", pstate.enabled ? "Yes" : "No");
 
     // pstate.duty_cycle = 0;
     pstate.period = 20000000;         // ✅ 设置周期 20ms = 20,000,000ns
-    pstate.duty_cycle = 10000000;     // ✅ 设置占空比 50% = 10,000,000ns
+    pstate.duty_cycle = 5000000;//10000000;     // ✅ 设置占空比 50% = 10,000,000ns
     pstate.polarity = PWM_POLARITY_NORMAL;
     pstate.enabled = true;
     err = pwm_apply_might_sleep(my_pwm_dev->pwm, &pstate);
@@ -241,23 +245,21 @@ static int my_pwm_probe(struct platform_device *pdev){
 
 
 
-    //  开始注册 字符设备
-     err = alloc_chrdev_region(&_dev_no, 0, 1, _NAME);// 分配设备号, 存放在 my_input_dev->dev_no 中 
+    // //  开始注册 字符设备
+    //  err = alloc_chrdev_region(&_dev_no, 0, 1, _NAME);// 分配设备号, 存放在 my_input_dev->dev_no 中 
     
-    major = MAJOR(_dev_no);// 提取 主设备号
+
     dev_info(&pdev->dev, "Allocated major number: %d\n", major);
      // 
     index = atomic_inc_return(&next_index) - 1;// 获取次设备号
     dev_info(&pdev->dev, "Assigned minor number: %d\n", index);
-     my_pwm_dev->dev_no = MKDEV(major, index);
-     dev_info(&pdev->dev, "Device number: %d\n", my_pwm_dev->dev_no);
-    
+    my_pwm_dev->dev_no = MKDEV(major, index);
+    dev_info(&pdev->dev, "Device number: %d\n", my_pwm_dev->dev_no);
 
-     cdev_init(&my_pwm_dev->cdev, &_fops);// 初始化 cdev 结构体
+
+    cdev_init(&my_pwm_dev->cdev, &_fops);// 初始化 cdev 结构体
     err = cdev_add(&my_pwm_dev->cdev, my_pwm_dev->dev_no, 1);// 添加 cdev 到内核
-    char device_class_name_buf[30];
-    snprintf(device_class_name_buf, sizeof(device_class_name_buf), "%s_%d", "my_pwm_diver_class", index);
-    my_pwm_dev->class = class_create(device_class_name_buf);
+
 
     // // 2、 注册  file_operations _fops
     // major = register_chrdev(0, _NAME, &_fops);
@@ -282,12 +284,16 @@ static int my_pwm_probe(struct platform_device *pdev){
     char device_name_buf[30];
     int minor = index;
     snprintf(device_name_buf, sizeof(device_name_buf), "%s_%d", _NAME, minor);
-    // my_pwm_dev->device  = device_create(my_pwm_dev->class, NULL, MKDEV(major, minor), NULL, device_name_buf);//创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件  
-     my_pwm_dev->device  = device_create(my_pwm_dev->class, NULL,  my_pwm_dev->dev_no, NULL, device_name_buf);//创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件  
+    // my_pwm_dev->device  = device_create(_class, NULL,  my_pwm_dev->dev_no, NULL, device_name_buf);//创建 文件系统 的设备节点; 应用程序 通过文件系统的设备 节点 访问 硬件  
     // device_create(_class, NULL, MKDEV(major, 0), NULL, "100ask_led%d", 0);
+
+    my_pwm_dev->device = device_create(_class, &pdev->dev, my_pwm_dev->dev_no, NULL,  "%s_%d", _NAME, index);
 
     // // 获取 pwm 设备
     // my_pwm_device = devm_pwm_get(&pdev->dev, "my_pwm");
+
+
+    platform_set_drvdata(pdev, my_pwm_dev);// 将 my_pwm_dev 存入 platform_device 的 drvdata 字段
 
     return 0;
 }
@@ -300,7 +306,11 @@ static int my_pwm_remove(struct platform_device *pdev){
     // class_destroy(_class);// 销毁 class
     // unregister_chrdev(major, _NAME);// 卸载驱动 注销字符设备
     struct my_pwm_device *my_pwm_dev = platform_get_drvdata(pdev);
-    device_destroy(my_pwm_dev->class, my_pwm_dev->dev_no);
+
+    pwm_disable(my_pwm_dev->pwm);// 关键修复：强制禁用 PWM 以重置状态，确保第二次加载时生效
+    dev_info(&pdev->dev, "my_pwm_remove Device number: %d\n", my_pwm_dev->dev_no);
+    // if (!my_pwm_dev) return 0;  // 防御性检查
+    device_destroy(_class, my_pwm_dev->dev_no);
     cdev_del(&my_pwm_dev->cdev);
 
     return 0;
@@ -334,16 +344,33 @@ static struct platform_driver my_pwm_dirver = {
 // 模块加载时执行的函数 
 static int __init device_init(void) {
     printk(KERN_INFO "========= %s %s %d  ========= \n", __FILE__, __FUNCTION__, __LINE__);
+    _class = class_create("my_pwm_diver_class");
+    //  开始注册 字符设备
+    int err = alloc_chrdev_region(&_dev_no, 0, MAX_PWM_DEVICES, _NAME);// 分配设备号, 存放在 my_input_dev->dev_no 中 
+    
+    major = MAJOR(_dev_no);// 提取 主设备号
 
     // 入口函数里 注册 my_pwm_dirver 结构体
-    int err;
     err = platform_driver_register(&my_pwm_dirver);// 注册 my_pwm_dirver 会调用  probe
     return err;
 }
 
 // 模块卸载时执行的函数
 static void __exit device_exit(void) {
+
+
+
+    // 2. 注销字符设备区域
+    // unregister_chrdev_region(MKDEV(major, 0), MINORMASK + 1);
+    unregister_chrdev_region(_dev_no, MAX_PWM_DEVICES);
+
     platform_driver_unregister(&my_pwm_dirver);// 会调用 remove
+
+    if (_class) {
+        class_destroy(_class);
+        _class = NULL;
+    }
+
     printk(KERN_INFO "Entering _exit\n");
 }
 
