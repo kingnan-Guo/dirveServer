@@ -33,7 +33,7 @@ static struct class *_class;
 
 
 
-struct  pwm_device *my_pwm_device;
+struct pwm_device *my_pwm_device;
 
 struct my_pwm_device {
     struct pwm_device *pwm;
@@ -53,6 +53,18 @@ static struct my_pwm_device *my_pwm_dev;
 
 static int _open(struct inode *inode, struct file *file) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
+    unsigned int minor = iminor(inode);
+    struct pwm_state pstate;
+    struct my_pwm_device *my_pwd = pwm_devices[minor];
+
+    // 
+    file->private_data = my_pwd;// 保存 私有数据 指针
+
+    // 
+    pwm_get_state(my_pwd->pwm, &pstate);
+    pstate.enabled = true;
+    pwm_apply_might_sleep(my_pwd->pwm, &pstate);
+
 
     // // 配置 pwm
     // pwm_config(my_pwm_device, 500000, 1000000); // 占空比 50%
@@ -77,6 +89,25 @@ static ssize_t _read(struct file *file, char __user *buffer, size_t len, loff_t 
 static ssize_t _write(struct file *file, const char __user *buffer, size_t len, loff_t *offset) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
 
+    struct my_pwm_device *my_pwd = file->private_data;
+
+    struct pwm_state pstate;
+    pwm_get_state(my_pwd->pwm, &pstate);
+
+
+    char data_buffer[10] = {0};
+    int err = copy_from_user(&data_buffer, buffer, len);// 获取用户空间数据
+
+    data_buffer[len] = '\0'; // 确保字符串结束
+    printk("data_buffer %s \n", data_buffer);
+
+    int duty_percent;
+    sscanf(data_buffer, "%d", &duty_percent); // 解析字符串为整数
+
+    printk("duty_percent %d \n", duty_percent);
+    // 根据次设备号 和 status 控制 XXX
+    pstate.duty_cycle = duty_percent * pstate.period / 100; // 设置占空比
+    pwm_apply_might_sleep(my_pwd->pwm, &pstate);
 
     // int err;
     // char status;
@@ -96,8 +127,16 @@ static ssize_t _write(struct file *file, const char __user *buffer, size_t len, 
 
 static int _release(struct inode *inode, struct file *file) {
     printk(KERN_INFO "%s %s %d \n", __FILE__, __FUNCTION__, __LINE__);
-    // pwm_config(my_pwm_device, 500000, 1000000); // 占空比 50%
-    // pwm_disable(my_pwm_device);// 关闭 pwm
+
+
+    // struct my_pwm_device *my_pwd = file->private_data;
+
+    // struct pwm_state pstate;
+    // pwm_get_state(my_pwd->pwm, &pstate);
+    // pstate.enabled = false;
+    // pwm_apply_might_sleep(my_pwd->pwm, &pstate);
+
+
     return 0;
 }
 
@@ -124,7 +163,7 @@ static int my_pwm_probe(struct platform_device *pdev){
 
     int err;
     struct device_node *child;
-        int index = 0;
+    int index = 0;
 
 
     // 1、 获取 pwm 设备
@@ -193,8 +232,8 @@ static int my_pwm_probe(struct platform_device *pdev){
 
     
 
-        const char *pwm_name;
-         struct pwm_state pstate; // 获取 pwm 通道 周期 极性
+    const char *pwm_name;
+    struct pwm_state pstate; // 获取 pwm 通道 周期 极性
 
  
     printk(KERN_INFO "%s %s %d: Probe called for device %s\n", __FILE__, __FUNCTION__, __LINE__, pdev->name);
@@ -251,7 +290,7 @@ static int my_pwm_probe(struct platform_device *pdev){
 
     dev_info(&pdev->dev, "Allocated major number: %d\n", major);
      // 
-    index = atomic_inc_return(&next_index) - 1;// 获取次设备号
+    index = atomic_inc_return(&next_index) - 1;// 获取次设备号； atomic_inc_return 把 next_index 的值 加 1
     dev_info(&pdev->dev, "Assigned minor number: %d\n", index);
     my_pwm_dev->dev_no = MKDEV(major, index);
     dev_info(&pdev->dev, "Device number: %d\n", my_pwm_dev->dev_no);
@@ -295,6 +334,9 @@ static int my_pwm_probe(struct platform_device *pdev){
 
     platform_set_drvdata(pdev, my_pwm_dev);// 将 my_pwm_dev 存入 platform_device 的 drvdata 字段
 
+
+    pwm_devices[minor] = my_pwm_dev;
+
     return 0;
 }
 
@@ -306,12 +348,15 @@ static int my_pwm_remove(struct platform_device *pdev){
     // class_destroy(_class);// 销毁 class
     // unregister_chrdev(major, _NAME);// 卸载驱动 注销字符设备
     struct my_pwm_device *my_pwm_dev = platform_get_drvdata(pdev);
+    int minor = MINOR(my_pwm_dev->dev_no);
 
     pwm_disable(my_pwm_dev->pwm);// 关键修复：强制禁用 PWM 以重置状态，确保第二次加载时生效
     dev_info(&pdev->dev, "my_pwm_remove Device number: %d\n", my_pwm_dev->dev_no);
     // if (!my_pwm_dev) return 0;  // 防御性检查
     device_destroy(_class, my_pwm_dev->dev_no);
     cdev_del(&my_pwm_dev->cdev);
+
+    pwm_devices[minor] = NULL;
 
     return 0;
 }

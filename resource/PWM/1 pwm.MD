@@ -1,12 +1,12 @@
 2025/10/18 00:10
 # 名称
     分支
-        dirver_raspberry_pwm_vX.X.X
+        dirver_raspberry_pwm_v0.6.1
 
     文件
-        ./modules/app_XXX/app_XXX.c
-        ./dirverModules/dirverModules/XXX.c
-
+        ./modules/app_pwm/app_pwm.c
+        ./dirverModules/my_pwm/my_pwm.c
+        
 # 定义
 
 
@@ -63,9 +63,12 @@ root@raspberrypi:/sys/class/pwm/pwmchip0/pwm0# echo 0 > enable
 
 
 # Makefile
-# # XXXX ---------------------
-XXXX-y := $(MODULES_DIR)/XXXX/XXXX.o
-obj-m := XXXX.o
+
+# # pwm 驱动 -------------------
+my_pwm-y := $(MODULES_DIR)/my_pwm/my_pwm.o
+obj-m += my_pwm.o
+
+
 
 
 # 执行命令
@@ -197,3 +200,11 @@ pwm_ops
 lsmod | grep pwm
 ls /sys/bus/platform/devices/3f20c000.pwm/driver
 sudo rmmod pwm_bcm2835
+
+
+
+
+# 字符设备驱动
+
+root@raspberrypi:/home/kingnan/TEMP/pwm# insmod my_pwm.ko
+root@raspberrypi:/home/kingnan/TEMP/pwm# ./main /dev/my_pwm_0 10

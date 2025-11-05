@@ -47,7 +47,10 @@
 // #include "app_usb_mouse_sync.h"
 
 
-#include "app_usb_mouse_async.h"
+// #include "app_usb_mouse_async.h"// USB 获取鼠标数据 驱动
+
+
+#include "app_pwm.h"
 
 
 int main(int argc, char *argv[]){
@@ -119,7 +122,10 @@ int main(int argc, char *argv[]){
     // app_usb_mouse_sync_main(argc, argv); // USB 获取鼠标数据 驱动
 
 
-    app_usb_mouse_async_main(argc, argv); // USB 获取鼠标数据 驱动
+    // app_usb_mouse_async_main(argc, argv); // USB 获取鼠标数据 驱动
+
+
+    app_pwm_main(argc, argv); // PWM 驱动
 
     return 0;
 
